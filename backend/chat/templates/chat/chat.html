@@ -1,0 +1,920 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chat with {{ other.username }} | MindSpace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --ocean-deep: #1a4d5e;
+    --ocean-mid: #2c6b7f;
+    --seafoam: #4db8a8;
+    --sand: #f9e5c9;
+    --coral: #ff7b54;
+    --pearl: #f4f8fb;
+    --white: #ffffff;
+    --shadow: rgba(26, 77, 94, 0.15);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: linear-gradient(135deg, #e8f4f8 0%, #f4f8fb 100%);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===================================
+   HEADER
+   =================================== */
+
+.chat-header {
+    background: linear-gradient(135deg, var(--ocean-deep), var(--ocean-mid));
+    color: white;
+    padding: 20px 30px;
+    box-shadow: 0 4px 20px rgba(26, 77, 94, 0.3);
+    z-index: 100;
+    animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar-header {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.user-details h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.user-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.header-btn {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.header-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* ===================================
+   CHAT CONTAINER
+   =================================== */
+
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.messages-container {
+    flex: 1;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 30px;
+    overflow-y: auto;
+    box-shadow: 0 -4px 30px var(--shadow);
+    scroll-behavior: smooth;
+    position: relative;
+}
+
+/* Custom scrollbar */
+.messages-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--seafoam), var(--ocean-mid));
+    border-radius: 10px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: var(--ocean-deep);
+}
+
+/* Empty state */
+.empty-chat {
+    text-align: center;
+    padding: 100px 20px;
+    color: #99a;
+}
+
+.empty-chat-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-chat-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #667;
+    margin-bottom: 8px;
+}
+
+.empty-chat-subtext {
+    font-size: 14px;
+    color: #99a;
+}
+
+/* ===================================
+   MESSAGES
+   =================================== */
+
+.message-group {
+    margin-bottom: 20px;
+    animation: messageSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.message-group.me {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.message-group.other {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 14px 18px;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message-group.me .message-bubble {
+    background: linear-gradient(135deg, var(--seafoam), var(--ocean-mid));
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 15px rgba(77, 184, 168, 0.3);
+}
+
+.message-group.other .message-bubble {
+    background: #f1f5f9;
+    color: var(--ocean-deep);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+.message-content {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.message-time {
+    font-size: 11px;
+    opacity: 0.7;
+    text-align: right;
+}
+
+.message-group.other .message-time {
+    text-align: left;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #f1f5f9;
+    border-radius: 18px;
+    max-width: 100px;
+    box-shadow: 0 4px 15px var(--shadow);
+    margin-bottom: 20px;
+    animation: messageSlideIn 0.3s ease;
+}
+
+.typing-indicator.active {
+    display: flex;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--ocean-mid);
+    border-radius: 50%;
+    animation: typingDot 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+    30% { transform: translateY(-10px); opacity: 1; }
+}
+
+/* ===================================
+   MESSAGE INPUT
+   =================================== */
+
+.message-input-container {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 -4px 30px var(--shadow);
+}
+
+.message-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.emoji-picker-btn {
+    background: #f1f5f9;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.emoji-picker-btn:hover {
+    background: #e2e8f0;
+    transform: scale(1.1);
+}
+
+.message-input {
+    flex: 1;
+    padding: 16px 20px;
+    border: 2px solid #e5e9f0;
+    border-radius: 16px;
+    font-size: 15px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #f8fafc;
+    transition: all 0.3s;
+    outline: none;
+    resize: none;
+    max-height: 120px;
+    min-height: 50px;
+}
+
+.message-input:focus {
+    border-color: var(--seafoam);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(77, 184, 168, 0.1);
+}
+
+.message-input::placeholder {
+    color: #aab;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, var(--seafoam), var(--ocean-mid));
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(77, 184, 168, 0.3);
+}
+
+.send-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(77, 184, 168, 0.4);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.send-btn.sending {
+    pointer-events: none;
+}
+
+.send-btn.sending::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Character counter */
+.char-counter {
+    position: absolute;
+    bottom: 25px;
+    right: 45px;
+    font-size: 11px;
+    color: #99a;
+    pointer-events: none;
+}
+
+/* ===================================
+   QUICK REACTIONS (GAMIFICATION)
+   =================================== */
+
+.quick-reactions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0;
+    overflow-x: auto;
+}
+
+.quick-reaction {
+    background: white;
+    border: 2px solid #e5e9f0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.quick-reaction:hover {
+    border-color: var(--seafoam);
+    background: rgba(77, 184, 168, 0.1);
+    transform: translateY(-2px);
+}
+
+/* ===================================
+   EMOJI PICKER
+   =================================== */
+
+.emoji-popup {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    opacity: 0;
+}
+
+.emoji-popup.active {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    max-width: 400px;
+}
+
+.emoji-item {
+    font-size: 28px;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.emoji-item:hover {
+    background: #f1f5f9;
+    transform: scale(1.2);
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+@media (max-width: 768px) {
+    .chat-container {
+        padding: 10px;
+    }
+    
+    .messages-container,
+    .message-input-container {
+        padding: 20px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .emoji-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+/* ===================================
+   LOADING STATE
+   =================================== */
+
+.loading-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 30px;
+}
+
+.skeleton-message {
+    height: 60px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    border-radius: 18px;
+    animation: shimmer 2s infinite;
+}
+
+.skeleton-message:nth-child(odd) {
+    width: 70%;
+    margin-right: auto;
+}
+
+.skeleton-message:nth-child(even) {
+    width: 60%;
+    margin-left: auto;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ===================================
+   SCROLL TO BOTTOM BUTTON
+   =================================== */
+
+.scroll-to-bottom {
+    position: fixed;
+    bottom: 180px;
+    right: 40px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--seafoam), var(--ocean-mid));
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(77, 184, 168, 0.4);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.scroll-to-bottom.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.scroll-to-bottom:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(77, 184, 168, 0.5);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Header -->
+<header class="chat-header">
+    <div class="header-content">
+        <div class="user-info-header">
+            <div class="user-avatar-header">
+                {{ other.username|slice:":1" }}
+            </div>
+            <div class="user-details">
+                <h1>{{ other.username }}</h1>
+                <div class="user-status">
+                    <span class="status-indicator"></span>
+                    <span>Online</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <a href="/dashboard/" class="header-btn">
+                <span>←</span>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Chat Container -->
+<div class="chat-container">
+    <!-- Messages -->
+    <div class="messages-container" id="messagesContainer">
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="message-group {% if msg.sender == request.user %}me{% else %}other{% endif %}">
+                    <div class="message-bubble">
+                        <div class="message-content">{{ msg.content }}</div>
+                        <div class="message-time">{{ msg.created_at|date:"g:i A" }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-chat">
+                <div class="empty-chat-icon">💬</div>
+                <div class="empty-chat-text">Start your conversation</div>
+                <div class="empty-chat-subtext">Send a message to {{ other.username }}</div>
+            </div>
+        {% endif %}
+        
+        <!-- Typing indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Input -->
+    <div class="message-input-container">
+        <!-- Quick Reactions -->
+        <div class="quick-reactions">
+            <button class="quick-reaction" onclick="insertText('👍')">👍 Thanks</button>
+            <button class="quick-reaction" onclick="insertText('❤️')">❤️ Support</button>
+            <button class="quick-reaction" onclick="insertText('🌟')">🌟 You got this!</button>
+            <button class="quick-reaction" onclick="insertText('🤗')">🤗 Here for you</button>
+            <button class="quick-reaction" onclick="insertText('💪')">💪 Stay strong</button>
+        </div>
+        
+        <form class="message-form" method="POST" id="messageForm">
+            {% csrf_token %}
+            <button type="button" class="emoji-picker-btn" onclick="toggleEmojiPicker()">😊</button>
+            
+            <textarea 
+                class="message-input" 
+                name="message" 
+                id="messageInput"
+                placeholder="Type your message..."
+                rows="1"
+                required
+                maxlength="500"
+            ></textarea>
+            
+            <button type="submit" class="send-btn" id="sendBtn">
+                <span>Send</span>
+                <span>➤</span>
+            </button>
+        </form>
+        
+        <div class="char-counter" id="charCounter">0/500</div>
+    </div>
+</div>
+
+<!-- Emoji Popup -->
+<div class="emoji-popup" id="emojiPopup">
+    <div class="emoji-grid" id="emojiGrid"></div>
+</div>
+
+<!-- Scroll to Bottom Button -->
+<button class="scroll-to-bottom" id="scrollToBottom" onclick="scrollToBottom()">
+    ↓
+</button>
+
+<script>
+// Auto-resize textarea
+const messageInput = document.getElementById('messageInput');
+messageInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+    
+    // Update character counter
+    const charCounter = document.getElementById('charCounter');
+    charCounter.textContent = this.value.length + '/500';
+    
+    // Show typing indicator (in real implementation, send via WebSocket)
+    // simulateTyping();
+});
+
+// Character counter color change
+messageInput.addEventListener('input', function() {
+    const counter = document.getElementById('charCounter');
+    const length = this.value.length;
+    
+    if (length > 450) {
+        counter.style.color = '#ef4444';
+    } else if (length > 400) {
+        counter.style.color = '#f59e0b';
+    } else {
+        counter.style.color = '#99a';
+    }
+});
+
+// Form submission
+const messageForm = document.getElementById('messageForm');
+const sendBtn = document.getElementById('sendBtn');
+
+messageForm.addEventListener('submit', function(e) {
+    const message = messageInput.value.trim();
+    
+    if (!message) {
+        e.preventDefault();
+        return;
+    }
+    
+    // Show sending state
+    sendBtn.classList.add('sending');
+    sendBtn.disabled = true;
+    
+    // Add message optimistically
+    addMessageToUI(message, true);
+    
+    // Clear input
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    document.getElementById('charCounter').textContent = '0/500';
+    
+    // Scroll to bottom
+    setTimeout(scrollToBottom, 100);
+});
+
+// Add message to UI
+function addMessageToUI(content, isMe) {
+    const container = document.getElementById('messagesContainer');
+    
+    // Remove empty state if exists
+    const emptyState = container.querySelector('.empty-chat');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
+    const messageGroup = document.createElement('div');
+    messageGroup.className = `message-group ${isMe ? 'me' : 'other'}`;
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    
+    messageGroup.innerHTML = `
+        <div class="message-bubble">
+            <div class="message-content">${escapeHtml(content)}</div>
+            <div class="message-time">${timeString}</div>
+        </div>
+    `;
+    
+    container.appendChild(messageGroup);
+    
+    // Play send sound
+    playMessageSound();
+}
+
+// Insert text (quick reactions)
+function insertText(text) {
+    const input = messageInput;
+    const cursorPos = input.selectionStart;
+    const textBefore = input.value.substring(0, cursorPos);
+    const textAfter = input.value.substring(cursorPos);
+    
+    input.value = textBefore + text + ' ' + textAfter;
+    input.focus();
+    
+    // Trigger input event to update height
+    input.dispatchEvent(new Event('input'));
+}
+
+// Emoji picker
+const emojis = ['😊', '😂', '❤️', '👍', '🎉', '😍', '🤗', '😢', '😭', '🙏', '💪', '🌟', '✨', '🔥', '💯', '🎯', '🌈', '🌸', '🌺', '🦋', '🐝', '🌊', '☀️', '🌙', '⭐', '💫', '💖', '💕', '💗', '💓', '💝', '🎈'];
+
+function toggleEmojiPicker() {
+    const popup = document.getElementById('emojiPopup');
+    const grid = document.getElementById('emojiGrid');
+    
+    if (popup.classList.contains('active')) {
+        popup.classList.remove('active');
+    } else {
+        // Populate emojis if empty
+        if (grid.children.length === 0) {
+            emojis.forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'emoji-item';
+                item.textContent = emoji;
+                item.onclick = () => {
+                    insertText(emoji);
+                    popup.classList.remove('active');
+                };
+                grid.appendChild(item);
+            });
+        }
+        
+        popup.classList.add('active');
+    }
+}
+
+// Close emoji picker when clicking outside
+document.addEventListener('click', function(e) {
+    const popup = document.getElementById('emojiPopup');
+    const btn = document.querySelector('.emoji-picker-btn');
+    
+    if (!popup.contains(e.target) && e.target !== btn) {
+        popup.classList.remove('active');
+    }
+});
+
+// Scroll to bottom
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+    });
+}
+
+// Show/hide scroll button
+const messagesContainer = document.getElementById('messagesContainer');
+const scrollBtn = document.getElementById('scrollToBottom');
+
+messagesContainer.addEventListener('scroll', function() {
+    const scrolledToBottom = this.scrollHeight - this.scrollTop <= this.clientHeight + 100;
+    
+    if (scrolledToBottom) {
+        scrollBtn.classList.remove('visible');
+    } else {
+        scrollBtn.classList.add('visible');
+    }
+});
+
+// Auto-scroll to bottom on load
+window.addEventListener('load', () => {
+    setTimeout(scrollToBottom, 100);
+});
+
+// Utility functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function playMessageSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (e) {
+        // Audio not supported
+    }
+}
+
+// Simulate typing indicator (for future WebSocket implementation)
+let typingTimeout;
+function simulateTyping() {
+    const indicator = document.getElementById('typingIndicator');
+    indicator.classList.add('active');
+    
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        indicator.classList.remove('active');
+    }, 2000);
+}
+
+// Focus input on load
+messageInput.focus();
+
+console.log('%c💬 MindSpace Chat ', 'font-size: 16px; font-weight: bold; color: #4db8a8; background: #1a4d5e; padding: 8px; border-radius: 4px;');
+console.log('%cReal-time messaging ready', 'color: #2c6b7f;');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Anonymous Suggestions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f4f6fb;
+    margin: 0;
+}
+
+header {
+    background: #6a5acd;
+    color: white;
+    padding: 16px 24px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 24px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+}
+
+.alias {
+    font-weight: 600;
+    color: #6a5acd;
+}
+
+button {
+    margin-top: 12px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #6a5acd;
+    color: white;
+    cursor: pointer;
+}
+
+button.secondary {
+    background: #ddd;
+    color: #333;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h3>Suggested Anonymous Peers</h3>
+</header>
+
+<div class="container" id="list"></div>
+
+<script src="{% static 'chat/recommendations.js' %}"></script>
+</body>
+</html>

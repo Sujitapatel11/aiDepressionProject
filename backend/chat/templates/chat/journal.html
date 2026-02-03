@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Journal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: #f4f6fb;
+    color: #333;
+}
+
+/* Top bar */
+header {
+    background: linear-gradient(135deg, #6a5acd, #9f7aea);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* Container */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 24px;
+}
+
+/* Intro */
+.intro {
+    margin-bottom: 20px;
+}
+
+.intro h2 {
+    margin-bottom: 6px;
+}
+
+.intro p {
+    font-size: 14px;
+    color: #555;
+}
+
+/* Journal card */
+.journal-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+}
+
+/* Textarea */
+textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    transition: 0.3s;
+}
+
+textarea:focus {
+    border-color: #6a5acd;
+    box-shadow: 0 0 0 3px rgba(106,90,205,0.15);
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.actions span {
+    font-size: 12px;
+    color: #777;
+}
+
+.actions button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #6a5acd;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.actions button:hover {
+    background: #5a4ccf;
+}
+
+/* Entries */
+.entries {
+    margin-top: 30px;
+}
+
+.entry {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+}
+
+.entry small {
+    color: #777;
+    font-size: 12px;
+}
+
+.entry p {
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .actions {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div>📝 Journal</div>
+    <a href="/dashboard/">Back to Dashboard</a>
+</header>
+
+<div class="container">
+    <div class="intro">
+        <h2>Write freely</h2>
+        <p>This space is private. There are no right or wrong words.</p>
+    </div>
+
+    <div class="journal-card">
+        <textarea id="journalText" placeholder="How was your day? What’s on your mind?"></textarea>
+
+        <div class="actions">
+            <span>Your entry stays private.</span>
+            <button onclick="saveEntry()">Save Entry</button>
+        </div>
+    </div>
+
+    <div class="entries" id="entries">
+        <!-- Previous entries appear here -->
+    </div>
+</div>
+
+<script src="{% static 'chat/journal.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Write Journal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="{% static 'chat/journal.js' %}" defer></script>
+
+    <style>
+        body {
+            background: #0f1419;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .card {
+            background: #1a1f2e;
+            border-radius: 14px;
+            padding: 25px;
+            border-left: 4px solid #9b59b6;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            background: #0f1419;
+            border: 1px solid #2c3448;
+            border-radius: 10px;
+            padding: 14px;
+            color: white;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #9b59b6;
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .save-btn {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #8e44ad;
+        }
+
+        .back-btn {
+            background: #2c3448;
+            color: #ccc;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .hint {
+            margin-top: 12px;
+            font-size: 11px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h1>📝 Write your thoughts</h1>
+        <p>
+            This space is private. Write freely.  
+            You can delete this entry later, but you cannot edit it after saving.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <textarea name="content" id="journalInput" placeholder="Start writing here..." required></textarea>
+
+            <div class="actions">
+                <a href="{% url 'dashboard' %}" class="back-btn">← Back</a>
+                <button type="submit" class="save-btn">Save</button>
+            </div>
+        </form>
+
+        <div class="hint">
+            We don’t judge. We don’t label. We just listen.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

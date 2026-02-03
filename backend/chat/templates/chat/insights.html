@@ -1,0 +1,27 @@
+{% extends "chat/base.html" %}
+{% block content %}
+
+<h2>💡 Your Insights</h2>
+
+{% if insights %}
+    <div class="insights-list">
+        {% for insight in insights %}
+            <div class="insight-card">
+                <p>{{ insight.summary }}</p>
+                <small>{{ insight.created_at|date:"M d, Y H:i" }}</small>
+
+                <form method="POST" action="{% url 'insight_detail' insight.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Dismiss</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>No insights yet.</p>
+        <p>Write journals consistently to unlock self-awareness insights.</p>
+    </div>
+{% endif %}
+
+{% endblock %}
