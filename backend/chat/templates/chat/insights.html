@@ -7,7 +7,7 @@
     <div class="insights-list">
         {% for insight in insights %}
             <div class="insight-card">
-                <p>{{ insight.summary }}</p>
+                <p>{{ insight.message }}</p>
                 <small>{{ insight.created_at|date:"M d, Y H:i" }}</small>
 
                 <form method="POST" action="{% url 'insight_detail' insight.id %}">

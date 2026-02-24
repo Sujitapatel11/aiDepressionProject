@@ -1,66 +1,64 @@
-# chat/ai/signal_extractor.py
-
-from datetime import timedelta
 from django.utils import timezone
 from chat.models import SignalSnapshot
-
-
-NEGATIVE_WORDS = {
-    "tired", "exhausted", "sad", "hopeless", "alone",
-    "empty", "anxious", "stressed", "overwhelmed"
-}
-
-POSITIVE_WORDS = {
-    "calm", "grateful", "better", "relieved",
-    "hopeful", "peaceful"
-}
+from chat.ai.insight_generator import create_insight_from_sentiment
+from chat.ai.keyword_bank import KEYWORDS
 
 
 def extract_signals_from_journal(journal):
+
     """
-    RULE-BASED SIGNAL EXTRACTION
-    - No diagnosis
-    - No AI
-    - No storage of raw text
-    - Deterministic & auditable
+    Rule-based sentiment extraction.
+    MUST NEVER break journal saving.
     """
 
-    text = journal.content.lower()
-    created_at = journal.created_at
+    try:
+        text = (journal.content or "").lower()
+        matched=[]
+        for category, words in KEYWORDS.items():
+            for word in words:
+                if word in text:
+                    matched.append((category, word))
+        if not matched:
+            return  # No signals found, skip saving snapshot
+        # -----------------------------
+        # 1. Simple negative lexicon
+        # -----------------------------
+        negative_words = [
+            "awful", "bad", "tired", "exhausted", "hopeless",
+            "confused", "anxious", "worried", "overwhelmed"
+        ]
 
-    negative_hits = len(NEGATIVE_WORDS.intersection(text.split()))
-    positive_hits = len(POSITIVE_WORDS.intersection(text.split()))
+        score = 0
+        for word in negative_words:
+            if word in text:
+                score -= 1
 
-    # --- Signal 1: Mood Direction ---
-    if negative_hits > positive_hits:
-        mood = "downward"
-        confidence = min(0.9, 0.4 + negative_hits * 0.1)
-    elif positive_hits > negative_hits:
-        mood = "upward"
-        confidence = min(0.9, 0.4 + positive_hits * 0.1)
-    else:
-        mood = "neutral"
-        confidence = 0.3
+        # -----------------------------
+        # 2. Sentiment label
+        # -----------------------------
+        if score < 0:
+            sentiment = "negative"
+        else:
+            sentiment = "neutral"
 
-    SignalSnapshot.objects.create(
-        user=journal.user,
-        signal_type="mood_direction",
-        value_type="enum",
-        value=mood,
-        confidence=confidence,
-        window_start=created_at - timedelta(hours=12),
-        window_end=created_at,
-    )
+        # -----------------------------
+        # 3. REQUIRED timestamps
+        # -----------------------------
+        window_time = journal.created_at or timezone.now()
 
-    # --- Signal 2: Expression Intensity ---
-    intensity = min(1.0, (negative_hits + positive_hits) / 6)
+        # -----------------------------
+        # 4. Save snapshot
+        # -----------------------------
+        SignalSnapshot.objects.create(
+            user=journal.user,
+            journal=journal,
+            signal_type="sentiment",
+            value=sentiment,
+            confidence=min(abs(score) / 5, 1.0),
+            window_start=window_time,
+            window_end=window_time,
+        )
+        create_insight_from_sentiment(journal, sentiment)
 
-    SignalSnapshot.objects.create(
-        user=journal.user,
-        signal_type="expression_intensity",
-        value_type="int",
-        value=str(int(intensity * 10)),  # stored as string
-        confidence=0.5,
-        window_start=created_at - timedelta(hours=12),
-        window_end=created_at,
-    )
+    except Exception as e:
+        print("Signal extraction failed:", e)

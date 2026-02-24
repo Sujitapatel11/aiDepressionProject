@@ -31,13 +31,13 @@ def generate_insights_for_user(user):
 
     signal_payload = _prepare_signal_payload(signals)
 
-    if not signal_payload:
+    if not any(s["confidence"]>=0.4 for s in signal_payload):
         return None
 
     prompt = build_insight_prompt(signal_payload)
 
     provider = get_ai_provider()
-    ai_text = provider.generate(system_prompt="you are a compassionate assistant.", user_prompt=prompt, max_tokens=200)
+    ai_text = provider.generate(prompt, max_tokens=200)
 
     if not ai_text:
         return None
@@ -164,4 +164,4 @@ def generate_guaranteed_insight(user):
         ),
         source_window_start=latest.created_at,
         source_window_end=timezone.now(),
-    )
+    )                           

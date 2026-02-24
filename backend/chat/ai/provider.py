@@ -1,70 +1,50 @@
-# chat/ai/provider.py
-# Controlled gateway to OpenAI / Gemini / Claude
-
 import os
 from typing import Optional
+from openai import OpenAI
 
 
 class AIProviderError(Exception):
-    """Raised when AI provider fails safely."""
     pass
 
 
-class BaseAIProvider:
-    """
-    Base interface for any AI provider.
-    """
+class AIProvider:
+    def __init__(self):
+        self.enabled = os.getenv("AI_ENABLED", "false").lower() == "true"
+        self.client = None
 
-    def generate(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        max_tokens: int = 300,
-    ) -> Optional[str]:
-        raise NotImplementedError
+        if self.enabled:
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise AIProviderError("OPENAI_API_KEY missing")
 
+            self.client = OpenAI(api_key=api_key)
 
-class MockAIProvider(BaseAIProvider):
-    """
-    Safe default provider (NO external API).
-    Used for development & testing.
-    """
+    def generate(self, prompt: str, max_tokens: int = 250) -> Optional[str]:
+        if not self.enabled or not self.client:
+            return None
 
-    def generate(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        max_tokens: int = 300,
-    ) -> Optional[str]:
-        return (
-            "You’ve been expressing mixed emotions lately. "
-            "Noticing these patterns is a meaningful step toward self-understanding. "
-            "Try to be gentle with yourself."
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a gentle, non-diagnostic mental wellness assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=0.6,
+            )
 
+            return response.choices[0].message.content
 
-class DisabledAIProvider(BaseAIProvider):
-    """
-    Explicitly disabled AI (returns nothing).
-    """
-
-    def generate(self, system_prompt, user_prompt, max_tokens=300):
-        return None
+        except Exception as e:
+            # FAIL SILENTLY — app must not crash
+            return None
 
 
-def get_ai_provider() -> BaseAIProvider:
-    """
-    Factory: decides which AI provider to use.
-    """
+_provider = None
 
-    enabled = os.getenv("AI_ENABLED", "true").lower() == "true"
-
-    if not enabled:
-        return DisabledAIProvider()
-
-    # 🔴 Later switch here:
-    # return OpenAIProvider()
-    # return GeminiProvider()
-    # return ClaudeProvider()
-
-    return MockAIProvider()
+def get_ai_provider():
+    global _provider
+    if _provider is None:
+        _provider = AIProvider()
+    return _provider

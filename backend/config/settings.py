@@ -1,4 +1,9 @@
+from json import load
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+import dotenv
+load_dotenv()
 
 # =========================
 # BASE DIRECTORY
@@ -9,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =========================
 # SECURITY
 # =========================
-SECRET_KEY = 'django-insecure-change-this-later'
+SECRET_KEY = "dev-secret-key-unsafe-but-ok"
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 

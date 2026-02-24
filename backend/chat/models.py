@@ -10,6 +10,112 @@ from datetime import timedelta
 # SUPPORT REQUEST
 # ===========================
 
+
+# SIGNALS (ADD THIS HERE)
+#=========================
+def default_expiry():
+    return timezone.now() + timedelta(days=7)
+class SignalSnapshot(models.Model):
+    """
+    Internal, non-user-facing signals derived from journaling.
+    This model NEVER stores raw journal text.
+    """
+
+    SIGNAL_TYPES = [
+        ("mood_direction", "Mood Direction"),
+        ("emotional_variance", "Emotional Variance"),
+        ("expression_intensity", "Expression Intensity"),
+        ("consistency", "Consistency"),
+        ("social_reference", "Social Reference"),
+    ]
+
+    VALUE_TYPES = [
+        ("enum", "Enum"),
+        ("int", "Integer"),
+        ("bool", "Boolean"),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="signal_snapshots"
+    )
+
+    signal_type = models.CharField(
+        max_length=50,
+        choices=SIGNAL_TYPES
+    )
+
+    value_type = models.CharField(
+        max_length=10,
+        choices=VALUE_TYPES
+    )
+
+    value = models.CharField(
+        max_length=50
+    )
+
+    confidence = models.FloatField(
+        default=0.0
+    )
+
+    window_start = models.DateTimeField()
+    window_end = models.DateTimeField()
+
+    generated_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "signal_type"]),
+            models.Index(fields=["generated_at"]),
+        ]
+        ordering = ["-generated_at"]
+
+    def __str__(self):
+        return f"{self.user.username} | {self.signal_type} | {self.value}"
+#class Insight(models.Model):
+class Insight(models.Model):
+    """
+    User-facing, safe, non-diagnostic insight.
+
+    IMPORTANT:
+    Each Insight is linked to exactly one JournalEntry.
+    This prevents duplicate insights, enables pattern tracking,
+    and allows AI to reason over journal history safely.
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="insights"
+    )
+
+    # 🔑 CRITICAL RELATIONSHIP
+    # Each journal can have at most ONE insight.
+    # This enforces:
+    # - No repeated insights for same journal
+    # - Clear traceability (journal → insight)
+    # - Stable future AI + analytics
+    journal = models.OneToOneField(
+        "JournalEntry",
+        on_delete=models.CASCADE,
+        related_name="insight",
+        null=True,
+        blank=True
+    )
+
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+
+    source_window_start = models.DateTimeField()
+    source_window_end = models.DateTimeField()
+
+    is_read = models.BooleanField(default=False)
+    is_dismissed = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 class SupportRequest(models.Model):
     PENDING = "pending"
     ACCEPTED = "accepted"
@@ -38,7 +144,9 @@ class SupportRequest(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     responded_at = models.DateTimeField(null=True, blank=True)
-    expires_at = models.DateTimeField()
+
+    expires_at = models.DateTimeField(default=default_expiry)
+    
 
     class Meta:
         indexes = [
@@ -51,8 +159,10 @@ class SupportRequest(models.Model):
             raise ValidationError("Cannot send support request to yourself.")
 
     def save(self, *args, **kwargs):
-        if self.expires_at <= timezone.now() and self.status == self.PENDING:
+        # Auto-expire logic
+        if self.status == self.PENDING and self.expires_at and self.expires_at <= timezone.now():
             self.status = self.EXPIRED
+
         super().save(*args, **kwargs)
 
     def is_active(self) -> bool:
@@ -60,8 +170,6 @@ class SupportRequest(models.Model):
 
     def __str__(self):
         return f"{self.from_user_id} → {self.to_user_id} ({self.status})"
-
-
 # ===========================
 # SUPPORT CONNECTION
 # ===========================
@@ -117,22 +225,20 @@ class SupportConnection(models.Model):
         if self.user_one_id == self.user_two_id:
             raise ValidationError("Connection requires two different users.")
 
-        # Normalize ordering BEFORE save
-        if self.user_one_id > self.user_two_id:
-            self.user_one, self.user_two = self.user_two, self.user_one
-            self.alias_user_one, self.alias_user_two = (
-                self.alias_user_two,
-                self.alias_user_one,
-            )
-
     def save(self, *args, **kwargs):
-        self.clean()
+        # Normalize ordering BEFORE saving
+        if self.user_one_id and self.user_two_id:
+            if self.user_one_id > self.user_two_id:
+                self.user_one, self.user_two = self.user_two, self.user_one
+                self.alias_user_one, self.alias_user_two = (
+                    self.alias_user_two,
+                    self.alias_user_one,
+                )
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.connection_id} ({self.status})"
-
-
 # ===========================
 # MESSAGE
 # ===========================
@@ -223,6 +329,7 @@ class TypingIndicator(models.Model):
     def is_expired(self) -> bool:
         return self.updated_at < timezone.now() - timedelta(seconds=10)
 class JournalEntry(models.Model):
+
     user=models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -236,102 +343,3 @@ class JournalEntry(models.Model):
         ordering=["-created_at"]
     def __str__(self):
         return f"Journal({self.user.username}, {self.created_at})"
-
-# SIGNALS (ADD THIS HERE)
-#=========================
-class SignalSnapshot(models.Model):
-    """
-    Internal, non-user-facing signals derived from journaling.
-    This model NEVER stores raw journal text.
-    """
-
-    SIGNAL_TYPES = [
-        ("mood_direction", "Mood Direction"),
-        ("emotional_variance", "Emotional Variance"),
-        ("expression_intensity", "Expression Intensity"),
-        ("consistency", "Consistency"),
-        ("social_reference", "Social Reference"),
-    ]
-
-    VALUE_TYPES = [
-        ("enum", "Enum"),
-        ("int", "Integer"),
-        ("bool", "Boolean"),
-    ]
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="signal_snapshots"
-    )
-
-    signal_type = models.CharField(
-        max_length=50,
-        choices=SIGNAL_TYPES
-    )
-
-    value_type = models.CharField(
-        max_length=10,
-        choices=VALUE_TYPES
-    )
-
-    value = models.CharField(
-        max_length=50
-    )
-
-    confidence = models.FloatField(
-        default=0.0
-    )
-
-    window_start = models.DateTimeField()
-    window_end = models.DateTimeField()
-
-    generated_at = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["user", "signal_type"]),
-            models.Index(fields=["generated_at"]),
-        ]
-        ordering = ["-generated_at"]
-
-    def __str__(self):
-        return f"{self.user.username} | {self.signal_type} | {self.value}"
-#class Insight(models.Model):
-class Insight(models.Model):
-    """
-    User-facing, safe, non-diagnostic insight.
-    Derived from signals, NEVER directly from journal text.
-    """
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="insights"
-    )
-
-    title = models.CharField(
-        max_length=100
-    )
-
-    message = models.TextField()
-
-    source_window_start = models.DateTimeField()
-    source_window_end = models.DateTimeField()
-
-    is_read = models.BooleanField(default=False)
-    is_dismissed = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["user", "created_at"]),
-            models.Index(fields=["is_dismissed"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user.username} | {self.title}"

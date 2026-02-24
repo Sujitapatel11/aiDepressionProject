@@ -15,7 +15,10 @@ from chat.ai.insight_builder import generate_insights_for_user
 
 
 from .models import SupportRequest, SupportConnection, Message
-
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from chat.ai.signal_extractor import extract_signals_from_journal
+from chat.ai.rule_insight_engine import generate_rule_based_insight_text
 
 # =========================
 # AUTH
@@ -142,102 +145,53 @@ def dashboard_view(request):
     "latest_journal": latest_journal,
 
 })
-@login_required
-def accept_support_request(request, request_id):
-    req = get_object_or_404(SupportRequest, id=request_id, to_user=request.user)
-
-    req.is_accepted = True
-    req.save()
-
-    SupportConnection.objects.get_or_create(
-        user_one=min(req.from_user, req.to_user, key=lambda u: u.id),
-        user_two=max(req.from_user, req.to_user, key=lambda u: u.id),
-    )
-
-    return redirect("chat/dashboard.html")
-@login_required
-def send_support_request(request, user_id):
-    to_user = get_object_or_404(User, id=user_id)
-
-    if to_user == request.user:
-        return redirect("dashboard")
-
-    SupportRequest.objects.get_or_create(
-        from_user=request.user,
-        to_user=to_user,
-        defaults={"status": "pending"}
-    )
-
-    return redirect("dashboard")
-
-
-@login_required
-def reject_support_request(request, request_id):
-    req = get_object_or_404(SupportRequest, id=request_id, to_user=request.user)
-    req.delete()
-    return redirect("chat/dashboard.html")
-
-
-# =========================
-# CHAT (HTTP ONLY)
-# =========================
-
-@login_required
-def chat_view(request, user_id):
-    other_user = get_object_or_404(User, id=user_id)
-
-    # Verify connection
-    connected = SupportConnection.objects.filter(
-        Q(user_one=request.user, user_two=other_user) |
-        Q(user_one=other_user, user_two=request.user),
-        is_active=True
-    ).exists()
-
-    if not connected:
-        return redirect("chat/dashboard.html")
-
-    if request.method == "POST":
-        content = request.POST.get("message", "").strip()
-        if content:
-            Message.objects.create(
-                sender=request.user,
-                receiver=other_user,
-                content=content
-            )
-        return redirect("chat", user_id=other_user.id)
-
-    messages = Message.objects.filter(
-        Q(sender=request.user, receiver=other_user) |
-        Q(sender=other_user, receiver=request.user)
-    ).order_by("created_at")
-
-    return render(request, "chat.html", {
-        "messages": messages,
-        "other": other_user
-    })
-
 
 @login_required
 def journal_create_view(request):
+    if request.method == "GET":
+        return render(request, "chat/journal_create.html")
+
     if request.method == "POST":
         content = request.POST.get("content", "").strip()
 
-        if content:
-            journal = JournalEntry.objects.create(
-                user=request.user,
-                content=content
+        if not content:
+            return render(
+                request,
+                "chat/journal_create.html",
+                {"error": "Journal cannot be empty."}
             )
-            from chat.ai.signal_extractor import extract_signals_from_journal
-            from chat.ai.insight_builder import generate_guaranteed_insight
 
+        # ✅ CORE: JOURNAL SAVE (ABSOLUTELY SAFE)
+        journal = JournalEntry.objects.create(
+            user=request.user,
+            content=content,
+            created_at=timezone.now(),
+        )
 
-            extract_signals_from_journal(journal)
-            generate_guaranteed_insight(request.user)
-            generate_insights_for_user(request.user)
+        # ✅ OPTIONAL: INSIGHT (FAIL-SAFE)
+        try:
+            from chat.ai.rule_insight_engine import generate_rule_based_insight_text
+            from chat.models import Insight
 
-        return redirect("journal_list")
+            insight_text = generate_rule_based_insight_text(journal.content)
 
-    return render(request, "chat/journal_create.html")
+            Insight.objects.create(
+                user=request.user,
+                journal=journal,
+                title="Reflection",
+                message=insight_text,
+                source_window_start=journal.created_at,
+                source_window_end=journal.created_at,
+            )
+
+        except Exception as e:
+            # NEVER break journal
+            print("Insight skipped:", e)
+
+        return redirect("dashboard")
+
+    return redirect("dashboard")
+    return redirect("dashboard")
 @login_required
 def journal_list_view(request):
     journals = JournalEntry.objects.filter(
@@ -340,3 +294,89 @@ def insight_detail_view(request, insight_id):
     insight.save(update_fields=["is_dismissed"])
 
     return redirect("insights")
+# =========================
+# SUPPORT REQUESTS
+# =========================
+
+@login_required
+def send_support_request(request, user_id):
+    to_user = get_object_or_404(User, id=user_id)
+
+    if to_user == request.user:
+        return redirect("dashboard")
+
+    SupportRequest.objects.get_or_create(
+        from_user=request.user,
+        to_user=to_user,
+        defaults={"status": "pending"}
+    )
+
+    return redirect("dashboard")
+
+
+@login_required
+def accept_support_request(request, request_id):
+    req = get_object_or_404(
+        SupportRequest,
+        id=request_id,
+        to_user=request.user
+    )
+
+    req.is_accepted = True
+    req.save()
+
+    SupportConnection.objects.get_or_create(
+        user_one=min(req.from_user, req.to_user, key=lambda u: u.id),
+        user_two=max(req.from_user, req.to_user, key=lambda u: u.id),
+    )
+
+    return redirect("dashboard")
+
+
+@login_required
+def reject_support_request(request, request_id):
+    req = get_object_or_404(
+        SupportRequest,
+        id=request_id,
+        to_user=request.user
+    )
+    req.delete()
+    return redirect("dashboard")
+
+
+# =========================
+# CHAT (HTTP ONLY)
+# =========================
+
+@login_required
+def chat_view(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+
+    connected = SupportConnection.objects.filter(
+        Q(user_one=request.user, user_two=other_user) |
+        Q(user_one=other_user, user_two=request.user),
+        is_active=True
+    ).exists()
+
+    if not connected:
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        content = request.POST.get("message", "").strip()
+        if content:
+            Message.objects.create(
+                sender=request.user,
+                receiver=other_user,
+                content=content
+            )
+        return redirect("chat", user_id=other_user.id)
+
+    messages = Message.objects.filter(
+        Q(sender=request.user, receiver=other_user) |
+        Q(sender=other_user, receiver=request.user)
+    ).order_by("created_at")
+
+    return render(request, "chat.html", {
+        "messages": messages,
+        "other": other_user
+    })

@@ -14,7 +14,7 @@ NO medical language.
 from typing import List, Dict
 
 
-def build_insight_prompt(signals: List[Dict]) -> str:
+def build_insight_prompt(signal_payload):
     """
     Build a controlled prompt for the AI based on signals.
 
@@ -28,28 +28,18 @@ def build_insight_prompt(signals: List[Dict]) -> str:
     ]
     """
 
-    if not signals:
-        return BASELINE_PROMPT
 
     lines = [
         "The user has been journaling recently.",
         "Based on patterns (not diagnoses), here are gentle observations:",
     ]
 
-    for signal in signals:
-        line = _signal_to_text(signal)
-        if line:
-            lines.append(f"- {line}")
-
+    for s  in signal_payload:
+        lines.append(
+            f"-{s['type']}={s['value']}(confidence{round(s['confidence'],2)})"
+        )
     lines.append("")
-    lines.append(
-        "Respond with a short, calm reflection.\n"
-        "Do not label emotions.\n"
-        "Do not suggest treatment.\n"
-        "Do not sound authoritative.\n"
-        "Do not ask too many questions.\n"
-        "Offer at most one gentle reflective question."
-    )
+    lines.append("Respond as a calm, supportive presence.")
 
     return "\n".join(lines)
 
