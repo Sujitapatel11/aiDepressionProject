@@ -452,20 +452,88 @@
                 <span class="feature-status">✓ Designed</span>
             </div>
 
-            <!-- 7 -->
-            <div class="feature-card">
-                <div class="feature-number">7</div>
-                <span class="feature-icon">🤝</span>
-                <div class="feature-title">Support Connection System</div>
-                <div class="feature-desc">Connect with others anonymously, no forced conversations</div>
-                <ul class="feature-list">
-                    <li>Send support requests</li>
-                    <li>Accept/reject/ignore</li>
-                    <li>Anonymous by default</li>
-                    <li>No obligations</li>
-                </ul>
-                <span class="feature-status">✓ Ready</span>
-            </div>
+           <!-- 7 -->
+<div class="feature-card">
+
+    <div class="feature-number">7</div>
+    <span class="feature-icon">🤝</span>
+
+    <div class="feature-title">Support Connection System</div>
+
+    <div class="feature-desc">
+        Connect with others anonymously and start supportive conversations.
+    </div>
+
+
+    <!-- Incoming Requests -->
+    {% if incoming_requests %}
+    <h4 style="margin-top:12px;">Incoming Requests</h4>
+
+    {% for req in incoming_requests %}
+        <p style="font-size:13px; margin-bottom:6px;">
+            {{ req.from_user.username }}
+
+            <a href="{% url 'accept_support' req.id %}" style="margin-left:8px;">
+                Accept
+            </a>
+
+            |
+
+            <a href="{% url 'reject_support' req.id %}">
+                Reject
+            </a>
+        </p>
+    {% endfor %}
+
+    {% endif %}
+
+
+
+    <!-- Available Users -->
+    <h4 style="margin-top:12px;">Find Support</h4>
+
+    {% for u in available_users %}
+        <p style="font-size:13px; margin-bottom:6px;">
+
+            {{ u.username }}
+
+            <a href="{% url 'send_support' u.id %}" style="margin-left:8px;">
+                Send Request
+            </a>
+
+        </p>
+    {% endfor %}
+
+
+
+    <!-- Active Connections -->
+    {% if connections %}
+    <h4 style="margin-top:12px;">Your Connections</h4>
+
+    {% for c in connections %}
+
+        {% if c.user_one == request.user %}
+
+            <a href="{% url 'chat' c.user_two.id %}">
+                Chat with {{ c.user_two.username }}
+            </a><br>
+
+        {% else %}
+
+            <a href="{% url 'chat' c.user_one.id %}">
+                Chat with {{ c.user_one.username }}
+            </a><br>
+
+        {% endif %}
+
+    {% endfor %}
+
+    {% endif %}
+
+
+    <span class="feature-status">✓ Ready</span>
+
+</div>
 
             <!-- 8 -->
             <div class="feature-card">

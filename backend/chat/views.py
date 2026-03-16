@@ -16,6 +16,10 @@ from chat.ai.insight_builder import generate_insights_for_user
 
 from .models import SupportRequest, SupportConnection, Message
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect, get_object_or_404,redirect,render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.utils import timezone
 from chat.ai.signal_extractor import extract_signals_from_journal
 from chat.ai.rule_insight_engine import generate_rule_based_insight_text
@@ -68,6 +72,7 @@ def signup_view(request):
 
 @login_required
 def dashboard_view(request):
+
     user = request.user
 
     # =========================
@@ -77,7 +82,9 @@ def dashboard_view(request):
         to_user=user,
         status='pending'
     )
+
     incoming_requests_count = incoming_requests_qs.count()
+
 
     # =========================
     # ACTIVE CONNECTIONS
@@ -86,7 +93,9 @@ def dashboard_view(request):
         Q(user_one=user) | Q(user_two=user),
         status='active'
     )
+
     connections_count = connections_qs.count()
+
 
     # =========================
     # AVAILABLE USERS
@@ -101,6 +110,52 @@ def dashboard_view(request):
     ).exclude(
         id__in=connected_user_ids
     )
+
+
+    # =========================
+    # JOURNALING
+    # =========================
+    journal_qs = JournalEntry.objects.filter(
+        user=user,
+        is_deleted=False
+    )
+
+    journal_count = journal_qs.count()
+    latest_journal = journal_qs.order_by('-created_at').first()
+
+
+    # =========================
+    # PLACEHOLDERS
+    # =========================
+    pending_insights = 0
+    active_tasks = 0
+    stories_count = 0
+
+
+    # =========================
+    # CONTEXT
+    # =========================
+    context = {
+
+        "incoming_requests": incoming_requests_qs,
+        "incoming_requests_count": incoming_requests_count,
+
+        "connections": connections_qs,
+        "connections_count": connections_count,
+
+        "available_users": available_users,
+
+        "journal_count": journal_count,
+        "latest_journal": latest_journal,
+
+        "pending_insights": pending_insights,
+        "active_tasks": active_tasks,
+        "stories_count": stories_count,
+
+    }
+
+
+    return render(request, "chat/dashboard.html", context)
 
     # =========================
     # JOURNALING (CORE)
@@ -168,7 +223,7 @@ def journal_create_view(request):
             created_at=timezone.now(),
         )
 
-        # ✅ OPTIONAL: INSIGHT (FAIL-SAFE)
+        #✅ OPTIONAL: INSIGHT (FAIL-SAFE)
         try:
             from chat.ai.rule_insight_engine import generate_rule_based_insight_text
             from chat.models import Insight
@@ -302,81 +357,107 @@ def insight_detail_view(request, insight_id):
 def send_support_request(request, user_id):
     to_user = get_object_or_404(User, id=user_id)
 
+    # prevent sending request to yourself
     if to_user == request.user:
         return redirect("dashboard")
 
-    SupportRequest.objects.get_or_create(
+    # prevent duplicate requests
+    existing_request = SupportRequest.objects.filter(
         from_user=request.user,
         to_user=to_user,
-        defaults={"status": "pending"}
-    )
+        status=SupportRequest.PENDING
+    ).first()
+
+    if not existing_request:
+        SupportRequest.objects.create(
+            from_user=request.user,
+            to_user=to_user
+        )
 
     return redirect("dashboard")
-
 
 @login_required
 def accept_support_request(request, request_id):
     req = get_object_or_404(
         SupportRequest,
         id=request_id,
-        to_user=request.user
+        to_user=request.user,
+        status=SupportRequest.PENDING
     )
 
-    req.is_accepted = True
+    # mark request as accepted
+    req.status = SupportRequest.ACCEPTED
+    req.responded_at = timezone.now()
     req.save()
 
+    # normalize user order (smaller id first)
+    user_one = min(req.from_user, req.to_user, key=lambda u: u.id)
+    user_two = max(req.from_user, req.to_user, key=lambda u: u.id)
+
+    # create connection
     SupportConnection.objects.get_or_create(
-        user_one=min(req.from_user, req.to_user, key=lambda u: u.id),
-        user_two=max(req.from_user, req.to_user, key=lambda u: u.id),
+        user_one=user_one,
+        user_two=user_two,
+        defaults={
+            "alias_user_one": f"user_{user_one.id}",
+            "alias_user_two": f"user_{user_two.id}",
+        }
     )
 
     return redirect("dashboard")
-
 
 @login_required
 def reject_support_request(request, request_id):
     req = get_object_or_404(
         SupportRequest,
         id=request_id,
-        to_user=request.user
+        to_user=request.user,
+        status=SupportRequest.PENDING
     )
-    req.delete()
+    req.status = SupportRequest.REJECTED
+    req.responded_at = timezone.now()
+    req.save()
     return redirect("dashboard")
 
 
 # =========================
 # CHAT (HTTP ONLY)
-# =========================
+#==========================
 
 @login_required
 def chat_view(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
 
-    connected = SupportConnection.objects.filter(
+    connection = SupportConnection.objects.filter(
         Q(user_one=request.user, user_two=other_user) |
         Q(user_one=other_user, user_two=request.user),
-        is_active=True
-    ).exists()
-
-    if not connected:
+        status="active"
+    ).first()
+    print("Connection found:", connection.id)
+    if not connection:
         return redirect("dashboard")
 
     if request.method == "POST":
+        print("Received POST data:", request.POST)
         content = request.POST.get("message", "").strip()
+        print("Message content:", content)
         if content:
             Message.objects.create(
+                connection=connection,
                 sender=request.user,
                 receiver=other_user,
                 content=content
             )
-        return redirect("chat", user_id=other_user.id)
+        #return redirect("chat", user_id=other_user.id)
 
     messages = Message.objects.filter(
         Q(sender=request.user, receiver=other_user) |
         Q(sender=other_user, receiver=request.user)
     ).order_by("created_at")
+     
+    print(f"Messages for connection {connection.id}:", messages)
 
-    return render(request, "chat.html", {
+    return render(request, "chat/chat.html", {
         "messages": messages,
         "other": other_user
     })

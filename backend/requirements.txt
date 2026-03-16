@@ -3,3 +3,4 @@ channels==4.2.0
 channels-redis==4.2.0
 daphne==4.2.1
 redis==5.2.1
+django-allauth==0.63.6

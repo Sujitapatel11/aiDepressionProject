@@ -626,27 +626,39 @@ body {
     </div>
 </header>
 
-<!-- Chat Container -->
-<div class="chat-container">
-    <!-- Messages -->
-    <div class="messages-container" id="messagesContainer">
-        {% if messages %}
-            {% for msg in messages %}
-                <div class="message-group {% if msg.sender == request.user %}me{% else %}other{% endif %}">
-                    <div class="message-bubble">
-                        <div class="message-content">{{ msg.content }}</div>
-                        <div class="message-time">{{ msg.created_at|date:"g:i A" }}</div>
+<div class="messages-container" id="messagesContainer">
+
+    {% if messages|length > 0 %}
+
+        {% for msg in messages %}
+            <div class="message-group {% if msg.sender.id == request.user.id %}me{% else %}other{% endif %}">
+                <div class="message-bubble">
+
+                    <div class="message-content">
+                        {{ msg.content }}
                     </div>
+
+                    <div class="message-time">
+                        {{ msg.created_at|date:"g:i A" }}
+                    </div>
+
                 </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-chat">
-                <div class="empty-chat-icon">💬</div>
-                <div class="empty-chat-text">Start your conversation</div>
-                <div class="empty-chat-subtext">Send a message to {{ other.username }}</div>
             </div>
-        {% endif %}
-        
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-chat">
+            <div class="empty-chat-icon">💬</div>
+            <div class="empty-chat-text">Start your conversation</div>
+            <div class="empty-chat-subtext">
+                Send a message to {{ other.username }}
+            </div>
+        </div>
+
+    {% endif %}
+
+</div>
         <!-- Typing indicator -->
         <div class="typing-indicator" id="typingIndicator">
             <div class="typing-dots">
@@ -751,7 +763,7 @@ messageForm.addEventListener('submit', function(e) {
     addMessageToUI(message, true);
     
     // Clear input
-    messageInput.value = '';
+    //messageInput.value = '';
     messageInput.style.height = 'auto';
     document.getElementById('charCounter').textContent = '0/500';
     
