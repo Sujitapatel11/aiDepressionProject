@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>SoulCare</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7C3AED',
+            'primary-light': '#EDE9FE',
+            'primary-dark': '#5B21B6',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; }
+    .tab-btn.active svg { color: #7C3AED; }
+    .tab-btn.active span { color: #7C3AED; }
+    .msg-bubble { word-break: break-word; }
+    textarea { resize: none; }
+    .fade-in { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .dot-typing span {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #9CA3AF; animation: dotBounce 1.2s infinite;
+    }
+    .dot-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+    input:focus, textarea:focus { outline: none; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP SHELL — max-width 480px centered (mobile-first)
+═══════════════════════════════════════════════════════════ -->
+<div id="app" class="max-w-[480px] mx-auto min-h-screen flex flex-col relative bg-white shadow-sm">
+
+  <!-- ── AUTH SCREENS (no nav) ── -->
+
+  <!-- LOGIN -->
+  <div id="screen-login" class="screen active flex-col justify-center px-6 py-12 min-h-screen">
+    <div class="text-center mb-8">
+      <div class="text-4xl mb-2">🌿</div>
+      <h1 class="text-2xl font-bold text-gray-900">SoulCare</h1>
+      <p class="text-sm text-gray-500 mt-1">Your mental wellness companion</p>
+    </div>
+    <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 mb-4"></div>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <input id="login-username" type="text" required autocomplete="username"
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input id="login-password" type="password" required autocomplete="current-password"
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <div class="text-right">
+        <button type="button" onclick="showScreen('forgot')" class="text-xs text-primary">Forgot password?</button>
+      </div>
+      <button type="submit" id="login-btn"
+        class="w-full bg-primary text-white py-3 rounded-xl font-semibold text-sm hover:bg-primary-dark transition">
+        Log In
+      </button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-6">
+      No account?
+      <button onclick="showScreen('signup')" class="text-primary font-medium">Sign up</button>
+    </p>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="screen-signup" class="screen flex-col justify-center px-6 py-12 min-h-screen">
+    <div class="text-center mb-8">
+      <div class="text-4xl mb-2">🌿</div>
+      <h1 class="text-2xl font-bold text-gray-900">Create Account</h1>
+      <p class="text-sm text-gray-500 mt-1">Join SoulCare today</p>
+    </div>
+    <div id="signup-error" class="hidden bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 mb-4"></div>
+    <form id="signup-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <input id="signup-username" type="text" required
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input id="signup-email" type="email" required
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input id="signup-password" type="password" required
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+        <input id="signup-password2" type="password" required
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <button type="submit"
+        class="w-full bg-primary text-white py-3 rounded-xl font-semibold text-sm hover:bg-primary-dark transition">
+        Create Account
+      </button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-6">
+      Already have an account?
+      <button onclick="showScreen('login')" class="text-primary font-medium">Log in</button>
+    </p>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <div id="screen-forgot" class="screen flex-col justify-center px-6 py-12 min-h-screen">
+    <button onclick="showScreen('login')" class="text-primary text-sm mb-8 flex items-center gap-1">
+      ← Back to login
+    </button>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Reset Password</h1>
+    <p class="text-sm text-gray-500 mb-6">Enter your email and we'll send a reset link.</p>
+    <div id="forgot-success" class="hidden bg-green-50 text-green-700 text-sm rounded-xl px-4 py-3 mb-4"></div>
+    <form id="forgot-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input id="forgot-email" type="email" required
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      </div>
+      <button type="submit"
+        class="w-full bg-primary text-white py-3 rounded-xl font-semibold text-sm hover:bg-primary-dark transition">
+        Send Reset Link
+      </button>
+    </form>
+  </div>
+
+  <!-- ── MAIN APP (with bottom nav) ── -->
+
+  <!-- DASHBOARD -->
+  <div id="screen-dashboard" class="screen flex-col min-h-screen">
+    <div class="px-5 pt-8 pb-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs text-gray-400">Good day,</p>
+        <h2 class="text-xl font-bold text-gray-900" id="dash-username">—</h2>
+      </div>
+      <button onclick="logout()" class="text-xs text-gray-400 bg-gray-100 px-3 py-1.5 rounded-full">Logout</button>
+    </div>
+    <div class="px-5 grid grid-cols-2 gap-3 mb-5">
+      <div class="bg-primary-light rounded-2xl p-4">
+        <div class="text-2xl font-bold text-primary" id="dash-journals">—</div>
+        <div class="text-xs text-gray-500 mt-1">Journal Entries</div>
+      </div>
+      <div class="bg-purple-50 rounded-2xl p-4">
+        <div class="text-2xl font-bold text-purple-600" id="dash-connections">—</div>
+        <div class="text-xs text-gray-500 mt-1">Connections</div>
+      </div>
+      <div class="bg-amber-50 rounded-2xl p-4">
+        <div class="text-2xl font-bold text-amber-600" id="dash-requests">—</div>
+        <div class="text-xs text-gray-500 mt-1">Pending Requests</div>
+      </div>
+      <div class="bg-emerald-50 rounded-2xl p-4">
+        <div class="text-2xl font-bold text-emerald-600" id="dash-insights">—</div>
+        <div class="text-xs text-gray-500 mt-1">New Insights</div>
+      </div>
+    </div>
+    <div class="px-5 mb-4">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Latest Journal</h3>
+      <div id="dash-latest" class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 leading-relaxed">
+        No entries yet. Start writing!
+      </div>
+    </div>
+    <div class="px-5 mb-20">
+      <button onclick="showTab('journal')"
+        class="w-full bg-primary text-white py-3 rounded-xl font-semibold text-sm">
+        ✏️ Write in Journal
+      </button>
+    </div>
+  </div>
+
+  <!-- JOURNAL -->
+  <div id="screen-journal" class="screen flex-col min-h-screen">
+    <div class="px-5 pt-8 pb-4">
+      <h2 class="text-xl font-bold text-gray-900">Journal</h2>
+      <p class="text-xs text-gray-400 mt-0.5">Write freely. AI insights are generated automatically.</p>
+    </div>
+    <div class="px-5 mb-4">
+      <textarea id="journal-input" rows="5" placeholder="How are you feeling today?"
+        class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition"></textarea>
+      <div id="journal-error" class="hidden text-red-500 text-xs mt-1"></div>
+      <button id="journal-save-btn" onclick="saveJournal()"
+        class="mt-3 w-full bg-primary text-white py-3 rounded-xl font-semibold text-sm hover:bg-primary-dark transition">
+        Save Entry
+      </button>
+    </div>
+    <div class="px-5 pb-24 space-y-3" id="journal-list">
+      <div class="text-center text-gray-400 text-sm py-8">Loading...</div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div id="screen-insights" class="screen flex-col min-h-screen">
+    <div class="px-5 pt-8 pb-4">
+      <h2 class="text-xl font-bold text-gray-900">AI Insights</h2>
+      <p class="text-xs text-gray-400 mt-0.5">Sentiment analysis from your journal entries.</p>
+    </div>
+    <div id="insights-filter" class="px-5 flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide"></div>
+    <div class="px-5 pb-24 space-y-3" id="insights-list">
+      <div class="text-center text-gray-400 text-sm py-8">Loading...</div>
+    </div>
+  </div>
+
+  <!-- SUPPORT -->
+  <div id="screen-support" class="screen flex-col min-h-screen">
+    <div class="px-5 pt-8 pb-4">
+      <h2 class="text-xl font-bold text-gray-900">Peer Support</h2>
+    </div>
+    <!-- Sub-tabs -->
+    <div class="px-5 mb-4">
+      <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
+        <button onclick="supportTab('connections')" id="stab-connections"
+          class="stab flex-1 py-2 rounded-lg text-xs font-semibold transition">Connections</button>
+        <button onclick="supportTab('requests')" id="stab-requests"
+          class="stab flex-1 py-2 rounded-lg text-xs font-semibold transition">Requests</button>
+        <button onclick="supportTab('find')" id="stab-find"
+          class="stab flex-1 py-2 rounded-lg text-xs font-semibold transition">Find People</button>
+      </div>
+    </div>
+    <div class="px-5 pb-24">
+      <div id="support-connections" class="support-panel space-y-3"></div>
+      <div id="support-requests" class="support-panel hidden space-y-3"></div>
+      <div id="support-find" class="support-panel hidden">
+        <input id="find-search" type="text" placeholder="Search by username..."
+          oninput="filterUsers()"
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition mb-3" />
+        <div id="find-list" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="screen-chat" class="screen flex-col" style="height:100dvh;">
+    <!-- Chat header -->
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white">
+      <button onclick="showTab('support')" class="text-primary p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div id="chat-avatar" class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-sm text-gray-900 truncate" id="chat-peer-name">—</div>
+        <div class="text-xs" id="chat-status">Connecting...</div>
+      </div>
+    </div>
+    <!-- Messages -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-gray-50"></div>
+    <!-- Typing indicator -->
+    <div id="typing-indicator" class="hidden px-4 py-1">
+      <div class="inline-flex items-center gap-1 bg-white rounded-2xl px-3 py-2 shadow-sm">
+        <div class="dot-typing"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <!-- Input -->
+    <form id="chat-form" onsubmit="sendMessage(event)"
+      class="flex items-center gap-2 px-4 py-3 bg-white border-t border-gray-100">
+      <input id="chat-input" type="text" placeholder="Type a message..."
+        oninput="sendTyping()"
+        class="flex-1 px-4 py-2.5 rounded-full border border-gray-200 bg-gray-50 text-sm focus:border-primary focus:bg-white transition" />
+      <button type="submit"
+        class="w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0 hover:bg-primary-dark transition">
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav id="bottom-nav" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-gray-100 flex z-50">
+    <button onclick="showTab('dashboard')" class="tab-btn flex-1 flex flex-col items-center py-2.5 gap-0.5" data-tab="dashboard">
+      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+      <span class="text-[10px] text-gray-400 font-medium">Home</span>
+    </button>
+    <button onclick="showTab('journal')" class="tab-btn flex-1 flex flex-col items-center py-2.5 gap-0.5" data-tab="journal">
+      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      <span class="text-[10px] text-gray-400 font-medium">Journal</span>
+    </button>
+    <button onclick="showTab('insights')" class="tab-btn flex-1 flex flex-col items-center py-2.5 gap-0.5" data-tab="insights">
+      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+      <span class="text-[10px] text-gray-400 font-medium">Insights</span>
+    </button>
+    <button onclick="showTab('support')" class="tab-btn flex-1 flex flex-col items-center py-2.5 gap-0.5" data-tab="support">
+      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="text-[10px] text-gray-400 font-medium">Support</span>
+    </button>
+  </nav>
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-5 py-2.5 rounded-full z-[100] shadow-lg"></div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirm-modal" class="hidden fixed inset-0 bg-black/40 flex items-end justify-center z-[200] pb-6 px-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <p id="confirm-msg" class="text-sm text-gray-700 mb-5 leading-relaxed"></p>
+      <div class="flex gap-3">
+        <button onclick="closeConfirm()" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium">Cancel</button>
+        <button id="confirm-ok" class="flex-1 py-2.5 rounded-xl text-white text-sm font-medium"></button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+{% load static %}
+<script src="{% static 'web/app.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+from django.contrib.auth.models import User
+from rest_framework import serializers
+
+
+class SignupSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=6)
+    password_confirm = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+        if User.objects.filter(username=data['username']).exists():
+            raise serializers.ValidationError({"username": "Username already taken."})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        return User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+        )
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+
+class GoogleAuthSerializer(serializers.Serializer):
+    id_token = serializers.CharField()
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
