@@ -6,14 +6,37 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import SupportRequest, SupportConnection
+from .models import SupportRequest, SupportConnection, UserProfile
 from .serializers import UserSerializer, SupportRequestSerializer, SupportConnectionSerializer
+
+
+def _cosine_similarity(a: list, b: list) -> float:
+    """Cosine similarity between two equal-length vectors."""
+    try:
+        import math
+        dot = sum(x * y for x, y in zip(a, b))
+        mag_a = math.sqrt(sum(x ** 2 for x in a))
+        mag_b = math.sqrt(sum(x ** 2 for x in b))
+        if mag_a == 0 or mag_b == 0:
+            return 0.0
+        return round(dot / (mag_a * mag_b), 4)
+    except Exception:
+        return 0.0
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def available_users(request):
+    """
+    Smart matching: returns users ranked by Big Five personality compatibility.
+    Falls back to alphabetical if no personality data exists.
+    Query params:
+      ?mode=smart   (default) — ranked by cosine similarity of Big Five vectors
+      ?mode=all     — unranked list (original behaviour)
+    """
     user = request.user
+    mode = request.query_params.get("mode", "smart")
+
     connected_ids = SupportConnection.objects.filter(
         Q(user_one=user) | Q(user_two=user),
         status=SupportConnection.STATUS_ACTIVE,
@@ -22,8 +45,46 @@ def available_users(request):
     excluded = {uid for pair in connected_ids for uid in pair}
     excluded.add(user.id)
 
-    users = User.objects.exclude(id__in=excluded)
-    return Response(UserSerializer(users, many=True).data)
+    candidates = User.objects.exclude(id__in=excluded)
+
+    if mode != "smart":
+        return Response(UserSerializer(candidates, many=True).data)
+
+    # ── Smart matching ──────────────────────────────────────────────────────
+    # Get requester's personality vector
+    try:
+        my_profile = UserProfile.objects.get(user=user)
+        my_vec = my_profile.personality_vector()
+        has_my_profile = any(v != 0.5 for v in my_vec)
+    except UserProfile.DoesNotExist:
+        has_my_profile = False
+        my_vec = [0.5, 0.5, 0.5, 0.5, 0.5]
+
+    results = []
+    for candidate in candidates:
+        try:
+            cp = UserProfile.objects.get(user=candidate)
+            cv = cp.personality_vector()
+            has_profile = any(v != 0.5 for v in cv)
+        except UserProfile.DoesNotExist:
+            cv = [0.5, 0.5, 0.5, 0.5, 0.5]
+            has_profile = False
+
+        if has_my_profile and has_profile:
+            similarity = _cosine_similarity(my_vec, cv)
+        else:
+            similarity = 0.5  # neutral score when no data
+
+        results.append({
+            "id": candidate.id,
+            "username": candidate.username,
+            "match_score": round(similarity * 100),  # 0–100
+            "has_profile": has_profile,
+        })
+
+    # Sort: users with profiles first, then by match score desc
+    results.sort(key=lambda x: (-int(x["has_profile"]), -x["match_score"]))
+    return Response(results)
 
 
 @api_view(['GET'])
@@ -150,3 +211,27 @@ def disconnect_connection(request, connection_id):
 def sent_requests(request):
     reqs = SupportRequest.objects.filter(from_user=request.user, status=SupportRequest.PENDING)
     return Response(SupportRequestSerializer(reqs, many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_personality(request):
+    """Return the current user's Big Five personality profile."""
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        return Response({
+            "openness":          profile.openness,
+            "conscientiousness": profile.conscientiousness,
+            "extraversion":      profile.extraversion,
+            "agreeableness":     profile.agreeableness,
+            "neuroticism":       profile.neuroticism,
+            "dominant_emotion":  profile.dominant_emotion,
+            "updated_at":        profile.updated_at,
+            "has_data": any(v != 0.5 for v in profile.personality_vector()),
+        })
+    except UserProfile.DoesNotExist:
+        return Response({
+            "openness": 0.5, "conscientiousness": 0.5, "extraversion": 0.5,
+            "agreeableness": 0.5, "neuroticism": 0.5, "dominant_emotion": "neutral",
+            "updated_at": None, "has_data": False,
+        })

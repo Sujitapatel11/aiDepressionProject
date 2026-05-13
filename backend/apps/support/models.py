@@ -10,6 +10,34 @@ def default_expiry():
     return timezone.now() + timedelta(days=7)
 
 
+class UserProfile(models.Model):
+    """
+    Stores Big Five personality scores computed from journal entries.
+    Used by the matching engine to rank peer suggestions by compatibility.
+    Scores range 0.0–1.0.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+
+    # Big Five (OCEAN)
+    openness          = models.FloatField(default=0.5)
+    conscientiousness = models.FloatField(default=0.5)
+    extraversion      = models.FloatField(default=0.5)
+    agreeableness     = models.FloatField(default=0.5)
+    neuroticism       = models.FloatField(default=0.5)
+
+    # Dominant emotion pattern from recent journals
+    dominant_emotion  = models.CharField(max_length=32, default="neutral")
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def personality_vector(self):
+        return [self.openness, self.conscientiousness, self.extraversion,
+                self.agreeableness, self.neuroticism]
+
+    def __str__(self):
+        return f"Profile({self.user.username})"
+
+
 class SupportRequest(models.Model):
     PENDING = "pending"
     ACCEPTED = "accepted"

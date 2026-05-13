@@ -11,4 +11,5 @@ urlpatterns = [
     path('connections/', views.active_connections, name='active_connections'),
     path('connections/<str:connection_id>/block/', views.block_connection, name='block_connection'),
     path('connections/<str:connection_id>/disconnect/', views.disconnect_connection, name='disconnect_connection'),
+    path('personality/', views.my_personality, name='my_personality'),
 ]
