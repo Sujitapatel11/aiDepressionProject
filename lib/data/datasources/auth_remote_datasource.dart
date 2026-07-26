@@ -8,6 +8,12 @@ import '../../core/network/failure.dart';
 import '../models/auth_tokens_model.dart';
 
 abstract class AuthRemoteDataSource {
+  Future<AuthTokensModel> signup({
+    required String username,
+    required String email,
+    required String password,
+  });
+
   Future<AuthTokensModel> login({
     required String usernameOrEmail,
     required String password,
@@ -32,6 +38,40 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) : client = client ?? http.Client();
 
   @override
+  Future<AuthTokensModel> signup({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    final Uri url = Uri.parse("${config.apiBaseUrl}${ApiEndpoints.signup}");
+
+    try {
+      final response = await client
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "username": username,
+              "email": email,
+              "password": password,
+            }),
+          )
+          .timeout(config.apiTimeout);
+
+      return _parseTokenResponse(response);
+    } on SocketException {
+      throw const NetworkFailure("No internet connection");
+    } on TimeoutException {
+      throw const TimeoutFailure("Connection timed out. Please try again.");
+    } on FormatException {
+      throw const UnknownFailure("Invalid server response format.");
+    } catch (e) {
+      if (e is Failure) rethrow;
+      throw UnknownFailure(e.toString());
+    }
+  }
+
+  @override
   Future<AuthTokensModel> login({
     required String usernameOrEmail,
     required String password,
@@ -43,6 +83,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .post(
             url,
             headers: {"Content-Type": "application/json"},
+
             body: jsonEncode({
               "username": usernameOrEmail,
               "password": password,

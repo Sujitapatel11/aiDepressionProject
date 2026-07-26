@@ -14,10 +14,39 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
+  Future<({Failure? failure, AuthTokensModel? data})> signup({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final result = await remoteDataSource.signup(
+        username: username,
+        email: email,
+        password: password,
+      );
+
+      await storageService.saveAuthData(
+        accessToken: result.token,
+        refreshToken: result.refresh,
+        userId: result.userId,
+        username: result.username,
+      );
+
+      return (failure: null, data: result);
+    } on Failure catch (failure) {
+      return (failure: failure, data: null);
+    } catch (e) {
+      return (failure: UnknownFailure(e.toString()), data: null);
+    }
+  }
+
+  @override
   Future<({Failure? failure, AuthTokensModel? data})> login({
     required String usernameOrEmail,
     required String password,
   }) async {
+
     try {
       final result = await remoteDataSource.login(
         usernameOrEmail: usernameOrEmail,

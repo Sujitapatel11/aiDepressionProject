@@ -132,8 +132,37 @@ class LoginController extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      onErrorSnackBar("Google Sign-In failed. Please try again.");
+  /// Main Signup Business Logic Flow
+  Future<bool> signup({
+    required String username,
+    required String email,
+    required String password,
+    required Function(String snackbarMessage) onErrorSnackBar,
+  }) async {
+    if (_isLoading) return false;
+
+    if (!validateInputs(email, password)) {
       return false;
     }
+
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await repository.signup(
+      username: username.trim().isEmpty ? email.split('@')[0] : username.trim(),
+      email: email.trim(),
+      password: password,
+    );
+
+    _isLoading = false;
+    notifyListeners();
+
+    if (result.failure != null) {
+      onErrorSnackBar(result.failure!.message);
+      return false;
+    }
+
+    return true;
   }
 }
+
