@@ -6,6 +6,11 @@ class DashboardSummaryEntity {
   final String moodState;
   final double sentimentScore;
   final int unreadNotificationsCount;
+  final int pendingRequestsCount;
+  final int activeConnectionsCount;
+  final int journalCount;
+  final String? latestJournalPreview;
+  final DateTime? latestJournalCreatedAt;
 
   const DashboardSummaryEntity({
     required this.userId,
@@ -14,5 +19,10 @@ class DashboardSummaryEntity {
     required this.moodState,
     required this.sentimentScore,
     required this.unreadNotificationsCount,
+    this.pendingRequestsCount = 0,
+    this.activeConnectionsCount = 0,
+    this.journalCount = 0,
+    this.latestJournalPreview,
+    this.latestJournalCreatedAt,
   });
 }

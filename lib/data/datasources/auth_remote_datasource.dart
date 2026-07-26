@@ -54,6 +54,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               "username": username,
               "email": email,
               "password": password,
+              "password_confirm": password,
             }),
           )
           .timeout(config.apiTimeout);

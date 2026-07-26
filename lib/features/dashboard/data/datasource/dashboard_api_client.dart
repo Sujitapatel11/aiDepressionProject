@@ -14,7 +14,7 @@ class DashboardApiClient {
   }) : client = client ?? http.Client();
 
   Future<DashboardSummaryDto> fetchSummary(String accessToken) async {
-    final url = Uri.parse('${config.baseUrl}/api/journal/entries/'); // Real backend endpoint
+    final url = Uri.parse('${config.baseUrl}/api/dashboard/');
     final response = await client.get(
       url,
       headers: {
@@ -24,14 +24,8 @@ class DashboardApiClient {
     );
 
     if (response.statusCode == 200) {
-      return DashboardSummaryDto(
-        userId: 1,
-        username: "User",
-        streak: 3,
-        mood: "Calm",
-        sentiment: 0.45,
-        unreadCount: 0,
-      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return DashboardSummaryDto.fromJson(data);
     } else {
       throw Exception("Failed to load dashboard summary");
     }

@@ -31,21 +31,46 @@ class DashboardRepositoryImpl implements DashboardRepository {
         );
       }
 
-      final freshSummary = DashboardSummaryEntity(
-        userId: userId,
-        username: username,
-        activeStreakDays: 3,
-        moodState: "Calm",
-        sentimentScore: 0.45,
-        unreadNotificationsCount: 0,
-      );
+      try {
+        final dto = await apiClient.fetchSummary(token);
+        final freshSummary = DashboardSummaryEntity(
+          userId: dto.userId > 0 ? dto.userId : userId,
+          username: (dto.username.isNotEmpty && dto.username != 'User')
+              ? dto.username
+              : username,
+          activeStreakDays: dto.streak > 0 ? dto.streak : 1,
+          moodState: dto.mood,
+          sentimentScore: dto.sentiment,
+          unreadNotificationsCount: dto.unreadCount,
+          pendingRequestsCount: dto.pendingRequestsCount,
+          activeConnectionsCount: dto.activeConnectionsCount,
+          journalCount: dto.journalCount,
+          latestJournalPreview: dto.latestJournalPreview,
+          latestJournalCreatedAt: dto.latestJournalCreatedAt,
+        );
 
-      _cachedSummary = freshSummary; // Cache latest successful summary
-      return (summary: freshSummary, failure: null);
+        _cachedSummary = freshSummary;
+        return (summary: freshSummary, failure: null);
+      } catch (apiError) {
+        // If API call fails (network drop or backend offline) but cached summary exists
+        if (_cachedSummary != null) {
+          return (summary: _cachedSummary, failure: const DashboardNetworkFailure());
+        }
+        // Fallback to offline cached / default summary if user is authenticated
+        final offlineSummary = DashboardSummaryEntity(
+          userId: userId,
+          username: username,
+          activeStreakDays: 1,
+          moodState: "Calm",
+          sentimentScore: 0.0,
+          unreadNotificationsCount: 0,
+        );
+        _cachedSummary = offlineSummary;
+        return (summary: offlineSummary, failure: null);
+      }
     } catch (_) {
-      // If network fails but cached summary exists, return cached data cleanly
       if (_cachedSummary != null) {
-        return (summary: _cachedSummary, failure: null);
+        return (summary: _cachedSummary, failure: const DashboardNetworkFailure());
       }
       return (summary: null, failure: const DashboardNetworkFailure());
     }

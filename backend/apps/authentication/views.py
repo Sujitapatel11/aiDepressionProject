@@ -2,11 +2,12 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordResetForm
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from config.throttles import PasswordResetRateThrottle
 from .serializers import SignupSerializer, LoginSerializer, GoogleAuthSerializer, PasswordResetSerializer
 
 
@@ -53,7 +54,6 @@ def login_view(request):
         return Response({"detail": "Invalid email/username or password."}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(_token_response(user))
-
 
 
 @api_view(['POST'])
@@ -109,6 +109,7 @@ def google_auth_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def password_reset_view(request):
     serializer = PasswordResetSerializer(data=request.data)
     if serializer.is_valid():

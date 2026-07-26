@@ -35,6 +35,9 @@ class Insight(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_dismissed", "is_read"]),
+        ]
 
     def __str__(self):
         return f"Insight({self.user.username}, {self.mood}, {self.title})"

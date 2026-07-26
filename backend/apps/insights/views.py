@@ -1,8 +1,9 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from config.throttles import AIGenerationRateThrottle
 from .models import Insight
 from .serializers import InsightSerializer
 
@@ -32,6 +33,7 @@ def dismiss_insight(request, insight_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AIGenerationRateThrottle])
 def generate_for_journal(request, journal_id):
     """Manually (re)generate insight for a specific journal entry."""
     from apps.journal.models import JournalEntry

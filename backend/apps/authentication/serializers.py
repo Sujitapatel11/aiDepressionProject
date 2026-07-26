@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 
@@ -13,6 +15,13 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError({"password": "Passwords do not match."})
         if User.objects.filter(username=data['username']).exists():
             raise serializers.ValidationError({"username": "Username already taken."})
+
+        # Apply Django password strength validation
+        try:
+            validate_password(data['password'])
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
         return data
 
     def create(self, validated_data):

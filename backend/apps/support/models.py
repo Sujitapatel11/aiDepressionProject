@@ -64,6 +64,12 @@ class SupportRequest(models.Model):
             models.Index(fields=["to_user", "status"]),
             models.Index(fields=["expires_at"]),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["from_user", "to_user", "status"],
+                name="unique_pending_support_request"
+            )
+        ]
 
     def clean(self):
         if self.from_user_id == self.to_user_id:

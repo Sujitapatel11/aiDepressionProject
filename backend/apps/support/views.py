@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
@@ -51,7 +52,6 @@ def available_users(request):
         return Response(UserSerializer(candidates, many=True).data)
 
     # ── Smart matching ──────────────────────────────────────────────────────
-    # Get requester's personality vector
     try:
         my_profile = UserProfile.objects.get(user=user)
         my_vec = my_profile.personality_vector()
@@ -90,7 +90,9 @@ def available_users(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def incoming_requests(request):
-    reqs = SupportRequest.objects.filter(to_user=request.user, status=SupportRequest.PENDING)
+    reqs = SupportRequest.objects.filter(
+        to_user=request.user, status=SupportRequest.PENDING
+    ).select_related('from_user', 'to_user')
     return Response(SupportRequestSerializer(reqs, many=True).data)
 
 
@@ -110,15 +112,21 @@ def send_request(request, user_id):
     ).exists():
         return Response({"detail": "Request already pending."}, status=status.HTTP_400_BAD_REQUEST)
 
-    req = SupportRequest.objects.create(from_user=request.user, to_user=to_user)
-    return Response(SupportRequestSerializer(req).data, status=status.HTTP_201_CREATED)
+    try:
+        req = SupportRequest.objects.create(from_user=request.user, to_user=to_user)
+        return Response(SupportRequestSerializer(req).data, status=status.HTTP_201_CREATED)
+    except IntegrityError:
+        return Response({"detail": "Request already pending."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def accept_request(request, request_id):
     try:
-        req = SupportRequest.objects.get(id=request_id, to_user=request.user, status=SupportRequest.PENDING)
+        req = SupportRequest.objects.select_for_update().get(
+            id=request_id, to_user=request.user, status=SupportRequest.PENDING
+        )
     except SupportRequest.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -129,22 +137,28 @@ def accept_request(request, request_id):
     user_one = min(req.from_user, req.to_user, key=lambda u: u.id)
     user_two = max(req.from_user, req.to_user, key=lambda u: u.id)
 
-    conn, _ = SupportConnection.objects.get_or_create(
-        user_one=user_one,
-        user_two=user_two,
-        defaults={
-            "alias_user_one": f"user_{user_one.id}",
-            "alias_user_two": f"user_{user_two.id}",
-        },
-    )
-    return Response(SupportConnectionSerializer(conn, context={'request': request}).data)
+    try:
+        conn, _ = SupportConnection.objects.get_or_create(
+            user_one=user_one,
+            user_two=user_two,
+            defaults={
+                "alias_user_one": f"user_{user_one.id}",
+                "alias_user_two": f"user_{user_two.id}",
+            },
+        )
+        return Response(SupportConnectionSerializer(conn, context={'request': request}).data)
+    except IntegrityError:
+        return Response({"detail": "Connection creation failed."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def reject_request(request, request_id):
     try:
-        req = SupportRequest.objects.get(id=request_id, to_user=request.user, status=SupportRequest.PENDING)
+        req = SupportRequest.objects.select_for_update().get(
+            id=request_id, to_user=request.user, status=SupportRequest.PENDING
+        )
     except SupportRequest.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -161,7 +175,7 @@ def active_connections(request):
     conns = SupportConnection.objects.filter(
         Q(user_one=user) | Q(user_two=user),
         status=SupportConnection.STATUS_ACTIVE,
-    )
+    ).select_related('user_one', 'user_two')
     return Response(SupportConnectionSerializer(conns, many=True, context={'request': request}).data)
 
 
@@ -209,7 +223,9 @@ def disconnect_connection(request, connection_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def sent_requests(request):
-    reqs = SupportRequest.objects.filter(from_user=request.user, status=SupportRequest.PENDING)
+    reqs = SupportRequest.objects.filter(
+        from_user=request.user, status=SupportRequest.PENDING
+    ).select_related('from_user', 'to_user')
     return Response(SupportRequestSerializer(reqs, many=True).data)
 
 

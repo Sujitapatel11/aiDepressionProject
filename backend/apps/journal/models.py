@@ -11,6 +11,9 @@ class JournalEntry(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_deleted", "-created_at"]),
+        ]
 
     def __str__(self):
         return f"Journal({self.user.username}, {self.created_at})"
