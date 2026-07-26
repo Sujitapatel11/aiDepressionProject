@@ -37,15 +37,23 @@ def login_view(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    user = authenticate(
-        request,
-        username=serializer.validated_data['username'],
-        password=serializer.validated_data['password'],
-    )
+    login_input = serializer.validated_data['username']
+    password = serializer.validated_data['password']
+
+    # Try direct username authentication
+    user = authenticate(request, username=login_input, password=password)
+
+    # Fallback: if input looks like email, lookup by email address
     if not user:
-        return Response({"detail": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
+        user_by_email = User.objects.filter(email__iexact=login_input).first()
+        if user_by_email:
+            user = authenticate(request, username=user_by_email.username, password=password)
+
+    if not user:
+        return Response({"detail": "Invalid email/username or password."}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(_token_response(user))
+
 
 
 @api_view(['POST'])

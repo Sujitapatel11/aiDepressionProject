@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Log In — SoulCare</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ═════════════════════════════════════════════════════════════════
+       SOULCARE DESIGN TOKENS (M3 + Calming Lavender & Mint Palette)
+       ═════════════════════════════════════════════════════════════════ */
+    :root {
+      --lavender-100: #F3EDF7;
+      --lavender-200: #E8DEF8;
+      --lavender-300: #D0BCFF;
+      --lavender-500: #7D5260;
+      --lavender-700: #4A4458;
+      --lavender-900: #1D192B;
+      --lavender-primary: #6750A4;
+
+      --mint-100: #E8F5E9;
+      --mint-200: #C8E6C9;
+      --mint-400: #81C784;
+      --mint-600: #388E3C;
+      --mint-800: #1B5E20;
+      --mint-accent: #2D6A4F;
+
+      --white: #FFFFFF;
+      --bg-page: #F7F5FA;
+      
+      --card-bg: #FFFFFF;
+      --card-border: rgba(103, 80, 164, 0.08);
+      --card-shadow: 0 12px 36px rgba(103, 80, 164, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+
+      --text-main: #1D1B20;
+      --text-sub: #49454F;
+      --text-muted: #79747E;
+      --text-placeholder: #A09CAB;
+
+      --input-bg: #F8F7FC;
+      --input-border: #E6E1E5;
+      --input-focus: #6750A4;
+      --error-bg: #FDF2F2;
+      --error-text: #B3261E;
+      --error-border: #F8B4B4;
+
+      --radius-full: 9999px;
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+
+      --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.6;
+      animation: floatOrb 12s infinite alternate ease-in-out;
+    }
+    .bg-orb-1 {
+      top: -80px;
+      left: -80px;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, var(--lavender-300) 0%, rgba(208, 188, 255, 0) 70%);
+    }
+    .bg-orb-2 {
+      bottom: -60px;
+      right: -60px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, var(--mint-200) 0%, rgba(200, 230, 201, 0) 70%);
+      animation-delay: -6s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(25px, 20px) scale(1.08); }
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      padding: 36px 28px 32px;
+      z-index: 1;
+      position: relative;
+      animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes cardEntrance {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .header-section {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-container {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--lavender-200) 0%, var(--mint-100) 100%);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(103, 80, 164, 0.12);
+      transition: transform var(--transition-bounce);
+    }
+    .logo-container:hover {
+      transform: scale(1.05) rotate(2deg);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--lavender-900);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .brand-tagline {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-sub);
+      line-height: 1.4;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* Error Alert Banner */
+    .error-banner {
+      display: none;
+      background-color: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error-text);
+      padding: 12px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 13.5px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.25s ease;
+    }
+    .error-banner.visible {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-left: 4px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      transition: color var(--transition-fast);
+    }
+
+    .form-input {
+      width: 100%;
+      height: 52px;
+      padding: 0 44px 0 46px;
+      background-color: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: var(--radius-lg);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-main);
+      transition: all var(--transition-fast);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-placeholder);
+      font-weight: 400;
+    }
+
+    .form-input:focus {
+      outline: none;
+      background-color: var(--white);
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.12);
+    }
+
+    .form-input:focus + .input-icon,
+    .input-wrapper:focus-within .input-icon {
+      color: var(--input-focus);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+    .toggle-password:hover {
+      color: var(--lavender-primary);
+      background-color: rgba(103, 80, 164, 0.06);
+    }
+
+    .forgot-link-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -4px;
+    }
+
+    .forgot-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--lavender-primary);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+    .forgot-link:hover {
+      color: #4F378B;
+      text-decoration: underline;
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 52px;
+      background: linear-gradient(135deg, var(--lavender-primary) 0%, #4F378B 100%);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-full);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 6px 20px rgba(103, 80, 164, 0.25);
+      transition: all var(--transition-fast);
+      margin-top: 4px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(103, 80, 164, 0.35);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+      box-shadow: 0 3px 12px rgba(103, 80, 164, 0.2);
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-submit.loading .btn-text {
+      display: none;
+    }
+    .btn-submit.loading .spinner {
+      display: block;
+    }
+
+    .divider-container {
+      display: flex;
+      align-items: center;
+      margin: 22px 0;
+      gap: 12px;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background-color: var(--input-border);
+    }
+
+    .divider-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0 4px;
+    }
+
+    .btn-google {
+      width: 100%;
+      height: 52px;
+      background-color: var(--white);
+      color: #3C4043;
+      border: 1px solid #DADCE0;
+      border-radius: var(--radius-full);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all var(--transition-fast);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-google:hover {
+      background-color: #F8F9FA;
+      border-color: #D2E3FC;
+      box-shadow: 0 3px 10px rgba(60, 64, 67, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .btn-google:active {
+      background-color: #EEEEEE;
+      transform: scale(0.98);
+    }
+
+    .google-icon-svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .footer-section {
+      text-align: center;
+      margin-top: 26px;
+      font-size: 14px;
+      color: var(--text-sub);
+      font-weight: 500;
+    }
+
+    .signup-link {
+      font-weight: 700;
+      color: var(--mint-accent);
+      text-decoration: none;
+      margin-left: 4px;
+      transition: color var(--transition-fast);
+    }
+
+    .signup-link:hover {
+      color: var(--mint-800);
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .login-card { padding: 28px 20px 24px; border: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <main class="login-card" role="main">
+    
+    <header class="header-section">
+      <div class="logo-container" aria-label="SoulCare Logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 6C20 6 24.5 13.5 24.5 18C24.5 20.4853 22.4853 22.5 20 22.5C17.5147 22.5 15.5 20.4853 15.5 18C15.5 13.5 20 6 20 6Z" fill="#6750A4" />
+          <path d="M12.5 13.5C12.5 13.5 20 16 22 19.5C23.1046 21.433 22.433 23.9046 20.5 25C18.567 26.0954 16.0954 25.4234 15 23.4904C13.5 20.5 12.5 13.5 12.5 13.5Z" fill="#388E3C" fill-opacity="0.85" />
+          <path d="M27.5 13.5C27.5 13.5 20 16 18 19.5C16.8954 21.433 17.567 23.9046 19.5 25C21.433 26.0954 23.9046 25.4234 25 23.4904C26.5 20.5 27.5 13.5 27.5 13.5Z" fill="#81C784" fill-opacity="0.9" />
+          <circle cx="20" cy="27" r="3.5" fill="#D0BCFF" />
+        </svg>
+      </div>
+      <h1 class="brand-title">SoulCare</h1>
+      <p class="brand-tagline">You're not alone. Let's begin your journey.</p>
+    </header>
+
+    <!-- Error Alert Message Banner -->
+    <div class="error-banner" id="errorBanner" role="alert">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span id="errorMessage">Invalid credentials.</span>
+    </div>
+
+    <!-- Login Form -->
+    <form class="login-form" id="loginForm" onsubmit="handleLoginSubmit(event)" novalidate>
+      
+      <div class="form-group">
+        <label for="email" class="field-label">Email or Username</label>
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="email" 
+            name="username" 
+            class="form-input" 
+            placeholder="name@example.com" 
+            required 
+            autocomplete="username" 
+          />
+          <div class="input-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="field-label">Password</label>
+        <div class="input-wrapper">
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input" 
+            placeholder="Enter your password" 
+            required 
+            autocomplete="current-password" 
+          />
+          <div class="input-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <button 
+            type="button" 
+            class="toggle-password" 
+            id="togglePasswordBtn" 
+            onclick="togglePasswordVisibility()" 
+            aria-label="Show password"
+          >
+            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="forgot-link-wrapper">
+        <a class="forgot-link" onclick="handleForgotPassword()">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <span class="btn-text">Log In</span>
+        <div class="spinner" id="btnSpinner"></div>
+      </button>
+
+    </form>
+
+    <div class="divider-container" aria-hidden="true">
+      <div class="divider-line"></div>
+      <span class="divider-text">OR</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <button type="button" class="btn-google" onclick="handleGoogleSignIn()">
+      <svg class="google-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+      </svg>
+      <span>Continue with Google</span>
+    </button>
+
+    <footer class="footer-section">
+      Don't have an account? 
+      <a href="/" class="signup-link">Create Account</a>
+    </footer>
+
+  </main>
+
+  <!-- Interactive JavaScript & Backend API Integration -->
+  <script>
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('password');
+      const toggleBtn = document.getElementById('togglePasswordBtn');
+      const eyeIcon = document.getElementById('eyeIcon');
+
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.setAttribute('aria-label', 'Hide password');
+        eyeIcon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+      } else {
+        passwordInput.type = 'password';
+        toggleBtn.setAttribute('aria-label', 'Show password');
+        eyeIcon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
+      }
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('errorBanner');
+      const errorMsg = document.getElementById('errorMessage');
+      errorMsg.textContent = msg;
+      banner.classList.add('visible');
+    }
+
+    function hideError() {
+      const banner = document.getElementById('errorBanner');
+      banner.classList.remove('visible');
+    }
+
+    // Backend Authentication API Integration
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+      hideError();
+
+      const submitBtn = document.getElementById('submitBtn');
+      const usernameInput = document.getElementById('email').value.trim();
+      const passwordInput = document.getElementById('password').value;
+
+      if (!usernameInput || !passwordInput) {
+        showError('Please enter both email/username and password.');
+        return;
+      }
+
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/auth/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: usernameInput,
+            password: passwordInput,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Store JWT tokens & User info in localStorage
+          localStorage.setItem('soulcare_token', data.token);
+          localStorage.setItem('soulcare_refresh', data.refresh);
+          localStorage.setItem('soulcare_user_id', data.user_id);
+          localStorage.setItem('soulcare_username', data.username);
+
+          // Redirect user to the main SoulCare application dashboard
+          window.location.href = '/';
+        } else {
+          const detail = data.detail || (data.username ? data.username[0] : null) || 'Invalid credentials. Please try again.';
+          showError(detail);
+        }
+      } catch (err) {
+        showError('Network error. Please check your connection.');
+      } finally {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Password Reset Business Logic Integration
+    async function handleForgotPassword() {
+      hideError();
+      const email = prompt('Enter your registered email address for password reset:');
+      if (!email || !email.trim()) return;
+
+      try {
+        const res = await fetch('/api/auth/password/reset/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() })
+        });
+        const data = await res.json();
+        alert(data.detail || 'Password reset link sent to your email address if registered.');
+      } catch (e) {
+        alert('Could not initiate password reset. Please try again.');
+      }
+    }
+
+    // Google Sign-In Business Logic Integration
+    function handleGoogleSignIn() {
+      alert('Google Sign-In integration ready. Send OAuth ID token to /api/auth/google/');
+    }
+  </script>
+</body>
+</html>

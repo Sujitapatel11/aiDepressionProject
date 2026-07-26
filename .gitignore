@@ -1,0 +1,16 @@
+# Flutter / Dart
+.dart_tool/
+.pub-cache/
+.pub/
+build/
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+backend/.env
+
+# IDEs & OS
+.idea/
+.vscode/
+.DS_Store

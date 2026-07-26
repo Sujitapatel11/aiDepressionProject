@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
+
 from apps.support.models import SupportConnection
 from .models import Message
 
