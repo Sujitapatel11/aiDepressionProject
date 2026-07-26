@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 
-/// Material Design 3 Calming Palette & Theme System for SoulCare
+/// Material Design 3 Calming & Playful Palette System for SoulCare Auth Redesign
 class AppTheme {
-  // Color Palette Tokens
-  static const Color lavenderPrimary = Color(0xFF6750A4);
-  static const Color lavenderSurfaceTint = Color(0xFFE8DEF8);
-  static const Color lavenderBackground = Color(0xFFF7F5FA);
-  
-  static const Color mintAccent = Color(0xFF2D6A4F);
-  static const Color mintLight = Color(0xFFE8F5E9);
+  // Brand Color Palette Tokens (User Design System Specs)
+  static const Color lavenderPrimary = Color(0xFF7C6EF6);
+  static const Color mintSecondary = Color(0xFF8DD8C8);
+  static const Color softYellowAccent = Color(0xFFFFD166);
+  static const Color appBackground = Color(0xFFF8FAFC);
 
-  static const Color textMain = Color(0xFF1D1B20);
-  static const Color textSub = Color(0xFF49454F);
-  static const Color textMuted = Color(0xFF79747E);
+  static const Color textMain = Color(0xFF1E293B);
+  static const Color textSub = Color(0xFF64748B);
+  static const Color textMuted = Color(0xFF94A3B8);
 
-  static const Color errorRed = Color(0xFFB3261E);
+  static const Color errorRed = Color(0xFFEF4444);
 
   // Mood Score Colors (1 to 5 scale)
-  static const Color moodVeryBad = Color(0xFFE57373);
-  static const Color moodBad = Color(0xFFFFB74D);
-  static const Color moodNeutral = Color(0xFFFFD54F);
-  static const Color moodGood = Color(0xFF81C784);
-  static const Color moodVeryGood = Color(0xFF64B5F6);
+  static const Color moodVeryBad = Color(0xFFF87171);
+  static const Color moodBad = Color(0xFFFBBF24);
+  static const Color moodNeutral = Color(0xFFFACC15);
+  static const Color moodGood = Color(0xFF4ADE80);
+  static const Color moodVeryGood = Color(0xFF60A5FA);
 
   static Color getMoodColor(int rating) {
     switch (rating) {
@@ -48,13 +46,14 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: lavenderPrimary,
         primary: lavenderPrimary,
-        secondary: mintAccent,
-        background: lavenderBackground,
+        secondary: mintSecondary,
+        tertiary: softYellowAccent,
+        background: appBackground,
         surface: Colors.white,
         error: errorRed,
       ),
-      scaffoldBackgroundColor: lavenderBackground,
-      fontFamily: 'PlusJakartaSans',
+      scaffoldBackgroundColor: appBackground,
+      fontFamily: 'Inter',
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -62,45 +61,46 @@ class AppTheme {
         scrolledUnderElevation: 0,
       ),
       cardTheme: CardTheme(
-        elevation: 0.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         color: Colors.white,
+        shadowColor: const Color(0xFF7C6EF6).withOpacity(0.06),
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 2,
         backgroundColor: Colors.white,
-        indicatorColor: lavenderSurfaceTint,
+        indicatorColor: const Color(0xFFEDE9FE),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: lavenderPrimary,
         foregroundColor: Colors.white,
-        elevation: 3,
+        elevation: 4,
         shape: StadiumBorder(),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFF8F7FC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE6E1E5)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE6E1E5)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: lavenderPrimary, width: 1.8),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: lavenderPrimary, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: errorRed, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: errorRed, width: 1.8),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: errorRed, width: 2.0),
         ),
       ),
     );
@@ -114,14 +114,15 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: lavenderPrimary,
         brightness: Brightness.dark,
-        primary: const Color(0xFFD0BCFF),
-        secondary: const Color(0xFF81C784),
-        background: const Color(0xFF141218),
-        surface: const Color(0xFF1D1B20),
-        error: const Color(0xFFF2B8B5),
+        primary: const Color(0xFFA78BFA),
+        secondary: mintSecondary,
+        tertiary: softYellowAccent,
+        background: const Color(0xFF0F172A),
+        surface: const Color(0xFF1E293B),
+        error: const Color(0xFFFCA5A5),
       ),
-      scaffoldBackgroundColor: const Color(0xFF141218),
-      fontFamily: 'PlusJakartaSans',
+      scaffoldBackgroundColor: const Color(0xFF0F172A),
+      fontFamily: 'Inter',
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -130,39 +131,46 @@ class AppTheme {
       ),
       cardTheme: CardTheme(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        color: const Color(0xFF2B2831),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        color: const Color(0xFF1E293B),
       ),
       navigationBarTheme: const NavigationBarThemeData(
         elevation: 2,
-        backgroundColor: Color(0xFF1D1B20),
-        indicatorColor: Color(0xFF4A4458),
+        backgroundColor: Color(0xFF0F172A),
+        indicatorColor: Color(0xFF334155),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFFD0BCFF),
-        foregroundColor: Color(0xFF381E72),
-        elevation: 3,
+        backgroundColor: Color(0xFFA78BFA),
+        foregroundColor: Color(0xFF1E1B4B),
+        elevation: 4,
         shape: StadiumBorder(),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF2B2831),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        fillColor: const Color(0xFF1E293B),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF49454F)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Color(0xFF334155), width: 1.2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF49454F)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Color(0xFF334155), width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFD0BCFF), width: 1.8),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Color(0xFFA78BFA), width: 2.0),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: errorRed, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: errorRed, width: 2.0),
         ),
       ),
     );
   }
 }
-
