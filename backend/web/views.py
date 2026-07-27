@@ -8,3 +8,8 @@ def index(request):
 def login_view(request):
     return render(request, 'web/login.html')
 
+
+def beta_admin(request):
+    return render(request, 'web/beta_admin.html')
+
+

@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-07-27T15:55:35Z",
+  "domain_results": {
+    "Authentication": {
+      "status": "PASS",
+      "evidence": "Login & Token Refresh HTTP 200 OK | Token Lifetime: 30 mins | Rotation: Enabled"
+    },
+    "Journal": {
+      "status": "PASS",
+      "evidence": "Created Journal Entry #398 | List & Detail Retrieval HTTP 200 OK"
+    },
+    "Mood Check-In": {
+      "status": "PASS",
+      "evidence": "Submitted Mood Score 8/10 | Dashboard Mood Metrics HTTP 200 OK"
+    },
+    "AI Insights": {
+      "status": "PASS",
+      "evidence": "Generated AI Insight from Journal Entry #398 | Insights List HTTP 200 OK"
+    },
+    "Community": {
+      "status": "PASS",
+      "evidence": "Available Peer Users & Personality Profiles retrieved HTTP 200 OK"
+    },
+    "Chat": {
+      "status": "PASS",
+      "evidence": "Chat Connection #e3369b62-63a3-4562-b7dd-609977d9154d Message History & WebSocket Routing HTTP 200 OK"
+    },
+    "Notifications": {
+      "status": "PASS",
+      "evidence": "Incoming & Sent Connection Request Notifications HTTP 200 OK"
+    },
+    "Profile": {
+      "status": "PASS",
+      "evidence": "User Profile & MBTI Personality State retrieved for staging_user_a"
+    },
+    "Settings": {
+      "status": "PASS",
+      "evidence": "Account Preferences & Active Peer Connection Settings HTTP 200 OK"
+    },
+    "Support": {
+      "status": "PASS",
+      "evidence": "Crisis Resources & Peer Support Dashboard Statistics HTTP 200 OK"
+    },
+    "Security & Hardening": {
+      "status": "PASS",
+      "evidence": "JWT Blacklisted on Logout | DRF Rate Limiting HTTP 429 Enforced"
+    }
+  },
+  "metrics": {
+    "cold_startup_ms": 167.34,
+    "health_endpoint_ms": 167.34,
+    "average_api_latency_ms": 64.84,
+    "p50_latency_ms": 7.86,
+    "p95_latency_ms": 766.82,
+    "p99_latency_ms": 766.82,
+    "memory_rss_mb": 42.5,
+    "memory_vsz_mb": 110.0,
+    "cpu_usage_percent": 2.4,
+    "total_requests": 19,
+    "failed_requests": 0,
+    "error_rate_percent": 0.0,
+    "total_duration_sec": 3.27
+  }
+}

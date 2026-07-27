@@ -11,7 +11,7 @@ from .serializers import InsightSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def insight_list(request):
-    insights = Insight.objects.filter(user=request.user, is_dismissed=False)
+    insights = Insight.objects.filter(user=request.user, is_dismissed=False).select_related('journal')
     # Mark all as read on fetch
     insights.filter(is_read=False).update(is_read=True)
     return Response(InsightSerializer(insights, many=True).data)

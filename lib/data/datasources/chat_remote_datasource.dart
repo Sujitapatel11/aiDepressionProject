@@ -5,12 +5,14 @@ import '../../core/config/app_config.dart';
 import '../../core/network/failure.dart';
 import '../models/chat_message_model.dart';
 
+import '../../core/network/ssl_pinning_client.dart';
+
 class ChatRemoteDataSource {
   final http.Client client;
   final AppConfig config;
 
   ChatRemoteDataSource({http.Client? client, this.config = AppConfig.dev})
-      : client = client ?? http.Client();
+      : client = client ?? SslPinningClient.createClient(config);
 
   Future<List<ChatMessageModel>> fetchMessageHistory(
     String token,

@@ -2,8 +2,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 
+from config.health_view import health_check
+from apps.telemetry.views import feedback_view, beta_dashboard_stats
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/health/', health_check, name='health_check'),
+    path('health/', health_check, name='health_check_alias'),
 
     # REST API
     path('api/auth/', include('apps.authentication.urls')),
@@ -12,6 +17,9 @@ urlpatterns = [
     path('api/support/', include('apps.support.urls')),
     path('api/chat/', include('apps.chat.urls')),
     path('api/dashboard/', include('apps.support.dashboard_urls')),
+    path('api/dashboard/beta/', beta_dashboard_stats, name='beta_dashboard_stats'),
+    path('api/telemetry/', include('apps.telemetry.urls')),
+    path('api/feedback/', feedback_view, name='feedback_api'),
 
     # Password reset confirmation (email link)
     path('password-reset-confirm/<uidb64>/<token>/',

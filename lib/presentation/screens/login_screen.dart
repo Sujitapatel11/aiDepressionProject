@@ -58,7 +58,7 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
     );
 
     _controller = LoginController(repository: repository);
-    _controller.addListener(() => setState(() {}));
+    // Granular ListenableBuilder used in build tree instead of full-screen setState listener.
 
     _animController = AnimationController(
       vsync: this,
@@ -283,9 +283,11 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
                                 ),
                               ],
                             ),
-                            child: AutofillGroup(
-                              child: Column(
-                                crossAxisAlignment: CrossAlignment.stretch,
+                            child: ListenableBuilder(
+                               listenable: _controller,
+                               builder: (context, _) => AutofillGroup(
+                                 child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   // ── EMAIL FIELD ──
                                   Row(
@@ -593,8 +595,8 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

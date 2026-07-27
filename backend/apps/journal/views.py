@@ -1,17 +1,29 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import JournalEntry
 from .serializers import JournalEntrySerializer
 
 
+class JournalPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def journal_list_create(request):
     if request.method == 'GET':
-        entries = JournalEntry.objects.filter(user=request.user, is_deleted=False)
+        entries = JournalEntry.objects.filter(user=request.user, is_deleted=False).order_by('-created_at')
+        paginator = JournalPagination()
+        page = paginator.paginate_queryset(entries, request)
+        if page is not None:
+            serializer = JournalEntrySerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         return Response(JournalEntrySerializer(entries, many=True).data)
 
     serializer = JournalEntrySerializer(data=request.data)

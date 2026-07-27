@@ -7,6 +7,8 @@ import '../../core/network/api_endpoints.dart';
 import '../../core/network/failure.dart';
 import '../models/auth_tokens_model.dart';
 
+import '../../core/network/ssl_pinning_client.dart';
+
 abstract class AuthRemoteDataSource {
   Future<AuthTokensModel> signup({
     required String username,
@@ -15,17 +17,15 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<AuthTokensModel> login({
-    required String usernameOrEmail,
+    required String emailOrUsername,
     required String password,
   });
 
-  Future<AuthTokensModel> authenticateWithGoogle({
-    required String idToken,
-  });
+  Future<AuthTokensModel> loginWithGoogle(String idToken);
 
-  Future<void> requestPasswordReset({
-    required String email,
-  });
+  Future<void> logout(String refreshToken);
+
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -35,7 +35,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({
     http.Client? client,
     this.config = AppConfig.dev,
-  }) : client = client ?? http.Client();
+  }) : client = client ?? SslPinningClient.createClient(config);
 
   @override
   Future<AuthTokensModel> signup({

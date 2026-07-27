@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulCare — Closed Beta Administration Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --accent-purple: #8b5cf6;
+            --accent-indigo: #6366f1;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-live .pulse {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-sub {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: var(--accent-green);
+        }
+
+        .stat-sub.warn {
+            color: var(--accent-amber);
+        }
+
+        .stat-sub.danger {
+            color: var(--accent-red);
+        }
+
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .badge-cat {
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .cat-bug { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+        .cat-sug { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+        .cat-feat { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; }
+
+        .feature-bar {
+            margin-bottom: 1rem;
+        }
+
+        .feature-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-indigo), var(--accent-purple));
+            border-radius: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>SoulCare Closed Beta Administration</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                Real-Time Product Telemetry, Crash Ingestion & In-App Feedback Monitor
+            </p>
+        </div>
+        <div class="badge-live">
+            <span class="pulse"></span> REAL-TIME TELEMETRY ACTIVE
+        </div>
+    </div>
+
+    <!-- Overview Stats Cards -->
+    <div class="grid-stats">
+        <div class="stat-card">
+            <div class="stat-title">Active Beta Users (DAU / WAU)</div>
+            <div class="stat-value" id="val-dau">0 / 0</div>
+            <div class="stat-sub">Real Human Testers Tracked</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Crash-Free Sessions</div>
+            <div class="stat-value" id="val-crash-free">100.0%</div>
+            <div class="stat-sub" id="sub-crash-target">Target: ≥ 99.0% (Passing)</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Fatal Crashes / Exceptions</div>
+            <div class="stat-value" id="val-crashes">0 / 0</div>
+            <div class="stat-sub warn" id="sub-crash-status">Zero Fatal Crashes</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Beta Feedback Received</div>
+            <div class="stat-value" id="val-feedback">0</div>
+            <div class="stat-sub" id="sub-feedback-open">0 Open Items</div>
+        </div>
+    </div>
+
+    <!-- Main Content Panels -->
+    <div class="dashboard-main">
+        
+        <!-- Left: In-App Feedback Explorer -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">In-App Beta Feedback Ingestion Feed</div>
+                <button onclick="fetchData()" style="background: var(--card-border); color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 0.375rem; cursor: pointer;">
+                    Refresh
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Title & Description</th>
+                            <th>User / App Version</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        <tr>
+                            <td colspan="5" class="empty-state">Loading beta feedback items...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right: Feature Usage & Telemetry Distribution -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Feature Usage Matrix</div>
+            </div>
+            <div id="feature-bar-list">
+                <div class="empty-state">Awaiting real user interaction events...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function fetchData() {
+            try {
+                const resStats = await fetch('/api/dashboard/beta/');
+                const data = await resStats.json();
+
+                // Update Stats Cards
+                document.getElementById('val-dau').innerText = `${data.beta_overview.dau} / ${data.beta_overview.wau}`;
+                document.getElementById('val-crash-free').innerText = `${data.beta_overview.crash_free_session_percent}%`;
+                
+                const targetSub = document.getElementById('sub-crash-target');
+                if (data.beta_overview.crash_free_session_percent >= 99.0) {
+                    targetSub.className = 'stat-sub';
+                    targetSub.innerText = 'Target: ≥ 99.0% (PASSING)';
+                } else {
+                    targetSub.className = 'stat-sub danger';
+                    targetSub.innerText = 'Target: ≥ 99.0% (BELOW TARGET)';
+                }
+
+                document.getElementById('val-crashes').innerText = `${data.crash_metrics.fatal_crashes} / ${data.crash_metrics.total_crashes}`;
+                document.getElementById('val-feedback').innerText = `${data.feedback_metrics.total}`;
+                document.getElementById('sub-feedback-open').innerText = `${data.feedback_metrics.open} Open Items`;
+
+                // Render Feature Usage Bars
+                const featureContainer = document.getElementById('feature-bar-list');
+                const features = data.feature_usage;
+                const featureKeys = Object.keys(features);
+
+                if (featureKeys.length === 0) {
+                    featureContainer.innerHTML = '<div class="empty-state">No feature events ingested yet.</div>';
+                } else {
+                    const maxVal = Math.max(...Object.values(features), 1);
+                    featureContainer.innerHTML = featureKeys.map(key => {
+                        const count = features[key];
+                        const pct = Math.round((count / maxVal) * 100);
+                        return `
+                            <div class="feature-bar">
+                                <div class="feature-info">
+                                    <span>${key}</span>
+                                    <span style="color: var(--text-muted);">${count} events</span>
+                                </div>
+                                <div class="bar-bg">
+                                    <div class="bar-fill" style="width: ${pct}%;"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Render Feedback Table
+                const resFb = await fetch('/api/feedback/');
+                const fbList = await resFb.json();
+                const tbody = document.getElementById('feedback-table-body');
+
+                if (!fbList || fbList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Zero feedback submissions. Awaiting real user submissions.</td></tr>';
+                } else {
+                    tbody.innerHTML = fbList.map(item => {
+                        let catBadge = '';
+                        if (item.category === 'bug_report') catBadge = '<span class="badge-cat cat-bug">Bug Report</span>';
+                        else if (item.category === 'suggestion') catBadge = '<span class="badge-cat cat-sug">Suggestion</span>';
+                        else catBadge = '<span class="badge-cat cat-feat">Feature Request</span>';
+
+                        const dt = new Date(item.created_at).toLocaleString();
+                        return `
+                            <tr>
+                                <td>${catBadge}</td>
+                                <td>
+                                    <strong style="color: var(--text-main);">${escapeHtml(item.title)}</strong>
+                                    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">${escapeHtml(item.description)}</div>
+                                </td>
+                                <td style="font-size: 0.8rem; color: var(--text-muted);">
+                                    v${item.app_version}<br>${item.device_info.model || 'Mobile Device'}
+                                </td>
+                                <td><span style="color: var(--accent-amber); font-weight: 600;">${item.status.toUpperCase()}</span></td>
+                                <td style="font-size: 0.8rem; color: var(--text-muted);">${dt}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+            } catch (err) {
+                console.error("Failed to fetch beta admin dashboard stats:", err);
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        fetchData();
+        setInterval(fetchData, 10000); // 10-second live polling
+    </script>
+</body>
+</html>

@@ -13,7 +13,7 @@ from .serializers import MessageSerializer
 @permission_classes([IsAuthenticated])
 def message_history(request, connection_id):
     try:
-        conn = SupportConnection.objects.get(
+        conn = SupportConnection.objects.select_related('user_one', 'user_two').get(
             connection_id=connection_id,
             status=SupportConnection.STATUS_ACTIVE,
         )
@@ -24,5 +24,5 @@ def message_history(request, connection_id):
     if user not in (conn.user_one, conn.user_two):
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    messages = Message.objects.filter(connection=conn).order_by("created_at")[:100]
+    messages = Message.objects.filter(connection=conn).select_related('sender').order_by("created_at")[:100]
     return Response(MessageSerializer(messages, many=True).data)

@@ -45,8 +45,12 @@ class UserAvatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: (avatarUrl != null && avatarUrl!.isNotEmpty)
-            ? Image.network(
-                avatarUrl!,
+            ? Image(
+                image: ResizeImage(
+                  NetworkImage(avatarUrl!),
+                  width: (size * 2).toInt(),
+                  height: (size * 2).toInt(),
+                ),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => _buildInitialText(),
               )

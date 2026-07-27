@@ -60,13 +60,18 @@ def available_users(request):
         has_my_profile = False
         my_vec = [0.5, 0.5, 0.5, 0.5, 0.5]
 
+    # Pre-fetch candidate user profiles in a single SQL query to eliminate N+1 loop queries
+    candidate_profiles = {
+        p.user_id: p for p in UserProfile.objects.filter(user__in=candidates)
+    }
+
     results = []
     for candidate in candidates:
-        try:
-            cp = UserProfile.objects.get(user=candidate)
+        cp = candidate_profiles.get(candidate.id)
+        if cp:
             cv = cp.personality_vector()
             has_profile = any(v != 0.5 for v in cv)
-        except UserProfile.DoesNotExist:
+        else:
             cv = [0.5, 0.5, 0.5, 0.5, 0.5]
             has_profile = False
 
