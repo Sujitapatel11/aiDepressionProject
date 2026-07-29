@@ -15,6 +15,8 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError({"password": "Passwords do not match."})
         if User.objects.filter(username=data['username']).exists():
             raise serializers.ValidationError({"username": "Username already taken."})
+        if User.objects.filter(email__iexact=data['email']).exists():
+            raise serializers.ValidationError({"email": "An account with this email address already exists."})
 
         # Apply Django password strength validation
         try:

@@ -1,154 +1,130 @@
-# SoulCare Official Design System & Visual Language
+# SoulCare Master Design System & Visual Language Specification
 
-Official Design System Specification for **SoulCare** — a premium startup-grade emotional wellness platform.
-
----
-
-## 🌿 1. Brand Personality & Core Emotions
-
-SoulCare is designed to evoke **Calm**, **Trust**, **Hope**, **Safety**, and **Human Connection**.
-- **Not Clinical or Sterile**: Soft, organic shapes, warm lighting, and gentle gradients replace rigid rectangular borders and harsh blues.
-- **Mindful & Non-Intrusive**: Interface elements step back to allow emotional reflection without visual clutter.
-- **Empathetic Micro-Feedback**: Animations breathe smoothly, simulating deep breathing rhythms.
+Official Design System for **SoulCare** — a calm, emotional, friendly, and modern wellness platform.
 
 ---
 
-## ✨ 2. Design Principles
-
-1. **Clarity Over Complexity**: Minimalist screen hierarchy focusing on one core emotional action per view.
-2. **Organic Softness**: Generous border radii (20px to 32px), subtle glassmorphism cards, and soft ambient drop shadows.
-3. **Intentional Motion**: Smooth 300ms–600ms bezier curve transitions that reassure rather than startle the user.
-4. **Accessible Harmony**: High contrast readability paired with soothing pastel background hues.
-
----
-
-## 🎨 3. Color Tokens
+## 🎨 1. Color Palette System
 
 ### Primary Brand Palette
-| Token Name | Hex Code | HSL / RGB | Purpose |
-| :--- | :--- | :--- | :--- |
-| `colorLavenderPrimary` | `#7C6EF6` | `hsl(246, 89%, 70%)` | Primary brand actions, active toggles, key headlines |
-| `colorMintSecondary` | `#8DD8C8` | `hsl(167, 51%, 70%)` | Success indicators, wellness streak accents, growth tags |
-| `colorSoftYellowAccent`| `#FFD166` | `hsl(42, 100%, 70%)` | Warm sun accents, positive mood tags, energy highlights |
-| `colorDeepSlateText` | `#1E293B` | `hsl(217, 33%, 17%)` | Primary high-contrast body typography |
-| `colorMutedText` | `#64748B` | `hsl(215, 16%, 47%)` | Secondary subtitles, timestamps, field hints |
-| `colorAppBackground` | `#F8FAFC` | `hsl(210, 40%, 98%)` | Light mode canvas background |
-| `colorDarkBackground` | `#0F172A` | `hsl(222, 47%, 11%)` | Dark mode canvas background |
-| `colorCardLight` | `#FFFFFF` | `hsl(0, 0%, 100%)` | Elevated surface canvas |
-| `colorCardDark` | `#1E293B` | `hsl(217, 33%, 17%)` | Dark mode elevated surface canvas |
-| `colorErrorSoft` | `#EF4444` | `hsl(0, 84%, 60%)` | Error indicators & shake alerts |
+- **Primary Purple / Indigo**: `#7C3AED` (Hover: `#6D28D9`, Soft: `#8B5CF6`)
+- **Light Purple Surface**: `#EDE9FE`
+- **Soft Lavender Background**: `#F5F3FF`
+- **Mint Green Accent**: `#10B981` (Light: `#34D399`, Soft: `#E6F4EA`)
+- **Peach Accent**: `#FDBA74` (Soft: `#FFF7ED`)
+- **Sky Blue Accent**: `#7DD3FC` (Soft: `#F0F9FF`)
+
+### Surface & Canvas
+- **Page Background**: `#FAF8FE` to `#F3F0F9` (Soft pastel gradient)
+- **Card Background**: `#FFFFFF` (Pure white with optional glassmorphism `backdrop-filter: blur(16px)`)
+- **Card Border**: `1.5px solid #E5E7EB`
+- **Input Background**: `#F9FAFB` (Focus: `#FFFFFF` with `#8B5CF6` border & glow)
+
+### Text Hierarchy
+- **Text Primary**: `#1F2937` (High contrast, dark slate)
+- **Text Secondary**: `#4B5563` (Medium contrast, readable slate)
+- **Text Muted / Caption**: `#6B7280` / `#9CA3AF`
+- **Brand Accent Text**: `#6D28D9`
 
 ---
 
-## 🔤 4. Typography Scale
+## 🔤 2. Typography System
 
-Font Families: **Plus Jakarta Sans** (Headings) & **Inter** (Body text)
+**Google Fonts**: `Plus Jakarta Sans` (Headings) & `Inter` (Body & UI)
 
-| Token Name | Size / Weight | Line Height | Letter Spacing | Purpose |
-| :--- | :--- | :--- | :--- | :--- |
-| `displayLarge` | 32sp / Bold (700) | 40sp | -0.8px | Screen title hero headers |
-| `headlineMedium` | 24sp / SemiBold (600)| 32sp | -0.4px | Section headers, card titles |
-| `titleMedium` | 18sp / Medium (500) | 26sp | 0.0px | Input labels, action buttons |
-| `bodyLarge` | 16sp / Regular (400) | 24sp | +0.15px | Main reflection body text |
-| `bodyMedium` | 14sp / Regular (400) | 20sp | +0.25px | Secondary card text, descriptions |
-| `labelSmall` | 12sp / Medium (500) | 16sp | +0.4px | Captions, timestamps, badges |
-
----
-
-## 📏 5. Spacing System (8pt Grid)
-
-| Spacing Token | Pixel Value | Typical Application |
-| :--- | :--- | :--- |
-| `space4` | 4dp | Micro gap between icon and label |
-| `space8` | 8dp | Tight gap between related form fields |
-| `space12` | 12dp | Medium gap inside compact chips |
-| `space16` | 16dp | Standard horizontal screen padding |
-| `space24` | 24dp | Card internal padding, section breaks |
-| `space32` | 32dp | Hero section top/bottom padding |
-| `space48` | 48dp | Large screen break |
+| Token | Font Family | Size | Weight | Line Height | Letter Spacing | Purpose |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Display** | Plus Jakarta Sans | 32px | 800 (ExtraBold) | 1.2 | -0.025em | Main hero headlines, splash screen |
+| **H1** | Plus Jakarta Sans | 26px | 800 (ExtraBold) | 1.25 | -0.02em | Section titles, main page headers |
+| **H2** | Plus Jakarta Sans | 22px | 700 (Bold) | 1.3 | -0.015em | Sub-headers, user greetings |
+| **H3** | Plus Jakarta Sans | 19px | 700 (Bold) | 1.35 | -0.01em | Card titles, top bar headers |
+| **H4** | Plus Jakarta Sans | 16.5px| 700 (Bold) | 1.4 | -0.005em | Action titles, dialog headings |
+| **Body Large**| Inter | 15.5px| 400 (Regular) | 1.6 | 0em | Reflection prompt text, journal body |
+| **Body Medium**| Inter | 14px | 400 (Regular) | 1.55 | +0.005em | Card descriptions, chat messages |
+| **Body Small** | Inter | 13px | 400 (Regular) | 1.5 | +0.01em | Secondary item details, list subtitles |
+| **Caption** | Inter | 11.5px| 500 (Medium) | 1.4 | +0.02em | Timestamps, status indicators |
+| **Label** | Inter | 11px | 700 (Bold) | 1.2 | +0.06em | Uppercase badges, category tags |
+| **Button** | Plus Jakarta Sans | 14.5px| 700 (Bold) | 1.2 | +0.02em | Primary & secondary action buttons |
 
 ---
 
-## ⭕ 6. Border Radius Scale
+## 📏 3. Spacing & Radius System
 
-- `radiusSmall`: 12dp (Chips, small badges)
-- `radiusMedium`: 20dp (Input text fields, buttons)
-- `radiusLarge`: 28dp (Standard content cards)
-- `radiusXLarge`: 32dp (Floating glassmorphic auth panel, hero containers)
-- `radiusFull`: 999dp (Circular avatars, pill buttons)
+### Spacing Grid (8pt System)
+- `space-1` ($4\text{px}$): Micro gap inside chips & badges.
+- `space-2` ($8\text{px}$): Gap between label and input.
+- `space-3` ($12\text{px}$): Padding inside compact buttons & list rows.
+- `space-4` ($16\text{px}$): Standard card internal padding.
+- `space-6` ($24\text{px}$): Section breaks & container padding.
+- `space-8` ($32\text{px}$): Hero top/bottom margins.
 
----
-
-## 🌫️ 7. Elevation & Ambient Shadows
-
-- `elevationLow`: `Offset(0, 4)`, Blur: `12`, Opacity: `0.04` (Subtle list cards)
-- `elevationMedium`: `Offset(0, 8)`, Blur: `24`, Opacity: `0.06` (Floating action panels)
-- `elevationHigh`: `Offset(0, 16)`, Blur: `36`, Opacity: `0.10` (Modal bottom sheets)
-
----
-
-## 🎨 8. Icon Guidelines
-
-- **Style**: Rounded Material Symbols (`Icons.rounded` / `Icons.outline_rounded`).
-- **Sizing**:
-  - `iconSmall`: 18dp (Inline input prefixes)
-  - `iconMedium`: 24dp (Navigation bar, standard action icons)
-  - `iconLarge`: 32dp - 48dp (Empty state features)
+### Border Radii
+- `radius-sm` ($12\text{px}$): Small badges, mini tags.
+- `radius-md` ($16\text{px}$): Input text fields, secondary buttons.
+- `radius-lg` ($24\text{px}$): Content cards, post containers, mood pills.
+- `radius-xl` ($32\text{px}$): Main hero containers, auth cards, modal sheets.
+- `radius-full` ($999\text{px}$): Circular avatar displays, floating nav pills.
 
 ---
 
-## 🍃 9. Illustration Style
+## 🌫️ 4. Shadows & Elevation System
 
-- Organic vector artwork featuring soothing pastel colors, glowing sun ☀️ accents, floating botanical leaves 🍃, soft particle auras, and mindful human silhouettes in meditation poses.
-
----
-
-## ⏱️ 10. Animation Principles
-
-- **Easing**: `Curves.easeOutCubic` for entry, `Curves.easeInOutSine` for breathing loops.
-- **Duration**:
-  - `durationFast`: 200ms (Hover, press ripples, checkbox toggles)
-  - `durationNormal`: 350ms (Screen slide transitions, card expands)
-  - `durationSlow`: 600ms - 3200ms (Breathing illustration aura, splash animations)
+- **Soft Card Elevation**: `0 10px 30px -5px rgba(124, 58, 237, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03)`
+- **Hover Elevation**: `0 16px 36px rgba(124, 58, 237, 0.12)`
+- **Primary Button Glow**: `0 10px 25px rgba(124, 58, 237, 0.3)`
+- **Floating Bar Elevation**: `0 -8px 24px rgba(0, 0, 0, 0.05)`
 
 ---
 
-## 🛠️ 11. Component Specifications
+## 🧩 5. Component Specifications
 
 ### Buttons
-- **Primary Button**: 56dp height, `radiusMedium` (20dp), linear gradient fill (`#7C6EF6` -> `#6366F1`), white bold text, subtle primary glow shadow.
-- **Secondary / Google Button**: 56dp height, `radiusMedium` (20dp), white surface (or `#0F172A` in dark mode), 1dp subtle border (`#DADCE0`).
+1. **Primary Button (`.btn-blue`)**:
+   - Gradient fill: `linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%)`
+   - White bold text, $16\text{px}$ radius, button glow shadow.
+   - Micro-interaction: `transform: translateY(-2px)` on hover, `scale(0.98)` on click.
+2. **Secondary / Gray Button (`.btn-gray`)**:
+   - White surface background, `1.5px solid #E5E7EB`, dark text.
+   - Hover state: `#F5F3FF` soft lavender fill with `#7C3AED` border.
 
-### Text Fields
-- 56dp height, `radiusMedium` (20dp), subtle background fill, rounded prefix icon, eye visibility toggle suffix, primary lavender focus border glow.
+### Inputs & Forms
+- **Input Field Wrapper**: Soft `#F9FAFB` fill, `1.5px solid #E5E7EB` border, $16\text{px}$ radius.
+- **Focus State**: White background, `#8B5CF6` border, `0 0 0 4px rgba(139, 92, 246, 0.15)` focus glow ring.
 
 ### Cards
-- Glassmorphic or pure white background, 28dp–32dp rounded corners, `space24` padding, soft ambient shadow.
+- Pure white background, $24\text{px}$–$32\text{px}$ rounded corners, soft shadow, subtle border (`1.5px solid #E5E7EB`).
+- Smooth hover transition with slight lift ($2\text{px}$) and border color transition (`#C4B5FD`).
 
-### Bottom Navigation
-- Floating rounded bar with active indicator pill, subtle icon elevation, and smooth sliding transitions.
+### Navigation Components
+1. **Desktop Sidebar (`#sidebar`)**:
+   - Fixed white panel ($260\text{px}$ width), subtle right border.
+   - Nav items: $16\text{px}$ radius, active lavender highlight (`#EDE9FE`), active indicator line (`#7C3AED`).
+2. **Mobile Bottom Nav (`#bot-nav`)**:
+   - Fixed white bar ($68\text{px}$ height), top border, 5 tab icons with active purple state.
+
+### Mood Selector Chips
+- Interactive pill chips (`Great 😊`, `Good 🙂`, `Okay 😐`, `Not good 🙁`, `Awful 😫`).
+- White background, $22\text{px}$ radius, active selection highlight (`#F3E8FF` fill with `#7C3AED` border).
+
+### Stat Tiles
+- White cards, $22\text{px}$ radius, radial top gradient aura, large purple numbers (`28px`), uppercase labels.
+
+### Badges & Pill Tags
+- `pill-coral`: Soft purple background (`rgba(255, 255, 255, 0.25)` on dark cards or `#F3E8FF` on light cards).
+- `pill-teal`: Soft mint background (`#E6F4EA`) with green text (`#059669`).
 
 ---
 
-## ⏳ 12. Loading, Empty & Error States
+## 🍃 6. Animations & Illustrations
 
-- **Loading**: `SkeletonLoader` shimmering placeholders matching target card layout shape.
-- **Empty**: Friendly illustration, reassuring headline, clear call-to-action button.
-- **Error**: Empathetic message, `ShakeWidget` form feedback, floating snackbar alert.
-
----
-
-## 🌗 13. Dark Theme Strategy
-
-- Canvas transitions seamlessly to deep night slate (`#0F172A`).
-- Card panels transition to elevated slate (`#1E293B`) with muted borders (`#334155`).
-- Primary Lavender (`#7C6EF6`) maintains high legibility and contrast ratio (>= 4.5:1 WCAG AA compliant).
+- **Easing Curves**: `cubic-bezier(0.16, 1, 0.3, 1)` for smooth card entries.
+- **Micro-Interactions**: Hover lift ($2\text{px}$), active scale ($0.98$), smooth color transitions ($200\text{ms}$).
+- **Artwork & Mascot**: Vector landscape visuals with sunset sky gradients, floating leaves (`decor-leaf-1`), sparkling stars (`decor-star-1`), and cute **SoulCare plant spirit mascot**.
 
 ---
 
-## 🏷️ 14. Design Token Naming Convention
+## ⏳ 7. States
 
-- Colors: `AppColors.primaryLavender`, `AppColors.mintSecondary`
-- Spacing: `AppSpacing.s16`, `AppSpacing.s24`
-- Radius: `AppRadius.r20`, `AppRadius.r32`
-- Typography: `AppTypography.displayLarge`, `AppTypography.bodyMedium`
+- **Loading State**: Circular animated spinner (`.spinner`) or shimmering skeleton loader.
+- **Empty State**: Friendly greeting, reassuring copy ("No entries yet. Start writing!"), primary action button.
+- **Error State**: Soft red banner (`#FEF2F2` background, `#EF4444` text, `#FCA5A5` border).

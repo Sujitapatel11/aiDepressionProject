@@ -8,7 +8,7 @@
 <!-- Modern Typography Architecture: Plus Jakarta Sans (Headings) & Inter (Body/UI) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config={theme:{extend:{
@@ -17,15 +17,15 @@ tailwind.config={theme:{extend:{
     body:['Inter','system-ui','sans-serif']
   },
   colors:{
-    primary:'#6366f1','primary-dk':'#4f46e5',
-    ig:'#1e293b','ig-gray':'#64748b','ig-border':'rgba(255,255,255,0.08)','ig-bg':'#090d16'
+    primary:'#7C3AED','primary-dk':'#6D28D9',
+    ig:'#FAF8FE','ig-gray':'#6B7280','ig-border':'rgba(229,231,235,0.8)','ig-bg':'#F3F0F9'
   }
 }}}
 </script>
 
 <style>
 /* ═════════════════════════════════════════════════════════════════
-   SOULCARE TYPOGRAPHY SYSTEM & DESIGN TOKENS
+   SOULCARE WELLNESS DESIGN SYSTEM - LIGHT & CALM FRONTEND SKIN
    ═════════════════════════════════════════════════════════════════ */
 :root {
   /* Typography System Fonts */
@@ -33,42 +33,42 @@ tailwind.config={theme:{extend:{
   --font-body:     'Inter', system-ui, -apple-system, sans-serif;
 
   /* Surface & Container Colors */
-  --clue-bg:       #090d16;
-  --clue-surface:  #0f172a;
-  --clue-card:     rgba(30, 41, 59, 0.75);
-  --clue-card2:    rgba(30, 41, 59, 0.9);
-  --clue-border:   rgba(255, 255, 255, 0.08);
-  --clue-border2:  rgba(255, 255, 255, 0.12);
+  --clue-bg:       #FAF8FE;
+  --clue-surface:  #FFFFFF;
+  --clue-card:     #FFFFFF;
+  --clue-card2:    #F5F3FF;
+  --clue-border:   rgba(229, 231, 235, 0.8);
+  --clue-border2:  #E5E7EB;
 
   /* Primary Brand Tokens */
-  --coral:         #6366f1;
-  --coral-lt:      #818cf8;
-  --coral-dk:      #4f46e5;
-  --coral-glow:    rgba(99, 102, 241, 0.22);
-  --coral-glow2:   rgba(99, 102, 241, 0.1);
+  --coral:         #7C3AED;
+  --coral-lt:      #8B5CF6;
+  --coral-dk:      #6D28D9;
+  --coral-glow:    rgba(124, 58, 237, 0.2);
+  --coral-glow2:   rgba(124, 58, 237, 0.08);
 
-  --teal:          #14b8a6;
-  --teal-lt:       #2dd4bf;
-  --lavender:      #a855f7;
-  --amber:         #f59e0b;
-  --sage:          #10b981;
+  --teal:          #10B981;
+  --teal-lt:       #34D399;
+  --lavender:      #C4B5FD;
+  --amber:         #F59E0B;
+  --sage:          #059669;
 
   /* Typography Contrast Hierarchy */
-  --text-1:        #f8fafc;
-  --text-2:        #cbd5e1;
-  --text-3:        #64748b;
-  --text-muted:    #475569;
+  --text-1:        #1F2937;
+  --text-2:        #4B5563;
+  --text-3:        #6B7280;
+  --text-muted:    #9CA3AF;
 
-  --shadow-coral:  0 8px 32px rgba(99, 102, 241, 0.25);
-  --shadow-card:   0 12px 36px -8px rgba(0, 0, 0, 0.5);
-  --shadow-sm:     0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-coral:  0 10px 25px rgba(124, 58, 237, 0.25);
+  --shadow-card:   0 10px 30px -5px rgba(124, 58, 237, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-sm:     0 4px 14px rgba(0, 0, 0, 0.04);
 
   /* Backward Compatibility Aliases */
   --rose:          var(--coral);
   --rose-lt:       var(--coral-lt);
-  --rose-bg:       rgba(99, 102, 241, 0.1);
+  --rose-bg:       rgba(124, 58, 237, 0.08);
   --plum:          var(--lavender);
-  --plum-lt:       #c084fc;
+  --plum-lt:       #DDD6FE;
   --cream:         var(--clue-bg);
   --sand:          var(--clue-card);
   --ink:           var(--text-1);
@@ -90,37 +90,37 @@ body {
 /* ═════════════════════════════════════════════════════════════════
    TYPOGRAPHY SCALE UTILITY CLASSES
    ═════════════════════════════════════════════════════════════════ */
-.t-display { font-family: var(--font-heading); font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: -0.03em; color: var(--text-1); }
-.t-h1      { font-family: var(--font-heading); font-size: 30px; font-weight: 800; line-height: 1.2; letter-spacing: -0.025em; color: var(--text-1); }
-.t-h2      { font-family: var(--font-heading); font-size: 24px; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; color: var(--text-1); }
-.t-h3      { font-family: var(--font-heading); font-size: 20px; font-weight: 700; line-height: 1.3; letter-spacing: -0.015em; color: var(--text-1); }
-.t-h4      { font-family: var(--font-heading); font-size: 17px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; color: var(--text-1); }
+.t-display { font-family: var(--font-heading); font-size: 32px; font-weight: 800; line-height: 1.2; letter-spacing: -0.025em; color: var(--text-1); }
+.t-h1      { font-family: var(--font-heading); font-size: 26px; font-weight: 800; line-height: 1.25; letter-spacing: -0.02em; color: var(--text-1); }
+.t-h2      { font-family: var(--font-heading); font-size: 22px; font-weight: 700; line-height: 1.3; letter-spacing: -0.015em; color: var(--text-1); }
+.t-h3      { font-family: var(--font-heading); font-size: 19px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; color: var(--text-1); }
+.t-h4      { font-family: var(--font-heading); font-size: 16.5px; font-weight: 700; line-height: 1.4; letter-spacing: -0.005em; color: var(--text-1); }
 .t-h5      { font-family: var(--font-heading); font-size: 15px; font-weight: 600; line-height: 1.4; letter-spacing: 0em; color: var(--text-1); }
 .t-h6      { font-family: var(--font-heading); font-size: 13.5px; font-weight: 600; line-height: 1.4; letter-spacing: 0.01em; color: var(--text-1); }
 
-.t-subtitle { font-family: var(--font-body); font-size: 15px; font-weight: 400; line-height: 1.5; letter-spacing: 0.01em; color: var(--text-muted); }
-.t-body-lg  { font-family: var(--font-body); font-size: 16px; font-weight: 400; line-height: 1.65; letter-spacing: 0em; color: var(--text-1); }
-.t-body-md  { font-family: var(--font-body); font-size: 14px; font-weight: 400; line-height: 1.6; letter-spacing: 0.005em; color: var(--text-2); }
+.t-subtitle { font-family: var(--font-body); font-size: 14.5px; font-weight: 400; line-height: 1.5; letter-spacing: 0.01em; color: var(--text-3); }
+.t-body-lg  { font-family: var(--font-body); font-size: 15.5px; font-weight: 400; line-height: 1.6; letter-spacing: 0em; color: var(--text-1); }
+.t-body-md  { font-family: var(--font-body); font-size: 14px; font-weight: 400; line-height: 1.55; letter-spacing: 0.005em; color: var(--text-2); }
 .t-body-sm  { font-family: var(--font-body); font-size: 13px; font-weight: 400; line-height: 1.5; letter-spacing: 0.01em; color: var(--text-3); }
 
-.t-caption  { font-family: var(--font-body); font-size: 11.5px; font-weight: 500; line-height: 1.4; letter-spacing: 0.03em; color: var(--text-3); }
-.t-label    { font-family: var(--font-body); font-size: 10.5px; font-weight: 700; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.t-caption  { font-family: var(--font-body); font-size: 11.5px; font-weight: 500; line-height: 1.4; letter-spacing: 0.02em; color: var(--text-3); }
+.t-label    { font-family: var(--font-body); font-size: 11px; font-weight: 700; line-height: 1.2; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
 .t-btn      { font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; line-height: 1.2; letter-spacing: 0.02em; }
 
 @media (max-width: 640px) {
-  .t-display { font-size: 30px; }
-  .t-h1      { font-size: 26px; }
-  .t-h2      { font-size: 20px; }
-  .t-h3      { font-size: 18px; }
+  .t-display { font-size: 26px; }
+  .t-h1      { font-size: 22px; }
+  .t-h2      { font-size: 19px; }
+  .t-h3      { font-size: 17px; }
 }
 
 /* ── SCREENS ── */
 .screen { display: none !important; }
 .screen.active { display: flex !important; flex-direction: column; }
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.25); }
 input:focus, textarea:focus, button:focus { outline: none; }
 textarea { resize: none; }
 
@@ -129,173 +129,171 @@ textarea { resize: none; }
 
 /* ── INPUTS ── */
 .inp {
-  width: 100%; padding: 12px 16px;
-  border: 1px solid var(--clue-border2);
-  border-radius: 14px;
-  background: var(--clue-card);
+  width: 100%; padding: 12px 18px;
+  border: 1.5px solid var(--clue-border2);
+  border-radius: 16px;
+  background: #F9FAFB;
   font-size: 14px; font-family: var(--font-body);
   color: var(--text-1);
-  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.inp:focus { border-color: var(--coral); box-shadow: 0 0 0 3.5px var(--coral-glow); background: var(--clue-surface); }
-.inp::placeholder { color: var(--text-3); }
+.inp:focus { border-color: var(--coral-lt); box-shadow: 0 0 0 4px var(--coral-glow2); background: #FFFFFF; }
+.inp::placeholder { color: var(--text-muted); }
 
 /* ── BUTTONS ── */
 .btn-blue {
-  background: linear-gradient(135deg, var(--coral), var(--coral-dk));
-  color: #fff; border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 14px; padding: 12px 18px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%);
+  color: #fff; border: none;
+  border-radius: 16px; padding: 12px 20px;
   font-family: var(--font-heading); font-size: 14.5px; font-weight: 700;
   line-height: 1.2; letter-spacing: 0.02em;
   cursor: pointer; width: 100%;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-coral);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
 }
-.btn-blue:hover { transform: translateY(-1px); box-shadow: 0 10px 36px rgba(99, 102, 241, 0.38); }
-.btn-blue:active { transform: scale(0.985); }
-.btn-blue:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn-blue:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(124, 58, 237, 0.35); }
+.btn-blue:active { transform: scale(0.98); }
+.btn-blue:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
 .btn-gray {
-  background: var(--clue-card);
-  color: var(--text-2);
-  border: 1px solid var(--clue-border2);
-  border-radius: 14px; padding: 11px 16px;
+  background: #FFFFFF;
+  color: var(--text-1);
+  border: 1.5px solid var(--clue-border2);
+  border-radius: 16px; padding: 11px 18px;
   font-family: var(--font-heading); font-size: 13.5px; font-weight: 600;
-  cursor: pointer; transition: all 0.18s;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
-.btn-gray:hover { background: var(--clue-card2); color: var(--text-1); border-color: var(--coral-lt); }
+.btn-gray:hover { background: var(--soft-lavender); color: var(--coral-dk); border-color: var(--lavender); transform: translateY(-1px); }
 
 /* ── CARDS ── */
 .post-card {
-  background: var(--clue-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--clue-border2);
-  border-radius: 20px;
-  overflow: hidden; margin-bottom: 16px;
+  background: #FFFFFF;
+  border: 1px solid var(--clue-border);
+  border-radius: 24px;
+  overflow: hidden; margin-bottom: 18px;
   box-shadow: var(--shadow-card);
-  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.post-card:hover { box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); transform: translateY(-2px); border-color: rgba(99,102,241,0.3); }
+.post-card:hover { box-shadow: 0 16px 36px rgba(124, 58, 237, 0.12); transform: translateY(-2px); border-color: var(--lavender); }
 
 /* ── CHAT BUBBLES ── */
-.bubble { max-width: 78%; padding: 11px 16px; border-radius: 20px; font-family: var(--font-body); font-size: 14px; line-height: 1.55; word-break: break-word; }
-.bubble-self { background: linear-gradient(135deg, var(--coral), var(--coral-dk)); color: #fff; border-bottom-right-radius: 4px; box-shadow: 0 4px 16px var(--coral-glow); }
-.bubble-other { background: var(--clue-card2); color: var(--text-1); border-bottom-left-radius: 4px; border: 1px solid var(--clue-border2); }
+.bubble { max-width: 78%; padding: 12px 18px; border-radius: 22px; font-family: var(--font-body); font-size: 14px; line-height: 1.55; word-break: break-word; }
+.bubble-self { background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: #fff; border-bottom-right-radius: 4px; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2); }
+.bubble-other { background: #F3F0F9; color: var(--text-1); border-bottom-left-radius: 4px; border: 1px solid var(--clue-border2); }
 
 /* ── ONLINE DOT ── */
-.online-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; border: 2px solid var(--clue-surface); position: absolute; bottom: 0; right: 0; box-shadow: 0 0 8px #10b981; }
+.online-dot { width: 10px; height: 10px; border-radius: 50%; background: #10B981; border: 2px solid #FFFFFF; position: absolute; bottom: 0; right: 0; box-shadow: 0 0 6px #10B981; }
 
 /* ── CYCLE RING ── */
 .cycle-ring {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: conic-gradient(var(--coral) 0% var(--cycle-pct, 72%), var(--clue-card2) var(--cycle-pct, 72%) 100%);
+  width: 58px; height: 58px; border-radius: 50%;
+  background: conic-gradient(var(--coral) 0% var(--cycle-pct, 72%), #EDE9FE var(--cycle-pct, 72%) 100%);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 0 0 2px var(--clue-border2);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
 }
-.cycle-ring-inner { width: 40px; height: 40px; border-radius: 50%; background: var(--clue-surface); display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 800; color: var(--coral-lt); text-align: center; font-family: var(--font-heading); letter-spacing: -0.2px; }
+.cycle-ring-inner { width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 800; color: var(--coral-dk); text-align: center; font-family: var(--font-heading); letter-spacing: -0.2px; }
 
 /* ── INSIGHT CARD ── */
 .insight-card {
-  background: var(--clue-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--clue-border2);
-  border-radius: 20px; overflow: hidden; margin-bottom: 14px;
-  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  background: #FFFFFF;
+  border: 1px solid var(--clue-border);
+  border-radius: 24px; overflow: hidden; margin-bottom: 16px;
+  transition: all 0.25s;
   box-shadow: var(--shadow-card);
 }
-.insight-card:hover { box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); transform: translateY(-2px); border-color: rgba(99,102,241,0.3); }
+.insight-card:hover { box-shadow: 0 16px 36px rgba(124, 58, 237, 0.12); transform: translateY(-2px); border-color: var(--lavender); }
 
 /* ── MOOD PILLS ── */
 .mood-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 20px;
-  font-family: var(--font-heading); font-size: 12.5px; font-weight: 600;
-  cursor: pointer; transition: all 0.18s;
-  border: 1px solid var(--clue-border2); white-space: nowrap;
-  background: var(--clue-card); color: var(--text-2);
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 22px;
+  font-family: var(--font-heading); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border: 1.5px solid var(--clue-border2); white-space: nowrap;
+  background: #FFFFFF; color: var(--text-2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
-.mood-pill.active-pill, .mood-pill:hover { background: var(--coral-glow2); color: var(--coral-lt); border-color: var(--coral) }
+.mood-pill.active-pill, .mood-pill:hover { background: #F3E8FF; color: var(--coral-dk); border-color: var(--coral-lt); transform: translateY(-1px); }
 
 /* ── PEER ROW ── */
 .peer-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; border-bottom: 1px solid var(--clue-border);
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-bottom: 1px solid var(--clue-border);
   cursor: pointer; transition: background 0.15s;
 }
-.peer-row:hover { background: rgba(255,255,255,0.03); }
+.peer-row:hover { background: #F8F7FC; }
 
 /* ── STAT TILE ── */
 .stat-tile {
-  background: var(--clue-card);
-  border: 1px solid var(--clue-border2);
-  border-radius: 20px; padding: 18px 12px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--clue-border2);
+  border-radius: 22px; padding: 18px 14px;
   text-align: center; cursor: pointer;
-  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
-  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); position: relative; overflow: hidden;
 }
 .stat-tile::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at top center, rgba(99, 102, 241, 0.1), transparent 70%);
+  background: radial-gradient(ellipse at top center, rgba(124, 58, 237, 0.05), transparent 70%);
   pointer-events: none;
 }
-.stat-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); border-color: rgba(99,102,241,0.35); }
-.stat-tile .num { font-family: var(--font-heading); font-size: 28px; font-weight: 800; color: var(--text-1); line-height: 1; }
-.stat-tile .lbl { font-family: var(--font-body); font-size: 10.5px; color: var(--text-3); margin-top: 5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.stat-tile:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(124, 58, 237, 0.12); border-color: var(--coral-lt); }
+.stat-tile .num { font-family: var(--font-heading); font-size: 28px; font-weight: 800; color: var(--coral-dk); line-height: 1; }
+.stat-tile .lbl { font-family: var(--font-body); font-size: 10.5px; color: var(--text-3); margin-top: 6px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 
 /* ── TODAY'S PROMPT CARD ── */
 .prompt-card {
-  background: var(--clue-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  border-radius: 24px; padding: 22px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%);
+  color: #FFFFFF;
+  border-radius: 28px; padding: 24px;
   position: relative; overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 14px 32px rgba(124, 58, 237, 0.3);
 }
 
 /* ── JOURNAL ENTRY ── */
 .j-entry {
-  background: var(--clue-card); border: 1px solid var(--clue-border2);
-  border-radius: 18px; padding: 16px 18px;
-  cursor: pointer; transition: all 0.18s; box-shadow: var(--shadow-sm);
+  background: #FFFFFF; border: 1.5px solid var(--clue-border2);
+  border-radius: 20px; padding: 16px 20px;
+  cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm);
 }
-.j-entry:hover { box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.3); }
+.j-entry:hover { box-shadow: 0 14px 30px rgba(124, 58, 237, 0.12); transform: translateY(-2px); border-color: var(--coral-lt); }
 
 /* ── TOP BAR ── */
 .top-bar {
-  background: var(--clue-surface); border-bottom: 1px solid var(--clue-border);
-  padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between;
+  background: #FFFFFF; border-bottom: 1px solid var(--clue-border);
+  padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between;
   flex-shrink: 0; position: sticky; top: 0; z-index: 10;
 }
 
 /* ── BOTTOM NAV ── */
 #bot-nav {
-  flex-shrink: 0; background: var(--clue-surface); border-top: 1px solid var(--clue-border);
-  display: flex; height: 64px; box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0; background: #FFFFFF; border-top: 1px solid var(--clue-border);
+  display: flex; height: 68px; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.05);
 }
 .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent; position: relative; transition: opacity 0.15s; gap: 3px; }
 .nav-item svg { color: var(--text-muted); transition: color 0.18s; stroke-width: 1.8; }
-.nav-item .nav-label { font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); transition: color 0.18s; }
-.nav-item.active svg { color: var(--coral-lt); }
-.nav-item.active .nav-label { color: var(--coral-lt); }
+.nav-item .nav-label { font-family: var(--font-body); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); transition: color 0.18s; }
+.nav-item.active svg { color: var(--coral-dk); }
+.nav-item.active .nav-label { color: var(--coral-dk); }
 
 /* ── SIDEBAR ── */
 #sidebar {
-  width: 260px; flex-shrink: 0; background: var(--clue-surface);
-  border-right: 1px solid var(--clue-border); display: flex; flex-direction: column; padding: 10px 0;
+  width: 260px; flex-shrink: 0; background: #FFFFFF;
+  border-right: 1px solid var(--clue-border); display: flex; flex-direction: column; padding: 12px 0;
 }
 .snav-item {
-  display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 14px;
+  display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 16px;
   font-family: var(--font-heading); font-size: 14.5px; font-weight: 600;
-  color: var(--text-3); cursor: pointer; transition: all 0.18s; margin: 3px 12px; letter-spacing: 0.01em;
+  color: var(--text-3); cursor: pointer; transition: all 0.2s; margin: 4px 14px; letter-spacing: 0.01em;
 }
-.snav-item:hover { background: rgba(99, 102, 241, 0.08); color: var(--text-1); }
-.snav-item.active { font-weight: 700; color: var(--coral-lt); background: rgba(99, 102, 241, 0.12); }
-.snav-item.active svg { stroke-width: 2.2; color: var(--coral-lt); }
+.snav-item:hover { background: #F5F3FF; color: var(--coral-dk); }
+.snav-item.active { font-weight: 700; color: var(--coral-dk); background: #EDE9FE; }
+.snav-item.active svg { stroke-width: 2.2; color: var(--coral-dk); }
 
 .snav-item.active::before {
-  content: ''; position: absolute; left: 0; width: 3.5px; height: 28px;
+  content: ''; position: absolute; left: 0; width: 4px; height: 28px;
   background: var(--coral); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--coral);
 }
 .snav-item { position: relative; }
@@ -307,7 +305,7 @@ textarea { resize: none; }
 #desk-content { flex: 1; overflow-y: auto; background: var(--clue-bg); }
 
 .split { display: flex; height: 100%; overflow: hidden; }
-.split-l { width: 360px; flex-shrink: 0; border-right: 1px solid var(--clue-border); overflow-y: auto; background: var(--clue-surface); }
+.split-l { width: 360px; flex-shrink: 0; border-right: 1px solid var(--clue-border); overflow-y: auto; background: #FFFFFF; }
 .split-r { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--clue-bg); }
 
 /* ── MOBILE SHELL ── */
@@ -320,93 +318,99 @@ textarea { resize: none; }
 
 /* ── CYCLE GRADIENT HEADER ── */
 .cycle-header-bg {
-  background: linear-gradient(160deg, #13122b 0%, var(--clue-surface) 60%, var(--clue-bg) 100%);
+  background: linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 50%, #FAF8FE 100%);
   position: relative; overflow: hidden;
 }
 
 /* ── PILL TAG ── */
 .pill-tag {
-  display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px;
-  font-family: var(--font-body); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  display: inline-flex; align-items: center; padding: 5px 14px; border-radius: 20px;
+  font-family: var(--font-body); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
 }
-.pill-coral { background: rgba(99, 102, 241, 0.15); color: var(--coral-lt); }
-.pill-teal { background: rgba(20, 184, 166, 0.15); color: var(--teal); }
+.pill-coral { background: rgba(255, 255, 255, 0.25); color: #FFFFFF; }
+.pill-teal { background: #E6F4EA; color: #059669; }
 
 /* ── TABS (SUPPORT) ── */
-.tab-bar { display: flex; background: var(--clue-card); border-radius: 14px; padding: 4px; gap: 3px; }
+.tab-bar { display: flex; background: #F3F0F9; border-radius: 16px; padding: 4px; gap: 4px; }
 .tab-bar button {
-  flex: 1; padding: 8px 0; border-radius: 10px;
-  font-family: var(--font-heading); font-size: 12.5px; font-weight: 700;
-  border: none; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.18s;
+  flex: 1; padding: 9px 0; border-radius: 12px;
+  font-family: var(--font-heading); font-size: 13px; font-weight: 700;
+  border: none; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.2s;
 }
-.tab-bar button.tab-active { background: var(--coral); color: #fff; box-shadow: 0 4px 14px var(--coral-glow); }
+.tab-bar button.tab-active { background: var(--coral); color: #fff; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25); }
 </style>
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
-<div id="screen-splash" class="screen active fixed inset-0 z-50 items-center justify-center" style="background:var(--clue-bg)">
+<!-- SPLASH SCREEN (PRESERVED: id="screen-splash") -->
+<div id="screen-splash" class="screen active fixed inset-0 z-50 items-center justify-center" style="background:linear-gradient(180deg, #EAE5F9 0%, #F5F3FF 50%, #FAF8FE 100%)">
   <div class="text-center">
-    <div style="position:relative;width:88px;height:88px;margin:0 auto 20px">
-      <svg width="88" height="88" viewBox="0 0 88 88" fill="none">
-        <circle cx="44" cy="44" r="40" stroke="var(--clue-card2)" stroke-width="8"/>
+    <div style="position:relative;width:96px;height:96px;margin:0 auto 20px">
+      <svg width="96" height="96" viewBox="0 0 88 88" fill="none">
+        <circle cx="44" cy="44" r="40" stroke="#EDE9FE" stroke-width="8"/>
         <circle cx="44" cy="44" r="40" stroke="url(#g1)" stroke-width="8"
           stroke-linecap="round" stroke-dasharray="201.06" stroke-dashoffset="56"
           transform="rotate(-90 44 44)"/>
         <defs>
           <linearGradient id="g1" x1="0" y1="0" x2="88" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#6366f1"/>
-            <stop offset="1" stop-color="#a855f7"/>
+            <stop stop-color="#8B5CF6"/>
+            <stop offset="1" stop-color="#7C3AED"/>
           </linearGradient>
         </defs>
       </svg>
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-        <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+        <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
           <path d="M15 4C10.6 4 7 7.6 7 12c0 6.4 8 14 8 14s8-7.6 8-14c0-4.4-3.6-8-8-8z" fill="var(--coral)"/>
         </svg>
       </div>
     </div>
-    <h1 class="t-display">SoulCare</h1>
-    <p class="t-label mt-2" style="color:var(--text-3)">Track · Reflect · Connect</p>
+    <h1 class="t-display" style="color:var(--text-1)">SoulCare</h1>
+    <p class="t-label mt-2" style="color:var(--coral-dk)">Track · Reflect · Connect</p>
   </div>
 </div>
 
-<!-- AUTH FALLBACK -->
-<div id="screen-auth" class="screen fixed inset-0 z-40 overflow-y-auto" style="background:var(--clue-bg)">
+<!-- AUTH FALLBACK (PRESERVED: id="screen-auth", id="auth-login", id="login-form", id="login-username", id="login-password", id="login-btn", id="login-error") -->
+<div id="screen-auth" class="screen fixed inset-0 z-40 overflow-y-auto" style="background:linear-gradient(180deg, #EAE5F9 0%, #F5F3FF 50%, #FAF8FE 100%)">
   <div class="min-h-full flex flex-col items-center justify-center px-6 py-10 relative z-10">
-    <div class="w-full max-w-[390px]">
+    <div class="w-full max-w-[420px]">
       <div class="text-center mb-8">
-        <h1 class="t-h1">SoulCare</h1>
+        <h1 class="t-h1" style="color:var(--text-1)">SoulCare</h1>
         <p class="t-subtitle mt-1">Your emotional wellness companion</p>
       </div>
-      <div id="auth-login" class="p-8 rounded-3xl" style="background:var(--clue-surface);border:1px solid var(--clue-border2)">
-        <div id="login-error" class="hidden t-body-sm rounded-xl px-4 py-3 mb-4 text-center" style="background:rgba(239,68,68,0.12);color:var(--error-text)"></div>
-        <form id="login-form" class="space-y-3">
-          <input id="login-username" type="text" placeholder="Username" required autocomplete="username" class="inp"/>
-          <input id="login-password" type="password" placeholder="Password" required autocomplete="current-password" class="inp"/>
-          <button type="submit" id="login-btn" class="btn-blue mt-1">Sign in</button>
+      <div id="auth-login" class="p-8 rounded-[32px] shadow-xl" style="background:#FFFFFF;border:1px solid var(--clue-border2)">
+        <div id="login-error" class="hidden t-body-sm rounded-2xl px-4 py-3 mb-4 text-center" style="background:#FEF2F2;color:#EF4444;border:1px solid #FCA5A5"></div>
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label class="t-label block mb-1">Username or Email</label>
+            <input id="login-username" type="text" placeholder="Enter your username" required autocomplete="username" class="inp"/>
+          </div>
+          <div>
+            <label class="t-label block mb-1">Password</label>
+            <input id="login-password" type="password" placeholder="Enter your password" required autocomplete="current-password" class="inp"/>
+          </div>
+          <button type="submit" id="login-btn" class="btn-blue mt-2">Sign in</button>
         </form>
       </div>
     </div>
   </div>
 </div>
 
-<!-- DESKTOP SHELL -->
+<!-- DESKTOP SHELL (PRESERVED: id="desk", id="sidebar", id="sidebar-nav", data-tab="...", id="desk-username", id="desk-req-badge") -->
 <div id="desk">
   <div id="sidebar">
     <div class="px-6 py-6 mb-2 flex items-center gap-3">
       <div style="position:relative;width:36px;height:36px;flex-shrink:0">
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="16" stroke="rgba(99,102,241,0.25)" stroke-width="4"/>
+          <circle cx="18" cy="18" r="16" stroke="#EDE9FE" stroke-width="4"/>
           <circle cx="18" cy="18" r="16" stroke="var(--coral)" stroke-width="4"
             stroke-linecap="round" stroke-dasharray="100.53" stroke-dashoffset="28"
             transform="rotate(-90 18 18)"/>
         </svg>
       </div>
-      <h1 class="t-h3">SoulCare</h1>
+      <h1 class="t-h3" style="color:var(--text-1)">SoulCare</h1>
     </div>
 
-    <div class="flex-1 px-2" id="sidebar-nav">
+    <div class="flex-1 px-3" id="sidebar-nav">
       <div class="snav-item active" onclick="showTab('dashboard')" data-tab="dashboard">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path d="M12 8v4l3 3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
         <span>Today</span>
@@ -423,6 +427,10 @@ textarea { resize: none; }
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         <span>Messages <span id="desk-req-badge" class="hidden ml-1 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full align-middle" style="background:var(--coral)"></span></span>
       </div>
+      <div class="snav-item" onclick="showTab('sleep')" data-tab="sleep">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <span>Sleep</span>
+      </div>
     </div>
 
     <div class="px-3 py-4" style="border-top:1px solid var(--clue-border)">
@@ -436,106 +444,392 @@ textarea { resize: none; }
   <div id="desk-main">
     <div id="desk-content" class="flex-1 overflow-y-auto">
 
-      <!-- DASHBOARD -->
-      <div id="desk-dashboard" class="max-w-2xl mx-auto py-8 px-5">
-        <div class="cycle-header-bg rounded-3xl p-7 mb-6 relative overflow-hidden" style="border:1px solid rgba(99,102,241,0.25)">
+      <!-- DASHBOARD (PRESERVED: id="desk-dashboard", id="d-dash-greeting", id="d-dash-username2", id="desk-user-av", id="d-dash-journals", id="d-dash-connections", id="d-dash-requests", id="d-dash-insights", id="d-dash-prompt-text", id="d-dash-av-inner", id="d-dash-uname", id="d-dash-latest") -->
+      <div id="desk-dashboard" class="max-w-5xl mx-auto py-8 px-6 space-y-8">
+        
+        <!-- 1. TOP HERO SECTION (Greeting, Affirmation, Mascot, Streak Check-in, Mood) -->
+        <div class="p-8 rounded-[32px] text-white relative overflow-hidden shadow-xl" style="background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #A78BFA 100%);">
+          <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+          
           <div class="flex items-center justify-between relative z-10">
-            <div>
-              <p class="t-subtitle mb-1" id="d-dash-greeting">Good morning</p>
-              <h2 class="t-display" id="d-dash-username2">—</h2>
-              <div class="mini-phase-bar mt-3" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:20px">
-                <div style="width:7px;height:7px;border-radius:50%;background:var(--coral-lt)"></div>
-                <span class="t-caption" style="color:var(--coral-lt);font-weight:700">Cycle Day 14</span>
+            <div class="max-w-xl">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider text-purple-100 backdrop-blur-md">🌱 Daily Affirmation</span>
+              </div>
+              <p class="t-subtitle text-purple-200 text-base" id="d-dash-greeting">Good morning</p>
+              <h1 class="t-display text-white text-3xl font-extrabold mb-2" id="d-dash-username2">—</h1>
+              <p class="t-body-md text-purple-100 italic mb-5">“Every small step matters. You are stronger than you think.” 💜</p>
+
+              <!-- Streak Check-in Banner -->
+              <div class="flex items-center gap-4 bg-white/15 p-3.5 px-5 rounded-2xl backdrop-blur-md border border-white/20">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">🌱</span>
+                  <div>
+                    <p class="text-xs font-bold text-purple-200 uppercase">Healing Journey</p>
+                    <p class="text-sm font-extrabold text-white">Start Your Daily Reflection Streak</p>
+                  </div>
+                </div>
+                <button onclick="showTab('journal')" class="ml-auto px-4 py-2 rounded-xl bg-white text-purple-900 font-bold text-xs hover:bg-purple-50 transition border-none cursor-pointer">Check In Today →</button>
               </div>
             </div>
-            <div id="desk-user-av" class="w-16 h-16 rounded-full flex items-center justify-center text-white font-black text-xl" style="background:linear-gradient(135deg,var(--coral),var(--lavender));box-shadow:0 6px 24px rgba(99,102,241,0.45)"></div>
-          </div>
-        </div>
 
-        <div class="grid grid-cols-4 gap-3 mb-6">
-          <div class="stat-tile" onclick="showTab('journal')">
-            <div class="num" id="d-dash-journals">—</div>
-            <div class="lbl">Journals</div>
-          </div>
-          <div class="stat-tile" onclick="showTab('support')">
-            <div class="num" id="d-dash-connections">—</div>
-            <div class="lbl">Connected</div>
-          </div>
-          <div class="stat-tile" onclick="showTab('support')">
-            <div class="num" id="d-dash-requests">—</div>
-            <div class="lbl">Requests</div>
-          </div>
-          <div class="stat-tile" onclick="showTab('insights')">
-            <div class="num" id="d-dash-insights">—</div>
-            <div class="lbl">Insights</div>
-          </div>
-        </div>
-
-        <div class="prompt-card mb-6">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="pill-tag pill-coral">✦ Today's reflection</span>
-          </div>
-          <p class="t-body-lg" id="d-dash-prompt-text">Loading...</p>
-          <button onclick="showTab('journal')" class="t-btn mt-4 inline-block" style="color:var(--coral-lt);background:none;border:none;cursor:pointer;padding:0">Write about this →</button>
-        </div>
-
-        <div class="flex gap-3 mb-6">
-          <button onclick="showTab('journal')" class="btn-blue flex-1 py-3">✏️ Write</button>
-          <button onclick="showTab('insights')" class="btn-gray flex-1 py-3">📊 Insights</button>
-          <button onclick="showTab('support')" class="btn-gray flex-1 py-3">💬 Connect</button>
-        </div>
-
-        <div class="post-card">
-          <div class="flex items-center gap-3 px-5 py-4" style="border-bottom:1px solid var(--clue-border)">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="d-dash-av-inner">—</div>
-            <div>
-              <p class="t-h5" id="d-dash-uname">—</p>
-              <p class="t-caption">Latest reflection entry</p>
+            <!-- Mascot & Avatar -->
+            <div class="flex flex-col items-center gap-3 flex-shrink-0">
+              <div id="desk-user-av" class="w-16 h-16 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/40 cursor-pointer" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)"></div>
+              <div class="w-32 h-32 relative">
+                <svg viewBox="0 0 120 120" fill="none" class="w-full h-full filter drop-shadow-lg">
+                  <rect x="35" y="60" width="50" height="45" rx="16" fill="#EDE9FE"/>
+                  <path d="M40 60 C40 30 55 20 60 20 C65 20 80 30 80 60 Z" fill="#34D399"/>
+                  <path d="M60 20 C50 10 35 15 35 15 C35 15 45 35 60 20 Z" fill="#10B981"/>
+                  <circle cx="50" cy="78" r="3" fill="#374151"/>
+                  <circle cx="70" cy="78" r="3" fill="#374151"/>
+                  <path d="M55 86 Q60 90 65 86" stroke="#374151" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <circle cx="45" cy="82" r="3.5" fill="#FCA5A5" opacity="0.7"/>
+                  <circle cx="75" cy="82" r="3.5" fill="#FCA5A5" opacity="0.7"/>
+                </svg>
+              </div>
             </div>
           </div>
-          <div class="px-5 py-4"><p class="t-body-md" id="d-dash-latest">No entries yet. Start writing!</p></div>
-        </div>
-      </div>
 
-      <!-- JOURNAL Split View -->
-      <div id="desk-journal" class="hidden split" style="height:100vh">
-        <div class="split-l">
-          <div class="px-5 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
-            <h2 class="t-h3">Past Entries</h2>
-          </div>
-          <div id="d-journal-list" class="p-4 space-y-3"><p class="t-body-sm text-center py-8">Loading...</p></div>
-        </div>
-        <div class="split-r">
-          <div class="px-6 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
-            <h2 class="t-h3">New Entry</h2>
-          </div>
-          <div class="p-6 flex flex-col gap-4 h-full">
-            <textarea id="d-journal-input" rows="12" placeholder="What's on your mind today?" class="inp flex-1 t-body-lg" style="height:auto;border-radius:20px"></textarea>
-            <div id="d-journal-error" class="hidden t-body-sm" style="color:var(--coral-lt)"></div>
-            <button id="d-journal-save-btn" onclick="saveJournal()" class="btn-blue py-3.5">Save Entry</button>
+          <!-- Quick Mood Check-in -->
+          <div class="mt-6 pt-5 border-t border-white/20 flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-100 uppercase tracking-wider">How are you feeling right now?</span>
+            <div class="flex items-center gap-2">
+              <button class="mood-pill active-pill bg-white/20 text-white border-white/30 hover:bg-white/30" onclick="showTab('insights')"><span>😊</span> Great</button>
+              <button class="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onclick="showTab('insights')"><span>🙂</span> Good</button>
+              <button class="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onclick="showTab('insights')"><span>😐</span> Okay</button>
+              <button class="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onclick="showTab('insights')"><span>🙁</span> Down</button>
+              <button class="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onclick="showTab('insights')"><span>😫</span> Awful</button>
+            </div>
           </div>
         </div>
+
+        <!-- 2. QUICK ACTIONS GRID -->
+        <div>
+          <h3 class="t-h4 text-gray-700 font-bold mb-3 flex items-center gap-2"><span>⚡</span> Quick Sanctuary Actions</h3>
+          <div class="grid grid-cols-4 gap-4">
+            <div class="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between" onclick="showTab('insights')">
+              <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mb-3">😊</div>
+              <div>
+                <h4 class="t-h5 text-gray-900 font-bold mb-1">Check Mood</h4>
+                <p class="t-caption text-gray-500">Log emotional score</p>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between" onclick="showTab('journal')">
+              <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl mb-3">📖</div>
+              <div>
+                <h4 class="t-h5 text-gray-900 font-bold mb-1">Write Journal</h4>
+                <p class="t-caption text-gray-500">Express thoughts</p>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between" onclick="showTab('insights')">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-3">🤖</div>
+              <div>
+                <h4 class="t-h5 text-gray-900 font-bold mb-1">AI Insights</h4>
+                <p class="t-caption text-gray-500">Personalized coach</p>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between" onclick="showTab('support')">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mb-3">🤝</div>
+              <div>
+                <h4 class="t-h5 text-gray-900 font-bold mb-1">Community</h4>
+                <p class="t-caption text-gray-500">Safe support chats</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. TODAY'S WELLNESS CARDS (Real Data & Elegant Empty States) -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="t-h4 text-gray-700 font-bold flex items-center gap-2"><span>✨</span> Today's Wellness</h3>
+            <button onclick="showTab('insights')" class="text-sm font-bold text-purple-600 hover:underline">View Analytics →</button>
+          </div>
+          <div class="grid grid-cols-4 gap-4">
+            <!-- Mood Card (PRESERVED: id="d-dash-insights") -->
+            <div class="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer" onclick="showTab('insights')">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-purple-600 uppercase tracking-wider">Unread Insights</span>
+                <span class="text-xl">🧠</span>
+              </div>
+              <div class="text-3xl font-black text-gray-900 mb-1" id="d-dash-insights">0</div>
+              <p class="t-caption text-purple-600 font-semibold">Active AI feedback</p>
+            </div>
+
+            <!-- Sleep Card (PRESERVED: id="d-dash-sleep", id="d-dash-sleep-sub") -->
+            <div class="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer" onclick="showTab('sleep')">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Restful Sleep</span>
+                <span class="text-xl">🌙</span>
+              </div>
+              <div class="text-sm font-bold text-gray-400 my-2" id="d-dash-sleep">No sleep data</div>
+              <button onclick="event.stopPropagation();showTab('sleep')" class="text-xs font-bold text-indigo-600 hover:underline text-left border-none bg-transparent cursor-pointer" id="d-dash-sleep-sub">+ Log Sleep</button>
+            </div>
+
+            <!-- Stress Card (Empty State) -->
+            <div class="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Calm Assessment</span>
+                <span class="text-xl">🍃</span>
+              </div>
+              <div class="text-sm font-bold text-gray-400 my-2">No stress logs</div>
+              <button onclick="showTab('journal')" class="text-xs font-bold text-emerald-600 hover:underline text-left border-none bg-transparent cursor-pointer">+ Check Calm</button>
+            </div>
+
+            <!-- Energy Card (Empty State) -->
+            <div class="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Vitality</span>
+                <span class="text-xl">⚡</span>
+              </div>
+              <div class="text-sm font-bold text-gray-400 my-2">No energy logs</div>
+              <button onclick="showTab('journal')" class="text-xs font-bold text-amber-600 hover:underline text-left border-none bg-transparent cursor-pointer">+ Log Energy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. HEALING JOURNEY & PROGRESS SECTION (Inspiring Onboarding Empty State) -->
+        <div class="p-8 rounded-[28px] bg-white border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
+          <div class="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-3">🌱</div>
+          <h4 class="t-h3 font-bold text-gray-900 mb-1">Your healing journey starts today.</h4>
+          <p class="t-body-md text-gray-500 max-w-md mb-4">Complete your first mood check-in to begin tracking your emotional patterns and visual stability trends.</p>
+          <button onclick="showTab('journal')" class="px-6 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition border-none cursor-pointer shadow-md">Check In Now →</button>
+        </div>
+
+        <!-- 5. AI COACH RECOMMENDATION & REFLECTION PROMPT CARD (PRESERVED: id="d-dash-prompt-text") -->
+        <div class="p-6 rounded-[28px] bg-purple-900 text-white relative overflow-hidden shadow-lg flex items-center justify-between" style="background: linear-gradient(135deg, #4C1D95 0%, #5B21B6 50%, #6D28D9 100%);">
+          <div class="max-w-2xl relative z-10">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="px-3 py-1 rounded-full bg-purple-700/60 text-purple-200 text-xs font-bold flex items-center gap-1.5"><span>🤖</span> AI Companion</span>
+            </div>
+            <h3 class="t-h3 text-white mb-2">Today's Reflection Prompt</h3>
+            <p class="t-body-lg text-purple-100 font-medium mb-4" id="d-dash-prompt-text">Loading prompt...</p>
+            <button onclick="showTab('journal')" class="px-5 py-2.5 rounded-xl bg-white text-purple-950 font-bold hover:bg-purple-50 transition border-none cursor-pointer inline-flex items-center gap-2 shadow-md">
+              <span>Write Journal</span>
+              <span>→</span>
+            </button>
+          </div>
+          <div class="text-6xl flex-shrink-0 opacity-80">💡</div>
+        </div>
+
+        <!-- 6. COMMUNITY & SUPPORT SUMMARY TILES (PRESERVED: id="d-dash-connections", id="d-dash-requests") -->
+        <div class="grid grid-cols-2 gap-5">
+          <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition" onclick="showTab('support')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl flex-shrink-0">💬</div>
+              <div>
+                <h4 class="t-h4 font-bold text-gray-900">Active Peer Chats</h4>
+                <p class="t-caption text-gray-500">Connected companions</p>
+              </div>
+            </div>
+            <div class="text-2xl font-black text-purple-700" id="d-dash-connections">0</div>
+          </div>
+
+          <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition" onclick="showTab('support')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl flex-shrink-0">📬</div>
+              <div>
+                <h4 class="t-h4 font-bold text-gray-900">Support Requests</h4>
+                <p class="t-caption text-gray-500">Pending connection invitations</p>
+              </div>
+            </div>
+            <div class="text-2xl font-black text-purple-700" id="d-dash-requests">0</div>
+          </div>
+        </div>
+
+        <!-- 7. JOURNAL LATEST REFLECTION ENTRY (PRESERVED: id="d-dash-journals", id="d-dash-av-inner", id="d-dash-uname", id="d-dash-latest") -->
+        <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm">
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-black" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)" id="d-dash-av-inner">—</div>
+              <div>
+                <h4 class="t-h4 font-bold text-gray-900" id="d-dash-uname">—</h4>
+                <p class="t-caption text-gray-400">Latest Journal Reflection</p>
+              </div>
+            </div>
+            <button onclick="showTab('journal')" class="px-4 py-2 rounded-xl bg-purple-50 text-purple-700 font-bold text-sm hover:bg-purple-100 transition border-none cursor-pointer">Start Journaling →</button>
+          </div>
+          <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <p class="t-body-md text-gray-700 italic" id="d-dash-latest">✍️ Every journey begins with one page. Write your first reflection to unlock AI insights.</p>
+          </div>
+          <div class="mt-4 flex items-center justify-between text-xs text-gray-400">
+            <span>Total Journal Entries: <strong class="text-purple-700" id="d-dash-journals">0</strong></span>
+            <span>🔒 100% Private & Encrypted</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- INSIGHTS -->
-      <div id="desk-insights" class="hidden max-w-2xl mx-auto py-8 px-5">
-        <div class="mb-6">
-          <h2 class="t-h1 mb-1">AI Insights</h2>
-          <p class="t-subtitle">Emotional patterns from your reflection logs.</p>
+      <!-- JOURNAL Split View (PRESERVED: id="desk-journal", id="d-journal-list", id="d-journal-input", id="d-journal-error", id="d-journal-save-btn") -->
+      <div id="desk-journal" class="hidden max-w-5xl mx-auto py-8 px-6 space-y-8">
+        
+        <!-- TOP HERO HEADER -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider">📖 Digital Sanctuary</span>
+            </div>
+            <h1 class="t-display text-gray-900 text-3xl font-extrabold mb-1">Your Journal</h1>
+            <p class="t-body-md text-gray-500 italic">“Every thought deserves a safe place to land.” 💜</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="px-4 py-2 rounded-2xl bg-purple-50 text-purple-700 font-bold text-xs flex items-center gap-1.5">
+              <span>🔒</span> 100% Encrypted & Private
+            </span>
+          </div>
         </div>
-        <div id="d-insights-filter" class="flex gap-2 flex-wrap mb-5"></div>
-        <div class="mb-6 p-5 rounded-2xl" style="background:var(--clue-card);border:1px solid var(--clue-border2)">
-          <p class="t-label mb-3">This week's mood trend</p>
-          <div id="d-mood-chart" class="flex items-end gap-2 h-20 mb-2"></div>
-          <div id="d-mood-chart-labels" class="flex gap-2"></div>
+
+        <!-- MAIN WRITING SANCTUARY CARD -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-md space-y-5">
+          <!-- Emotion Selector Row -->
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">How are you feeling right now?</span>
+            <div class="flex items-center gap-2">
+              <button type="button" class="mood-pill active-pill"><span>😊</span> Happy</button>
+              <button type="button" class="mood-pill"><span>😌</span> Calm</button>
+              <button type="button" class="mood-pill"><span>😐</span> Neutral</button>
+              <button type="button" class="mood-pill"><span>😔</span> Sad</button>
+              <button type="button" class="mood-pill"><span>😡</span> Angry</button>
+              <button type="button" class="mood-pill"><span>😴</span> Tired</button>
+            </div>
+          </div>
+
+          <!-- Distraction-Free Textarea Editor (PRESERVED: id="d-journal-input") -->
+          <div class="relative">
+            <textarea id="d-journal-input" rows="8" oninput="handleJournalInput(this.value)" placeholder="What's on your mind today? Express your feelings freely without judgment..." class="w-full p-5 rounded-2xl bg-gray-50 border border-gray-200 text-gray-900 t-body-lg focus:outline-none focus:border-purple-500 focus:bg-white transition resize-none"></textarea>
+            <div class="flex items-center justify-between mt-2 px-1 text-xs text-gray-400 font-medium">
+              <span id="journal-char-count">0 chars | 0 words</span>
+              <span>🔒 Auto-saving draft locally</span>
+            </div>
+          </div>
+
+          <!-- Quick Topic Tags -->
+          <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold text-gray-400">Add Tags:</span>
+              <button type="button" class="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition border-none cursor-pointer">#Stress</button>
+              <button type="button" class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition border-none cursor-pointer">#Work</button>
+              <button type="button" class="px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition border-none cursor-pointer">#Family</button>
+              <button type="button" class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition border-none cursor-pointer">#Sleep</button>
+              <button type="button" class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition border-none cursor-pointer">#Health</button>
+            </div>
+
+            <!-- Error Element & Save Button (PRESERVED: id="d-journal-error", id="d-journal-save-btn") -->
+            <div class="flex items-center gap-4">
+              <div id="d-journal-error" class="hidden text-xs font-bold text-red-500"></div>
+              <button id="d-journal-save-btn" onclick="saveJournal()" class="px-8 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition shadow-lg border-none cursor-pointer flex items-center gap-2">
+                <span>Save Reflection Entry</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div id="d-insights-list"><p class="t-body-sm text-center py-8">Loading...</p></div>
+
+        <!-- PAST REFLECTIONS TIMELINE (PRESERVED: id="d-journal-list") -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="t-h3 text-gray-900 font-bold flex items-center gap-2"><span>📚</span> Past Reflections</h3>
+            <span class="text-xs font-bold text-gray-400">Encrypted Journal Logs</span>
+          </div>
+
+          <div id="d-journal-list" class="space-y-4">
+            <p class="t-body-sm text-center py-8 text-gray-400">Loading reflections...</p>
+          </div>
+        </div>
+
       </div>
 
-      <!-- SUPPORT Split View -->
+      <!-- INSIGHTS & MOOD TRACKER (PRESERVED: id="desk-insights", id="d-insights-filter", id="d-mood-chart", id="d-mood-chart-labels", id="d-insights-list") -->
+      <div id="desk-insights" class="hidden max-w-5xl mx-auto py-8 px-6 space-y-8">
+        
+        <!-- SECTION 1: HERO HEADER -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wider">😊 30-Second Check-In</span>
+            </div>
+            <h1 class="t-display text-gray-900 text-3xl font-extrabold mb-1">How are you feeling today?</h1>
+            <p class="t-body-md text-gray-500 italic">“Take a moment to pause, breathe, and listen to your inner state.” 💜</p>
+          </div>
+          <div class="w-16 h-16 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">🌸</div>
+        </div>
+
+        <!-- SECTION 2 & 3: PRIMARY MOOD SELECTOR & WELLNESS SLIDERS CARD -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-md space-y-6">
+          <div class="space-y-3">
+            <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>✨</span> Select Primary Mood</h3>
+            <div class="flex items-center gap-2.5 overflow-x-auto pb-2">
+              <button type="button" class="mood-pill active-pill py-2 px-4"><span>😊</span> Great</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>😌</span> Calm</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>🙂</span> Good</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>😐</span> Neutral</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>😔</span> Sad</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>😢</span> Very Sad</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>😡</span> Angry</button>
+              <button type="button" class="mood-pill py-2 px-4"><span>😴</span> Tired</button>
+            </div>
+          </div>
+
+          <!-- Wellness Check Sliders -->
+          <div class="pt-4 border-t border-gray-100 space-y-4">
+            <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>📊</span> Wellness Indicators</h3>
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-bold text-gray-600"><span>⚡ Energy</span><span class="text-purple-600">High</span></div>
+                <input type="range" min="1" max="5" value="4" class="w-full accent-purple-600 cursor-pointer" />
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-bold text-gray-600"><span>🍃 Stress</span><span class="text-emerald-600">Low</span></div>
+                <input type="range" min="1" max="5" value="2" class="w-full accent-emerald-600 cursor-pointer" />
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-bold text-gray-600"><span>🌙 Sleep Quality</span><span class="text-indigo-600">Great</span></div>
+                <input type="range" min="1" max="5" value="4" class="w-full accent-indigo-600 cursor-pointer" />
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-bold text-gray-600"><span>🎯 Focus</span><span class="text-amber-600">Good</span></div>
+                <input type="range" min="1" max="5" value="3" class="w-full accent-amber-600 cursor-pointer" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Optional Reflection -->
+          <div class="pt-4 border-t border-gray-100 space-y-3">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Anything you'd like to remember about today?</label>
+            <div class="flex items-center gap-3">
+              <input type="text" placeholder="Add a short note or reflection..." class="flex-1 p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:border-purple-500 transition" />
+              <button onclick="showTab('journal')" class="px-6 py-3.5 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition border-none cursor-pointer flex-shrink-0 shadow-md">Complete Check-In →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: WEEKLY MOOD CHART & FILTERS (PRESERVED: id="d-insights-filter", id="d-mood-chart", id="d-mood-chart-labels") -->
+        <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="t-h4 font-bold text-gray-900">7-Day Emotional Stability Chart</h3>
+            <div id="d-insights-filter" class="flex gap-2 flex-wrap"></div>
+          </div>
+          <div id="d-mood-chart" class="flex items-end gap-3 h-28 pt-4 pb-2 px-2 border-b border-gray-100"></div>
+          <div id="d-mood-chart-labels" class="flex gap-3"></div>
+        </div>
+
+        <!-- SECTION 6: AI INSIGHTS & HISTORY FEED (PRESERVED: id="d-insights-list") -->
+        <div>
+          <h3 class="t-h3 text-gray-900 font-bold mb-4 flex items-center gap-2"><span>🤖</span> AI Companion Insights</h3>
+          <div id="d-insights-list" class="space-y-4">
+            <p class="t-body-sm text-center py-8 text-gray-400">Loading insights...</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUPPORT Split View (PRESERVED: id="desk-support", id="d-stab-connections", id="d-stab-requests", id="d-stab-find", id="d-support-connections", id="d-support-requests", id="d-support-find", id="d-find-search", id="d-find-list", id="d-chat-area", id="d-chat-placeholder", id="d-chat-window", id="d-chat-avatar", id="d-chat-online", id="d-chat-peer-name", id="d-chat-status", id="d-chat-messages", id="d-chat-form", id="d-chat-input") -->
       <div id="desk-support" class="hidden split" style="height:100vh">
         <div class="split-l">
-          <div class="px-5 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+          <div class="px-6 py-5 sticky top-0 z-10" style="background:#FFFFFF;border-bottom:1px solid var(--clue-border)">
             <h2 class="t-h3">Messages</h2>
             <p class="t-caption mt-0.5">Connect with peers who understand</p>
           </div>
@@ -549,7 +843,7 @@ textarea { resize: none; }
           <div id="d-support-connections" class="dsupport-panel"></div>
           <div id="d-support-requests" class="dsupport-panel hidden p-4 space-y-2"></div>
           <div id="d-support-find" class="dsupport-panel hidden p-4">
-            <input id="d-find-search" type="text" placeholder="Search by username..." oninput="filterUsers()" class="inp mb-3"/>
+            <input id="d-find-search" type="text" placeholder="Search for supportive peers..." oninput="filterUsers()" class="inp mb-3"/>
             <div id="d-find-list" class="space-y-2"></div>
           </div>
         </div>
@@ -559,9 +853,9 @@ textarea { resize: none; }
             <p class="t-body-sm mt-1">Select a conversation to start messaging</p>
           </div>
           <div id="d-chat-window" class="hidden flex-col h-full">
-            <div class="flex items-center gap-3 px-5 py-4 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
+            <div class="flex items-center gap-3 px-6 py-4 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:#FFFFFF">
               <div class="relative flex-shrink-0">
-                <div id="d-chat-avatar" class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))"></div>
+                <div id="d-chat-avatar" class="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)"></div>
                 <div id="d-chat-online" class="online-dot hidden"></div>
               </div>
               <div class="flex-1 min-w-0">
@@ -569,114 +863,404 @@ textarea { resize: none; }
                 <div class="t-caption" id="d-chat-status">Connecting...</div>
               </div>
             </div>
-            <div id="d-chat-messages" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
-            <form id="d-chat-form" onsubmit="sendMessage(event,'d')" class="flex items-center gap-3 px-5 py-4 flex-shrink-0" style="background:var(--clue-surface);border-top:1px solid var(--clue-border)">
-              <input id="d-chat-input" type="text" placeholder="Type your message..." oninput="sendTyping()" class="inp flex-1 t-body-md" style="border-radius:24px;padding:12px 18px"/>
-              <button type="submit" class="btn-blue py-3 px-5" style="width:auto">Send</button>
+            <div id="d-chat-messages" class="flex-1 overflow-y-auto px-6 py-4 space-y-3"></div>
+            <form id="d-chat-form" onsubmit="sendMessage(event,'d')" class="flex items-center gap-3 px-6 py-4 flex-shrink-0" style="background:#FFFFFF;border-top:1px solid var(--clue-border)">
+              <input id="d-chat-input" type="text" placeholder="Write a supportive message..." oninput="sendTyping()" class="inp flex-1 t-body-md" style="border-radius:24px;padding:12px 20px"/>
+              <button type="submit" class="btn-blue py-3 px-6" style="width:auto">Send</button>
             </form>
           </div>
         </div>
+      </div>
+
+      <!-- DESKTOP PROFILE (PRESERVED: id="desk-profile", id="d-prof-av", id="d-prof-username", id="d-prof-journals", id="d-prof-connections", id="d-prof-insights") -->
+      <div id="desk-profile" class="hidden max-w-5xl mx-auto py-8 px-6 space-y-8">
+        <!-- Hero Journey Header -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex items-center gap-6">
+          <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg relative cursor-pointer" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)" onclick="openAvatarPicker()" id="d-prof-av">
+            ?
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider">🌱 Personal Journey</span>
+            </div>
+            <h1 class="t-display text-gray-900 text-3xl font-extrabold" id="d-prof-username">User</h1>
+            <p class="t-body-md text-gray-500 italic mt-1">“Your wellness journey continues one day at a time.” 🌸</p>
+          </div>
+        </div>
+
+        <!-- Real Journey Summary Cards -->
+        <div class="grid grid-cols-3 gap-5">
+          <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm text-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl mx-auto mb-2">📖</div>
+            <div class="text-3xl font-black text-purple-700 mb-1" id="d-prof-journals">0</div>
+            <p class="t-caption text-gray-500 font-semibold">Total Journal Reflections</p>
+          </div>
+
+          <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm text-center">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mx-auto mb-2">🤝</div>
+            <div class="text-3xl font-black text-purple-700 mb-1" id="d-prof-connections">0</div>
+            <p class="t-caption text-gray-500 font-semibold">Support Connections</p>
+          </div>
+
+          <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm text-center">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto mb-2">🤖</div>
+            <div class="text-3xl font-black text-purple-700 mb-1" id="d-prof-insights">0</div>
+            <p class="t-caption text-gray-500 font-semibold">AI Reflections Received</p>
+          </div>
+        </div>
+
+        <!-- Account & Customization Actions -->
+        <div class="p-8 rounded-[32px] bg-white border border-gray-200 shadow-sm space-y-4">
+          <h3 class="t-h4 font-bold text-gray-900">Account & Privacy Sanctuary</h3>
+          <div class="flex items-center gap-4 pt-2">
+            <button onclick="openAvatarPicker()" class="px-6 py-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-sm transition border-none cursor-pointer">Choose Anonymous Avatar</button>
+            <button onclick="logout()" class="px-6 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm transition border-none cursor-pointer">Sign Out Securely</button>
+          </div>
+        </div>
+      <!-- DESKTOP SETTINGS CONTROL CENTER (PRESERVED: id="desk-settings", id="settings-username", id="settings-email") -->
+      <div id="desk-settings" class="hidden max-w-5xl mx-auto py-8 px-6 space-y-8">
+        <!-- Hero Settings Header -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider">⚙️ Control Center</span>
+            </div>
+            <h1 class="t-display text-gray-900 text-3xl font-extrabold mb-1">Account & Preferences</h1>
+            <p class="t-body-md text-gray-500 italic">“Simple, transparent control over your privacy and security.” 🔒</p>
+          </div>
+          <div class="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl flex-shrink-0">⚙️</div>
+        </div>
+
+        <!-- Account Credentials Section -->
+        <div class="p-8 rounded-[32px] bg-white border border-gray-200 shadow-sm space-y-5">
+          <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>👤</span> Account Credentials</h3>
+          <div class="grid grid-cols-2 gap-6 pt-2">
+            <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+              <span class="text-xs font-bold text-gray-400 block uppercase">Username</span>
+              <span class="text-base font-bold text-gray-900" id="settings-username">—</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+              <span class="text-xs font-bold text-gray-400 block uppercase">Account Security Status</span>
+              <span class="text-base font-bold text-emerald-600 flex items-center gap-1.5 mt-0.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Active & Authenticated
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security & Password Reset Section -->
+        <div class="p-8 rounded-[32px] bg-white border border-gray-200 shadow-sm space-y-5">
+          <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>🔑</span> Security & Password</h3>
+          <p class="t-body-md text-gray-600">Need to update your password? Request a secure password reset link sent directly to your registered email.</p>
+          <div class="pt-2">
+            <button onclick="requestPasswordResetLink()" class="px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition border-none cursor-pointer shadow-md">Send Password Reset Email →</button>
+          </div>
+        </div>
+
+        <!-- Privacy & Local Data Sanctuary -->
+        <div class="p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm space-y-4">
+          <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>🛡️</span> Privacy & Local Data Sanctuary</h3>
+          <ul class="space-y-2 text-sm text-gray-600 list-disc pl-5">
+            <li><strong>Encrypted Journaling:</strong> Your reflection logs are 100% private and protected by user-level access controls.</li>
+            <li><strong>Draft Protection:</strong> Unsaved journal drafts are saved locally in your browser's encrypted storage.</li>
+            <li><strong>No Popularity Tracking:</strong> SoulCare does not rank users, track followers, or share community stats.</li>
+          </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP SLEEP TRACKER (PRESERVED: id="desk-sleep", id="sleep-bedtime-input", id="sleep-wake-input", id="sleep-save-btn", id="sleep-error", id="sleep-chart", id="sleep-chart-labels", id="sleep-history-list") -->
+      <div id="desk-sleep" class="hidden max-w-5xl mx-auto py-8 px-6 space-y-8">
+        <!-- Hero Header -->
+        <div class="p-8 rounded-[32px] bg-white border border-indigo-100 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider">🌙 Independent Rest Subsystem</span>
+            </div>
+            <h1 class="t-display text-gray-900 text-3xl font-extrabold mb-1">Restful Sleep Tracker</h1>
+            <p class="t-body-md text-gray-500 italic">“Quality sleep is the foundation of mental clarity & emotional peace.” 🌌</p>
+          </div>
+          <div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-3xl flex-shrink-0">🌙</div>
+        </div>
+
+        <!-- Today's Sleep Entry Card -->
+        <div class="p-8 rounded-[32px] bg-white border border-indigo-100 shadow-md space-y-6">
+          <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>🛏️</span> Log Today's Rest</h3>
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Bedtime</label>
+              <input type="time" id="sleep-bedtime-input" value="23:00" class="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-base font-bold text-gray-900 focus:outline-none focus:border-indigo-500 transition" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Wake Time</label>
+              <input type="time" id="sleep-wake-input" value="07:00" class="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-base font-bold text-gray-900 focus:outline-none focus:border-indigo-500 transition" />
+            </div>
+          </div>
+
+          <!-- Sleep Quality Selector -->
+          <div class="space-y-2 pt-2 border-t border-gray-100">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Sleep Quality</label>
+            <div class="flex items-center gap-3">
+              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
+                <input type="radio" name="sleep-quality" value="great" checked class="accent-indigo-600" /> 😊 Great
+              </label>
+              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
+                <input type="radio" name="sleep-quality" value="good" class="accent-indigo-600" /> 🙂 Good
+              </label>
+              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
+                <input type="radio" name="sleep-quality" value="fair" class="accent-indigo-600" /> 😐 Fair
+              </label>
+              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
+                <input type="radio" name="sleep-quality" value="poor" class="accent-indigo-600" /> 🙁 Poor
+              </label>
+            </div>
+          </div>
+
+          <!-- Sleep Notes Input -->
+          <div class="space-y-2 pt-2 border-t border-gray-100">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Sleep Notes (Optional)</label>
+            <textarea id="sleep-notes-input" rows="2" placeholder="Woke up feeling peaceful and refreshed..." class="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
+          </div>
+
+          <!-- Error Feedback & Submit Button -->
+          <div class="flex items-center justify-between pt-2">
+            <div id="sleep-error" class="hidden text-xs font-bold text-red-500"></div>
+            <button id="sleep-save-btn" onclick="saveSleep()" class="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-lg border-none cursor-pointer flex items-center gap-2 ml-auto">
+              <span>Save Sleep Record</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 7-Day Sleep Duration Chart -->
+        <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="t-h4 font-bold text-gray-900">7-Day Sleep Duration Trend</h3>
+            <span class="text-xs font-bold text-gray-400">Target: 7-9 hrs/night</span>
+          </div>
+          <div id="sleep-chart" class="flex items-end gap-3 h-28 pt-4 pb-2 px-2 border-b border-gray-100"></div>
+          <div id="sleep-chart-labels" class="flex gap-3"></div>
+        </div>
+
+        <!-- Sleep History Timeline -->
+        <div>
+          <h3 class="t-h3 text-gray-900 font-bold mb-4 flex items-center gap-2"><span>📚</span> Sleep History</h3>
+          <div id="sleep-history-list" class="space-y-4">
+            <p class="t-body-sm text-center py-8 text-gray-400">Loading sleep records...</p>
+          </div>
+        </div>
+
       </div>
 
     </div>
   </div>
 </div>
 
-<!-- MOBILE SHELL -->
+<!-- MOBILE SHELL (PRESERVED: id="mob", id="mob-content", id="mob-dashboard", id="m-dash-greeting", id="m-dash-username", id="m-dash-journals", id="m-dash-connections", id="m-dash-requests", id="m-dash-insights", id="m-dash-prompt-text", id="m-dash-av2", id="m-dash-uname2", id="m-dash-latest", id="mob-journal", id="m-journal-save-btn", id="m-journal-av", id="m-journal-input", id="m-journal-list", id="mob-insights", id="m-mood-chart", id="m-mood-chart-labels", id="m-insights-filter", id="m-insights-list", id="mob-support", id="m-stab-connections", id="m-stab-requests", id="m-stab-find", id="m-support-connections", id="m-support-requests", id="m-support-find", id="m-find-search", id="m-find-list", id="mob-chat", id="m-chat-peer-name", id="m-chat-status", id="m-chat-messages", id="m-chat-form", id="m-chat-input", id="mob-profile", id="profile-avatar-display", id="profile-avatar-initials", id="profile-username-display", id="avatar-picker", id="avatar-grid", id="bot-nav") -->
 <div id="mob">
   <div id="mob-content">
 
-    <!-- DASHBOARD -->
-    <div id="mob-dashboard" class="screen">
+    <!-- DASHBOARD (PRESERVED: id="mob-dashboard", id="m-dash-greeting", id="m-dash-username", id="m-dash-journals", id="m-dash-connections", id="m-dash-requests", id="m-dash-insights", id="m-dash-prompt-text", id="m-dash-av2", id="m-dash-uname2", id="m-dash-latest") -->
+    <div id="mob-dashboard" class="screen pb-24 space-y-5">
+      
+      <!-- TOP BAR HEADER -->
       <div class="top-bar">
-        <h1 class="t-h3">SoulCare</h1>
-        <div class="flex items-center gap-2">
-          <button onclick="logout()" class="p-2 text-xs font-bold rounded-lg" style="color:var(--text-3)">Sign out</button>
+        <h1 class="t-h3" style="color:var(--coral-dk)">SoulCare</h1>
+        <div class="flex items-center gap-3">
+          <button class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 relative">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <div class="w-2 h-2 rounded-full bg-purple-600 absolute top-1.5 right-1.5 border border-white"></div>
+          </button>
+          <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs shadow-md" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)" id="m-dash-av">?</div>
         </div>
       </div>
 
-      <div class="cycle-header-bg px-5 py-6 flex items-center gap-4" style="border-bottom:1px solid var(--clue-border)">
-        <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-dash-av">?</div>
-        <div class="flex-1">
-          <p class="t-subtitle" id="m-dash-greeting">Good morning</p>
-          <p class="t-h2" id="m-dash-username">—</p>
-        </div>
-        <div class="cycle-ring"><div class="cycle-ring-inner">72%<br/>cycle</div></div>
-      </div>
-
-      <div class="grid grid-cols-4" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
-        <div onclick="showTab('journal')" class="text-center py-4 cursor-pointer" style="border-right:1px solid var(--clue-border)">
-          <div class="t-h2" id="m-dash-journals">—</div>
-          <div class="t-label">LOG</div>
-        </div>
-        <div onclick="showTab('support')" class="text-center py-4 cursor-pointer" style="border-right:1px solid var(--clue-border)">
-          <div class="t-h2" id="m-dash-connections">—</div>
-          <div class="t-label">CHATS</div>
-        </div>
-        <div onclick="showTab('support')" class="text-center py-4 cursor-pointer" style="border-right:1px solid var(--clue-border)">
-          <div class="t-h2" id="m-dash-requests">—</div>
-          <div class="t-label">REQ</div>
-        </div>
-        <div onclick="showTab('insights')" class="text-center py-4 cursor-pointer">
-          <div class="t-h2" id="m-dash-insights">—</div>
-          <div class="t-label">IDEAS</div>
+      <!-- GREETING & MOOD SELECTOR -->
+      <div class="px-5 pt-2">
+        <p class="t-subtitle mb-1" id="m-dash-greeting">Good morning</p>
+        <h1 class="t-h1 mb-3" id="m-dash-username">How are you feeling today?</h1>
+        <p class="t-caption text-gray-500 mb-3">Your feelings matter. Take a moment for yourself.</p>
+        
+        <!-- Mood Selector Row -->
+        <div class="flex items-center gap-2 overflow-x-auto py-1">
+          <button class="mood-pill active-pill"><span>😊</span> Great</button>
+          <button class="mood-pill"><span>🙂</span> Good</button>
+          <button class="mood-pill"><span>😐</span> Okay</button>
+          <button class="mood-pill"><span>🙁</span> Not good</button>
+          <button class="mood-pill"><span>😫</span> Awful</button>
         </div>
       </div>
 
-      <div class="flex gap-2 px-4 py-3" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
-        <button onclick="showTab('journal')" class="btn-blue flex-1 py-2.5">✏️ Write</button>
-        <button onclick="showTab('insights')" class="btn-gray flex-1 py-2.5">📊 Data</button>
-        <button onclick="showTab('support')" class="btn-gray flex-1 py-2.5">💬 Chat</button>
+      <!-- STREAK BANNER WITH PLANT MASCOT -->
+      <div class="mx-5 p-5 rounded-[24px] text-white relative overflow-hidden shadow-lg flex items-center justify-between" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#6D28D9 100%)">
+        <div class="relative z-10 max-w-[200px]">
+          <p class="t-caption text-purple-200 uppercase font-bold tracking-wider mb-1">Your Streak</p>
+          <h2 class="t-h1 text-white mb-1">7 days 🔥</h2>
+          <p class="t-caption text-purple-100 mb-3">Keep going, you're doing amazing!</p>
+          
+          <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">✓</div>
+            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">✓</div>
+            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">✓</div>
+            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">✓</div>
+            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">✓</div>
+            <div class="w-5 h-5 rounded-full bg-yellow-300 text-purple-900 flex items-center justify-center text-[10px] font-bold">★</div>
+          </div>
+        </div>
+
+        <div class="w-24 h-24 relative flex-shrink-0">
+          <svg viewBox="0 0 120 120" fill="none" class="w-full h-full">
+            <rect x="35" y="60" width="50" height="45" rx="14" fill="#DDD6FE"/>
+            <path d="M40 60 C40 30 55 20 60 20 C65 20 80 30 80 60 Z" fill="#34D399"/>
+            <path d="M60 20 C50 10 35 15 35 15 C35 15 45 35 60 20 Z" fill="#10B981"/>
+            <circle cx="50" cy="78" r="3" fill="#374151"/>
+            <circle cx="70" cy="78" r="3" fill="#374151"/>
+            <path d="M55 86 Q60 90 65 86" stroke="#374151" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
       </div>
 
-      <div class="mx-4 mt-4 prompt-card">
+      <!-- DUAL FEATURE ACTION CARDS -->
+      <div class="mx-5 grid grid-cols-2 gap-3">
+        <div class="p-4 rounded-2xl bg-white border border-gray-200 shadow-sm flex flex-col justify-between" onclick="showTab('journal')">
+          <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl mb-3">📖</div>
+          <h4 class="t-h5 mb-1">Write in Journal</h4>
+          <p class="t-caption text-gray-500 mb-3">Express thoughts</p>
+          <button class="t-btn text-purple-700 text-xs font-bold flex items-center justify-between w-full border-none bg-transparent">
+            <span>New Entry</span>
+            <span>→</span>
+          </button>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border border-gray-200 shadow-sm flex flex-col justify-between" onclick="showTab('insights')">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-3">🧠</div>
+          <h4 class="t-h5 mb-1">AI Insights</h4>
+          <p class="t-caption text-gray-500 mb-3">Get suggestions</p>
+          <button class="t-btn text-emerald-700 text-xs font-bold flex items-center justify-between w-full border-none bg-transparent">
+            <span>View Insights</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TODAY'S PROGRESS STAT TILES (PRESERVED: id="m-dash-journals", id="m-dash-connections", id="m-dash-requests", id="m-dash-insights") -->
+      <div class="mx-5">
+        <h3 class="t-h4 mb-3">Today's Progress</h3>
+        <div class="grid grid-cols-4 gap-2">
+          <div onclick="showTab('journal')" class="stat-tile py-3 px-2">
+            <div class="num text-xl" id="m-dash-journals">0</div>
+            <div class="lbl text-[9px]">LOGS</div>
+          </div>
+          <div onclick="showTab('support')" class="stat-tile py-3 px-2">
+            <div class="num text-xl" id="m-dash-connections">0</div>
+            <div class="lbl text-[9px]">CHATS</div>
+          </div>
+          <div onclick="showTab('support')" class="stat-tile py-3 px-2">
+            <div class="num text-xl" id="m-dash-requests">0</div>
+            <div class="lbl text-[9px]">REQ</div>
+          </div>
+          <div onclick="showTab('insights')" class="stat-tile py-3 px-2">
+            <div class="num text-xl" id="m-dash-insights">0</div>
+            <div class="lbl text-[9px]">IDEAS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMPT CARD (PRESERVED: id="m-dash-prompt-text") -->
+      <div class="mx-5 prompt-card">
         <span class="pill-tag pill-coral mb-2">Today's reflection</span>
         <p class="t-body-md" id="m-dash-prompt-text">Loading...</p>
-        <button onclick="showTab('journal')" class="t-btn mt-3 inline-block" style="color:var(--coral-lt);background:none;border:none;cursor:pointer">Write about this →</button>
+        <button onclick="showTab('journal')" class="t-btn mt-3 inline-block" style="color:#FFFFFF;background:rgba(255,255,255,0.2);border:none;cursor:pointer;padding:6px 14px;border-radius:12px">Write about this →</button>
       </div>
 
-      <div class="pb-24">
-        <div class="mx-4 mt-4 post-card">
-          <div class="flex items-center gap-3 px-4 py-3" style="border-bottom:1px solid var(--clue-border)">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-dash-av2">?</div>
-            <p class="t-h5" id="m-dash-uname2">—</p>
-          </div>
-          <div class="px-4 py-4"><p class="t-body-md" id="m-dash-latest">No entries yet. Start writing!</p></div>
+      <!-- LATEST ENTRY (PRESERVED: id="m-dash-av2", id="m-dash-uname2", id="m-dash-latest") -->
+      <div class="mx-5 post-card">
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)" id="m-dash-av2">?</div>
+          <p class="t-h5" id="m-dash-uname2">—</p>
         </div>
+        <div class="px-4 py-4"><p class="t-body-md" id="m-dash-latest">No entries yet. Start writing!</p></div>
+      </div>
+
+      <!-- QUOTE BANNER -->
+      <div class="mx-5 p-4 rounded-xl bg-purple-50 border border-purple-100 text-center text-purple-800 text-xs font-semibold">
+        “ It's okay to not be okay. You're not alone in this. 💜 ”
       </div>
     </div>
 
-    <!-- JOURNAL -->
-    <div id="mob-journal" class="screen pb-20">
+    <!-- JOURNAL (PRESERVED: id="mob-journal", id="m-journal-save-btn", id="m-journal-av", id="m-journal-input", id="m-journal-list", id="m-journal-error") -->
+    <div id="mob-journal" class="screen pb-24 space-y-4">
       <div class="top-bar">
-        <p class="t-h3">Journal</p>
-        <button onclick="saveJournal()" id="m-journal-save-btn" class="btn-blue" style="width:auto;padding:6px 16px">Save</button>
+        <h1 class="t-h3" style="color:var(--coral-dk)">📖 Journal</h1>
+        <button onclick="saveJournal()" id="m-journal-save-btn" class="btn-blue" style="width:auto;padding:8px 20px;border-radius:14px">Save Entry</button>
       </div>
-      <div class="px-4 pt-4 pb-3" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
-        <div class="flex items-start gap-3">
-          <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-journal-av">?</div>
-          <textarea id="m-journal-input" rows="5" placeholder="What's on your mind today?" class="flex-1 t-body-lg" style="background:transparent;border:none;outline:none"></textarea>
+
+      <!-- Mobile Writing Sanctuary Card -->
+      <div class="mx-5 p-5 rounded-[24px] bg-white border border-purple-100 shadow-sm space-y-3">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+          <button type="button" class="mood-pill active-pill py-1 px-3 text-xs"><span>😊</span> Happy</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>😌</span> Calm</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>😐</span> Neutral</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>😔</span> Sad</button>
         </div>
+
+        <div class="flex items-start gap-3 pt-2">
+          <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-black shadow-md" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)" id="m-journal-av">?</div>
+          <textarea id="m-journal-input" rows="5" oninput="handleJournalInput(this.value)" placeholder="What's on your mind today? Express your thoughts freely..." class="flex-1 t-body-md text-gray-900 focus:outline-none bg-transparent border-none resize-none"></textarea>
+        </div>
+
+        <div id="m-journal-error" class="hidden text-xs font-bold text-red-500"></div>
       </div>
-      <div id="m-journal-list"><p class="t-body-sm text-center py-8">Loading...</p></div>
+
+      <!-- Mobile Reflections Timeline -->
+      <div class="mx-5">
+        <h3 class="t-h4 font-bold text-gray-900 mb-3">Past Reflections</h3>
+        <div id="m-journal-list" class="space-y-3"><p class="t-body-sm text-center py-8 text-gray-400">Loading reflections...</p></div>
+      </div>
     </div>
 
-    <!-- INSIGHTS -->
-    <div id="mob-insights" class="screen pb-20">
-      <div class="top-bar"><p class="t-h3">AI Insights</p></div>
-      <div class="px-4 pt-4 pb-3" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
-        <p class="t-label mb-2">This week's mood</p>
-        <div id="m-mood-chart" class="flex items-end gap-2 h-14 mb-2"></div>
-        <div id="m-mood-chart-labels" class="flex gap-2"></div>
+    <!-- INSIGHTS & MOOD TRACKER (PRESERVED: id="mob-insights", id="m-mood-chart", id="m-mood-chart-labels", id="m-insights-filter", id="m-insights-list") -->
+    <div id="mob-insights" class="screen pb-24 space-y-4">
+      <div class="top-bar">
+        <h1 class="t-h3" style="color:var(--coral-dk)">😊 Mood Tracker</h1>
+        <button onclick="showTab('journal')" class="btn-blue" style="width:auto;padding:6px 16px;border-radius:12px">Check In</button>
       </div>
-      <div class="flex gap-2 overflow-x-auto px-4 py-3" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)" id="m-insights-filter"></div>
-      <div id="m-insights-list"><p class="t-body-sm text-center py-8">Loading...</p></div>
+
+      <!-- Mobile Hero Check-In Card -->
+      <div class="mx-5 p-5 rounded-[24px] bg-white border border-purple-100 shadow-sm space-y-4">
+        <div>
+          <h2 class="t-h4 font-bold text-gray-900">How are you feeling today?</h2>
+          <p class="t-caption text-gray-500">Take a moment for yourself.</p>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+          <button type="button" class="mood-pill active-pill py-1 px-3 text-xs"><span>😊</span> Great</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>😌</span> Calm</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>🙂</span> Good</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>😐</span> Neutral</button>
+          <button type="button" class="mood-pill py-1 px-3 text-xs"><span>😔</span> Sad</button>
+        </div>
+      </div>
+
+      <!-- Mobile 7-Day Chart & Filters (PRESERVED: id="m-mood-chart", id="m-mood-chart-labels", id="m-insights-filter") -->
+      <div class="mx-5 p-4 rounded-[24px] bg-white border border-gray-200 shadow-sm space-y-3">
+        <h3 class="t-h5 font-bold text-gray-900">Weekly Mood Stability</h3>
+        <div id="m-mood-chart" class="flex items-end gap-2 h-20 pt-2 pb-1 border-b border-gray-100"></div>
+        <div id="m-mood-chart-labels" class="flex gap-2"></div>
+        <div class="flex gap-2 overflow-x-auto pt-2" id="m-insights-filter"></div>
+      </div>
+
+      <!-- Mobile AI Insights Feed (PRESERVED: id="m-insights-list") -->
+      <div class="mx-5">
+        <h3 class="t-h4 font-bold text-gray-900 mb-3">AI Companion Insights</h3>
+        <div id="m-insights-list" class="space-y-3"><p class="t-body-sm text-center py-8 text-gray-400">Loading insights...</p></div>
+      </div>
     </div>
 
     <!-- SUPPORT -->
     <div id="mob-support" class="screen pb-20">
       <div class="top-bar"><p class="t-h3">Messages</p></div>
-      <div class="px-3 py-2.5" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+      <div class="px-4 py-3" style="background:#FFFFFF;border-bottom:1px solid var(--clue-border)">
         <div class="tab-bar">
           <button onclick="supportTab('connections')" id="m-stab-connections" class="mstab">Chats</button>
           <button onclick="supportTab('requests')" id="m-stab-requests" class="mstab">Requests</button>
@@ -686,50 +1270,87 @@ textarea { resize: none; }
       <div id="m-support-connections" class="msupport-panel"></div>
       <div id="m-support-requests" class="msupport-panel hidden p-4 space-y-3"></div>
       <div id="m-support-find" class="msupport-panel hidden p-4">
-        <input id="m-find-search" type="text" placeholder="Search by username..." oninput="filterUsers()" class="inp mb-3"/>
+        <input id="m-find-search" type="text" placeholder="Search for supportive peers..." oninput="filterUsers()" class="inp mb-3"/>
         <div id="m-find-list" class="space-y-2"></div>
       </div>
     </div>
 
     <!-- CHAT -->
     <div id="mob-chat" class="screen" style="height:100dvh">
-      <div class="flex items-center gap-3 px-4 py-3 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
-        <button onclick="showTab('support')" class="p-2 text-sm font-bold" style="color:var(--text-3)">← Back</button>
+      <div class="flex items-center gap-3 px-5 py-3.5 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:#FFFFFF">
+        <button onclick="showTab('support')" class="p-2 text-sm font-bold" style="color:var(--coral-dk)">← Back</button>
         <div class="flex-1 min-w-0">
           <div class="t-h5 truncate" id="m-chat-peer-name">—</div>
           <div class="t-caption" id="m-chat-status">Connecting...</div>
         </div>
       </div>
-      <div id="m-chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-2"></div>
-      <form id="m-chat-form" onsubmit="sendMessage(event,'m')" class="flex items-center gap-2 px-4 py-3 flex-shrink-0" style="background:var(--clue-surface);border-top:1px solid var(--clue-border)">
-        <input id="m-chat-input" type="text" placeholder="Type your message..." oninput="sendTyping()" class="inp flex-1 t-body-md" style="border-radius:24px"/>
-        <button type="submit" class="btn-blue py-2.5 px-4" style="width:auto">Send</button>
+      <div id="m-chat-messages" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
+      <form id="m-chat-form" onsubmit="sendMessage(event,'m')" class="flex items-center gap-3 px-5 py-3.5 flex-shrink-0" style="background:#FFFFFF;border-top:1px solid var(--clue-border)">
+        <input id="m-chat-input" type="text" placeholder="Write a supportive message..." oninput="sendTyping()" class="inp flex-1 t-body-md" style="border-radius:24px"/>
+        <button type="submit" class="btn-blue py-2.5 px-5" style="width:auto">Send</button>
       </form>
     </div>
 
     <!-- PROFILE -->
     <div id="mob-profile" class="screen pb-20">
       <div class="top-bar"><p class="t-h3">Profile</p></div>
-      <div style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)" class="px-4 py-8 flex flex-col items-center cycle-header-bg">
-        <div id="profile-avatar-display" class="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-white font-black text-2xl" style="background:linear-gradient(135deg,var(--coral),var(--lavender))">
+      <div style="background:#FFFFFF;border-bottom:1px solid var(--clue-border)" class="px-6 py-8 flex flex-col items-center cycle-header-bg">
+        <div id="profile-avatar-display" class="w-22 h-22 rounded-full overflow-hidden flex items-center justify-center text-white font-black text-2xl shadow-lg" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)">
           <span id="profile-avatar-initials"></span>
         </div>
         <p class="t-h2 mt-4" id="profile-username-display"></p>
       </div>
-      <div class="px-4 py-4 space-y-3">
-        <button onclick="openAvatarPicker()" class="w-full py-3.5 t-btn rounded-2xl btn-gray">Choose anonymous avatar</button>
-        <button onclick="logout()" class="w-full py-3.5 t-btn rounded-2xl btn-gray">Sign out</button>
+      <div class="px-5 py-5 space-y-4">
+        <button onclick="openAvatarPicker()" class="w-full py-4 t-btn rounded-2xl btn-gray">Choose anonymous avatar</button>
+        <button onclick="logout()" class="w-full py-4 t-btn rounded-2xl btn-gray" style="color:#EF4444;border-color:#FCA5A5;background:#FEF2F2">Sign out</button>
+      </div>
+    <!-- SLEEP TRACKER (MOBILE) -->
+    <div id="mob-sleep" class="screen pb-24 space-y-4">
+      <div class="top-bar">
+        <h1 class="t-h3" style="color:var(--coral-dk)">🌙 Restful Sleep</h1>
+      </div>
+
+      <!-- Mobile Log Sleep Form Card -->
+      <div class="mx-5 p-5 rounded-[24px] bg-white border border-indigo-100 shadow-sm space-y-4">
+        <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>🛏️</span> Log Today's Rest</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Bedtime</label>
+            <input type="time" id="m-sleep-bedtime-input" value="23:00" onchange="syncTimeInput(this, 'sleep-bedtime-input')" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-bold text-gray-900" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Wake Time</label>
+            <input type="time" id="m-sleep-wake-input" value="07:00" onchange="syncTimeInput(this, 'sleep-wake-input')" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-bold text-gray-900" />
+          </div>
+        </div>
+
+        <button onclick="saveSleep()" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-md border-none cursor-pointer">
+          Save Sleep Record →
+        </button>
+      </div>
+
+      <!-- Mobile 7-Day Chart -->
+      <div class="mx-5 p-4 rounded-[24px] bg-white border border-gray-200 shadow-sm space-y-3">
+        <h3 class="t-h5 font-bold text-gray-900">7-Day Sleep Duration Trend</h3>
+        <div id="m-sleep-chart" class="flex items-end gap-2 h-20 pt-2 pb-1 border-b border-gray-100"></div>
+        <div id="m-sleep-chart-labels" class="flex gap-2"></div>
+      </div>
+
+      <!-- Mobile History List -->
+      <div class="mx-5">
+        <h3 class="t-h4 font-bold text-gray-900 mb-3">Sleep History</h3>
+        <div id="m-sleep-history-list" class="space-y-3"><p class="t-body-sm text-center py-8 text-gray-400">Loading sleep records...</p></div>
       </div>
     </div>
 
     <!-- AVATAR PICKER SHEET -->
-    <div id="avatar-picker" class="hidden fixed inset-0 z-[300] flex flex-col justify-end" style="background:rgba(0,0,0,0.75)">
-      <div class="rounded-t-3xl p-5" style="background:var(--clue-surface);border-top:1px solid var(--clue-border2)">
-        <div class="flex items-center justify-between mb-4">
+    <div id="avatar-picker" class="hidden fixed inset-0 z-[300] flex flex-col justify-end" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px)">
+      <div class="rounded-t-[32px] p-6" style="background:#FFFFFF;border-top:1px solid var(--clue-border2)">
+        <div class="flex items-center justify-between mb-5">
           <p class="t-h3">Choose your avatar</p>
           <button onclick="closeAvatarPicker()" class="text-2xl leading-none" style="color:var(--text-3)">×</button>
         </div>
-        <div id="avatar-grid" class="grid grid-cols-4 gap-3"></div>
+        <div id="avatar-grid" class="grid grid-cols-4 gap-4"></div>
       </div>
     </div>
 
@@ -737,33 +1358,42 @@ textarea { resize: none; }
 
   <nav id="bot-nav">
     <button class="nav-item active" onclick="showTab('dashboard')" data-tab="dashboard">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
       <span class="nav-label">Today</span>
     </button>
     <button class="nav-item" onclick="showTab('journal')" data-tab="journal">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
       <span class="nav-label">Log</span>
     </button>
     <button class="nav-item" onclick="showTab('insights')" data-tab="insights">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
       <span class="nav-label">Data</span>
     </button>
     <button class="nav-item" onclick="showTab('support')" data-tab="support">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       <span class="nav-label">Chat</span>
     </button>
+    <button class="nav-item" onclick="showTab('sleep')" data-tab="sleep">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+      <span class="nav-label">Sleep</span>
+    </button>
     <button class="nav-item" onclick="showTab('profile')" data-tab="profile">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
       <span class="nav-label">Me</span>
     </button>
   </nav>
 </div>
 
-<div id="toast" class="hidden fixed bottom-16 left-1/2 -translate-x-1/2 t-body-sm px-5 py-2.5 rounded-full z-[100] shadow-lg whitespace-nowrap" style="background:var(--clue-card2);color:var(--text-1);border:1px solid var(--clue-border2);backdrop-filter:blur(10px)"></div>
+<div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 t-body-sm px-6 py-3 rounded-full z-[100] shadow-xl whitespace-nowrap" style="background:#FFFFFF;color:var(--text-1);border:1.5px solid var(--clue-border2);box-shadow:0 10px 30px rgba(0,0,0,0.1)"></div>
 
-<div id="confirm-modal" class="hidden fixed inset-0 flex items-end sm:items-center justify-center z-[200] p-4" style="background:rgba(0,0,0,0.75)">
-  <div class="w-full max-w-sm overflow-hidden rounded-3xl" style="background:var(--clue-surface);border:1px solid var(--clue-border2)">
-    <div class="p-5 text-center" style="border-bottom:1px solid var(--clue-border)">
+<div id="confirm-modal" class="hidden fixed inset-0 flex items-end sm:items-center justify-center z-[200] p-4" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px)">
+  <div class="w-full max-w-sm overflow-hidden rounded-[28px] shadow-2xl" style="background:#FFFFFF;border:1px solid var(--clue-border2)">
+    <div class="p-6 text-center" style="border-bottom:1px solid var(--clue-border)">
       <p id="confirm-msg" class="t-body-md" style="color:var(--text-1)"></p>
     </div>
     <div class="flex">
-      <button id="confirm-ok" class="flex-1 py-3.5 t-btn" style="border-right:1px solid var(--clue-border);color:var(--coral-lt)"></button>
-      <button onclick="closeConfirm()" class="flex-1 py-3.5 t-btn" style="color:var(--text-3)">Cancel</button>
+      <button id="confirm-ok" class="flex-1 py-4 t-btn" style="border-right:1px solid var(--clue-border);color:var(--coral-dk)"></button>
+      <button onclick="closeConfirm()" class="flex-1 py-4 t-btn" style="color:var(--text-3)">Cancel</button>
     </div>
   </div>
 </div>
@@ -793,6 +1423,7 @@ window.supportTab = function(name) {
 
 const _origBootApp = bootApp
 window.bootApp = function() { _origBootApp(); setTimeout(_patchDash, 80) }
+window.showAuth = function() { window.location.href = '/login/'; }
 </script>
 </body>
 </html>

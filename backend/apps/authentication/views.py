@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordResetForm
@@ -76,35 +77,57 @@ def google_auth_view(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    id_token_str = serializer.validated_data['id_token']
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    id_info = None
+
+    # Method 1: Try official google-auth library
     try:
         from google.oauth2 import id_token as google_id_token
         from google.auth.transport import requests as google_requests
-        import os
-
-        id_token_str = serializer.validated_data['id_token']
-        client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
-
         id_info = google_id_token.verify_oauth2_token(
             id_token_str,
             google_requests.Request(),
-            client_id,
+            client_id if client_id else None,
         )
+    except Exception:
+        # Method 2: Fallback to Google TokenInfo API Endpoint over HTTPS
+        try:
+            import urllib.request
+            import json
+            url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token_str}"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                if resp.status == 200:
+                    id_info = json.loads(resp.read().decode('utf-8'))
+        except Exception as err:
+            return Response({"detail": f"Failed to verify Google token: {str(err)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        email = id_info.get("email")
-        name = id_info.get("name", email.split("@")[0] if email else "user")
+    if not id_info or not id_info.get("email"):
+        return Response({"detail": "Invalid Google token or missing email claim."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not email:
-            return Response({"detail": "Google token missing email."}, status=status.HTTP_400_BAD_REQUEST)
+    email = id_info.get("email")
+    name = id_info.get("name", email.split("@")[0])
 
-        user, _ = User.objects.get_or_create(
+    # 1. Check if user already exists with this email (Primary Identity)
+    user = User.objects.filter(email__iexact=email).first()
+
+    # 2. If user does not exist, create user with unique username
+    if not user:
+        base_username = email.split("@")[0].lower()
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        user = User.objects.create_user(
+            username=username,
             email=email,
-            defaults={"username": email.split("@")[0], "first_name": name},
+            first_name=name
         )
 
-        return Response(_token_response(user))
-
-    except Exception as e:
-        return Response({"detail": f"Invalid Google token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(_token_response(user))
 
 
 @api_view(['POST'])
@@ -125,5 +148,44 @@ def password_reset_view(request):
                 )
         except Exception as e:
             import logging
-            logging.getLogger(__name__).warning("Password reset error: %s", e)
     return Response({"detail": "If that email exists, a reset link has been sent."})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm_api(request):
+    uidb64 = request.data.get('uid')
+    token = request.data.get('token')
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+
+    if not uidb64 or not token or not new_password:
+        return Response({"detail": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if new_password != confirm_password:
+        return Response({"detail": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        from django.utils.http import urlsafe_base64_decode
+        from django.contrib.auth.tokens import default_token_generator
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from django.contrib.auth.models import User
+
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"detail": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        validate_password(new_password, user=user)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Password has been reset successfully. You may now sign in."})
+
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)
+    except DjangoValidationError as e:
+        return Response({"detail": " ".join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+

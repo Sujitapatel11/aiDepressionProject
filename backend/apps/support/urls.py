@@ -8,6 +8,7 @@ urlpatterns = [
     path('send/<int:user_id>/', views.send_request, name='send_request'),
     path('accept/<int:request_id>/', views.accept_request, name='accept_request'),
     path('reject/<int:request_id>/', views.reject_request, name='reject_request'),
+    path('requests/<int:request_id>/cancel/', views.cancel_request, name='cancel_request'),
     path('connections/', views.active_connections, name='active_connections'),
     path('connections/<str:connection_id>/block/', views.block_connection, name='block_connection'),
     path('connections/<str:connection_id>/disconnect/', views.disconnect_connection, name='disconnect_connection'),

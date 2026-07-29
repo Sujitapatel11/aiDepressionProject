@@ -173,6 +173,20 @@ def reject_request(request, request_id):
     return Response({"detail": "Request rejected."})
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_request(request, request_id):
+    try:
+        req = SupportRequest.objects.get(
+            id=request_id, from_user=request.user, status=SupportRequest.PENDING
+        )
+    except SupportRequest.DoesNotExist:
+        return Response({"detail": "Pending request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    req.delete()
+    return Response({"detail": "Request cancelled successfully."})
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def active_connections(request):
