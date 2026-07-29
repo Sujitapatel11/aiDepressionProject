@@ -6,6 +6,7 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../controllers/login_controller.dart';
 import '../widgets/mascot_widget.dart';
+import '../widgets/primary_gradient_button.dart';
 import '../widgets/shake_widget.dart';
 import 'shell_screen.dart';
 
@@ -156,7 +157,7 @@ class _SignupScreenState extends State<SignupScreen>
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Center(
                         child: SoulCareMascot(
@@ -257,41 +258,16 @@ class _SignupScreenState extends State<SignupScreen>
                       const SizedBox(height: 28),
 
                       // Join Button
-                      SizedBox(
+                      PrimaryGradientButton(
+                        label: "Create Account",
                         height: 54,
-                        child: ElevatedButton(
-                          onPressed:
-                              _controller.isLoading ? null : _onSignupPressed,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.lavenderPrimary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: _controller.isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
-                                  ),
-                                )
-                              : const Text(
-                                  "Create Account",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
+                        isLoading: _controller.isLoading,
+                        onPressed: _onSignupPressed,
                       ),
                       const SizedBox(height: 20),
 
                       Row(
-                        mainAxisAlignment: MainState.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text("Already have an account? "),
                           GestureDetector(

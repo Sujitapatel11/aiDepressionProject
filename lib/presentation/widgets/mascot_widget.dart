@@ -122,7 +122,7 @@ class _SoulCareMascotState extends State<SoulCareMascot>
                   Positioned(
                     top: s * 0.35,
                     child: Row(
-                      mainAxisAlignment: MainState.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Left Eye
                         _buildEye(s),
@@ -137,7 +137,7 @@ class _SoulCareMascotState extends State<SoulCareMascot>
                   Positioned(
                     top: s * 0.44,
                     child: Row(
-                      mainAxisAlignment: MainState.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _buildBlush(s),
                         SizedBox(width: s * 0.38),

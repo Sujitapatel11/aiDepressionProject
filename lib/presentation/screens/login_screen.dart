@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/config/app_config.dart';
@@ -7,16 +6,29 @@ import '../../core/theme/app_theme.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../controllers/login_controller.dart';
+import '../widgets/auth_text_field.dart';
+import '../widgets/or_divider.dart';
 import '../widgets/peaceful_person_illustration.dart';
+import '../widgets/primary_gradient_button.dart';
 import '../widgets/shake_widget.dart';
+import '../widgets/social_auth_button.dart';
 import 'forgot_password_screen.dart';
 import 'shell_screen.dart';
 import 'signup_screen.dart';
 
 /// ════════════════════════════════════════════════════════════════════════════
-/// SOULCARE LOGIN SCREEN (MATCHES EXACT ASCII WIREFRAME LAYOUT & COPY)
+/// SOULCARE LOGIN SCREEN
 /// ════════════════════════════════════════════════════════════════════════════
-
+///
+/// NOTE: business logic, controller wiring, repository calls, auth flow,
+/// navigation targets, and validation are UNCHANGED from the original
+/// implementation. Only presentation (composition, theming, a11y,
+/// responsiveness, and two pre-existing UI bugs) was touched:
+///   1. `MainState.center` (invalid identifier, wouldn't compile) is now
+///      `MainAxisAlignment.center`.
+///   2. The prefix-icon focus color now actually updates on focus change
+///      because the field listens to its own FocusNode (see
+///      AuthTextField), instead of silently relying on unrelated rebuilds.
 class SoulCareLoginScreen extends StatefulWidget {
   final AppConfig config;
 
@@ -39,8 +51,10 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
 
-  final GlobalKey<ShakeWidgetState> _emailShakeKey = GlobalKey<ShakeWidgetState>();
-  final GlobalKey<ShakeWidgetState> _passwordShakeKey = GlobalKey<ShakeWidgetState>();
+  final GlobalKey<ShakeWidgetState> _emailShakeKey =
+      GlobalKey<ShakeWidgetState>();
+  final GlobalKey<ShakeWidgetState> _passwordShakeKey =
+      GlobalKey<ShakeWidgetState>();
 
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
@@ -58,7 +72,6 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
     );
 
     _controller = LoginController(repository: repository);
-    // Granular ListenableBuilder used in build tree instead of full-screen setState listener.
 
     _animController = AnimationController(
       vsync: this,
@@ -94,7 +107,7 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
 
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
-    HapticFeedback.vibrate();
+    HapticFeedback.lightImpact();
 
     if (_controller.emailError != null) {
       _emailShakeKey.currentState?.shake();
@@ -108,7 +121,8 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const Icon(Icons.error_outline_rounded,
+                color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -145,7 +159,8 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) => SoulCareShellScreen(config: widget.config),
+          pageBuilder: (_, __, ___) =>
+              SoulCareShellScreen(config: widget.config),
           transitionsBuilder: (_, animation, __, child) =>
               FadeTransition(opacity: animation, child: child),
         ),
@@ -165,7 +180,8 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) => SoulCareShellScreen(config: widget.config),
+          pageBuilder: (_, __, ___) =>
+              SoulCareShellScreen(config: widget.config),
           transitionsBuilder: (_, animation, __, child) =>
               FadeTransition(opacity: animation, child: child),
         ),
@@ -193,12 +209,94 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final maxCardWidth = MediaQuery.of(context).size.width < 480 ? 440.0 : 440.0;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : AppTheme.appBackground,
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : AppTheme.appBackground,
       body: Stack(
         children: [
-          // Background Gradient Glow
+          const _BackgroundGlow(),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 20),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxCardWidth),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Semantics(
+                            label: 'SoulCare illustration',
+                            excludeSemantics: true,
+                            child:
+                                const PeacefulPersonIllustration(size: 140),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Welcome Back 👋',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textMain,
+                              letterSpacing: -0.6,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Continue your journey with SoulCare',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: AppTheme.textSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          _LoginCard(
+                            isDark: isDark,
+                            controller: _controller,
+                            emailController: _emailController,
+                            passwordController: _passwordController,
+                            emailFocusNode: _emailFocusNode,
+                            passwordFocusNode: _passwordFocusNode,
+                            emailShakeKey: _emailShakeKey,
+                            passwordShakeKey: _passwordShakeKey,
+                            onLoginPressed: _onLoginPressed,
+                            onGooglePressed: _onGooglePressed,
+                            onForgotPasswordPressed: _onForgotPasswordPressed,
+                            onCreateAccountPressed: _onCreateAccountPressed,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Decorative background glow, split out so it never rebuilds with the
+/// rest of the tree (it depends on nothing).
+class _BackgroundGlow extends StatelessWidget {
+  const _BackgroundGlow();
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Stack(
+        children: [
           Positioned(
             top: -60,
             right: -60,
@@ -223,387 +321,195 @@ class _SoulCareLoginScreenState extends State<SoulCareLoginScreen>
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
 
-          // Main Wireframe SingleChildScrollView
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 440),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // ── TOP SECTION: ANIMATED ILLUSTRATION & HEADINGS ──
-                          const PeacefulPersonIllustration(size: 140),
-                          const SizedBox(height: 16),
+/// The glassmorphism card containing the form. Kept as its own widget so
+/// the [ListenableBuilder] scope is limited to exactly what reads
+/// controller state, instead of wrapping static siblings too.
+class _LoginCard extends StatelessWidget {
+  const _LoginCard({
+    required this.isDark,
+    required this.controller,
+    required this.emailController,
+    required this.passwordController,
+    required this.emailFocusNode,
+    required this.passwordFocusNode,
+    required this.emailShakeKey,
+    required this.passwordShakeKey,
+    required this.onLoginPressed,
+    required this.onGooglePressed,
+    required this.onForgotPasswordPressed,
+    required this.onCreateAccountPressed,
+  });
 
-                          const Text(
-                            "Welcome Back 👋",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textMain,
-                              letterSpacing: -0.6,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            "Continue your journey with SoulCare",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: AppTheme.textSub,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 28),
+  final bool isDark;
+  final LoginController controller;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final FocusNode emailFocusNode;
+  final FocusNode passwordFocusNode;
+  final GlobalKey<ShakeWidgetState> emailShakeKey;
+  final GlobalKey<ShakeWidgetState> passwordShakeKey;
+  final VoidCallback onLoginPressed;
+  final VoidCallback onGooglePressed;
+  final VoidCallback onForgotPasswordPressed;
+  final VoidCallback onCreateAccountPressed;
 
-                          // ── FLOATING GLASSMORPHISM CARD PANEL ──
-                          Container(
-                            padding: const EdgeInsets.all(28),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                              borderRadius: BorderRadius.circular(32),
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF334155)
-                                    : AppTheme.lavenderPrimary.withOpacity(0.08),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.lavenderPrimary.withOpacity(0.06),
-                                  blurRadius: 36,
-                                  offset: const Offset(0, 12),
-                                ),
-                              ],
-                            ),
-                            child: ListenableBuilder(
-                               listenable: _controller,
-                               builder: (context, _) => AutofillGroup(
-                                 child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // ── EMAIL FIELD ──
-                                  Row(
-                                    children: const [
-                                      Text(
-                                        "📧 Email",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textMain,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  ShakeWidget(
-                                    key: _emailShakeKey,
-                                    child: TextField(
-                                      controller: _emailController,
-                                      focusNode: _emailFocusNode,
-                                      keyboardType: TextInputType.emailAddress,
-                                      textInputAction: TextInputAction.next,
-                                      autofillHints: const [AutofillHints.email],
-                                      enabled: !_controller.isLoading,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: isDark ? Colors.white : AppTheme.textMain,
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: "Enter your email",
-                                        errorText: _controller.emailError,
-                                        prefixIcon: Icon(
-                                          Icons.mail_outline_rounded,
-                                          color: _emailFocusNode.hasFocus
-                                              ? AppTheme.lavenderPrimary
-                                              : AppTheme.textMuted,
-                                        ),
-                                      ),
-                                      onSubmitted: (_) {
-                                        FocusScope.of(context)
-                                            .requestFocus(_passwordFocusNode);
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(height: 18),
-
-                                  // ── PASSWORD FIELD ──
-                                  Row(
-                                    children: const [
-                                      Text(
-                                        "🔒 Password",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textMain,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  ShakeWidget(
-                                    key: _passwordShakeKey,
-                                    child: TextField(
-                                      controller: _passwordController,
-                                      focusNode: _passwordFocusNode,
-                                      obscureText: !_controller.isPasswordVisible,
-                                      textInputAction: TextInputAction.done,
-                                      autofillHints: const [AutofillHints.password],
-                                      enabled: !_controller.isLoading,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: isDark ? Colors.white : AppTheme.textMain,
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: "Enter your password",
-                                        errorText: _controller.passwordError,
-                                        prefixIcon: Icon(
-                                          Icons.lock_outline_rounded,
-                                          color: _passwordFocusNode.hasFocus
-                                              ? AppTheme.lavenderPrimary
-                                              : AppTheme.textMuted,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          icon: Icon(
-                                            _controller.isPasswordVisible
-                                                ? Icons.visibility_off_outlined
-                                                : Icons.visibility_outlined,
-                                            color: AppTheme.textMuted,
-                                          ),
-                                          onPressed:
-                                              _controller.togglePasswordVisibility,
-                                        ),
-                                      ),
-                                      onSubmitted: (_) => _onLoginPressed(),
-                                    ),
-                                  ),
-
-                                  // ── FORGOT PASSWORD ──
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: _controller.isLoading
-                                          ? null
-                                          : _onForgotPasswordPressed,
-                                      style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        minimumSize: Size.zero,
-                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                      child: const Text(
-                                        "Forgot Password?",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.lavenderPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // ── GRADIENT CONTINUE BUTTON ──
-                                  SizedBox(
-                                    height: 56,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF7C6EF6),
-                                            Color(0xFF6366F1),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(20),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF7C6EF6)
-                                                .withOpacity(0.35),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 6),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ElevatedButton(
-                                        onPressed:
-                                            _controller.isLoading ? null : _onLoginPressed,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.transparent,
-                                          shadowColor: Colors.transparent,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                        ),
-                                        child: _controller.isLoading
-                                            ? const SizedBox(
-                                                width: 24,
-                                                height: 24,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2.5,
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<Color>(
-                                                          Colors.white),
-                                                ),
-                                              )
-                                            : Row(
-                                                mainAxisAlignment:
-                                                    MainState.center,
-                                                children: const [
-                                                  Text(
-                                                    "Continue",
-                                                    style: TextStyle(
-                                                      fontSize: 16.5,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Icon(Icons.arrow_forward_rounded,
-                                                      size: 20),
-                                                ],
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 22),
-
-                                  // ── DIVIDER 'OR' ──
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Divider(
-                                          color: isDark
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFE2E8F0),
-                                        ),
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 12),
-                                        child: Text(
-                                          "OR",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.textMuted,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Divider(
-                                          color: isDark
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFE2E8F0),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 22),
-
-                                  // ── CONTINUE WITH GOOGLE BUTTON ──
-                                  SizedBox(
-                                    height: 56,
-                                    child: OutlinedButton(
-                                      onPressed:
-                                          _controller.isLoading ? null : _onGooglePressed,
-                                      style: OutlinedButton.styleFrom(
-                                        backgroundColor: isDark
-                                            ? const Color(0xFF0F172A)
-                                            : Colors.white,
-                                        foregroundColor: isDark
-                                            ? Colors.white
-                                            : const Color(0xFF3C4043),
-                                        side: BorderSide(
-                                          color: isDark
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFDADCE0),
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainState.center,
-                                        children: const [
-                                          Text(
-                                            "G",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w900,
-                                              color: Color(0xFF4285F4),
-                                            ),
-                                          ),
-                                          SizedBox(width: 12),
-                                          Text(
-                                            "Continue with Google",
-                                            style: TextStyle(
-                                              fontSize: 15.5,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 26),
-
-                                  // ── FOOTER: CREATE ACCOUNT ──
-                                  Row(
-                                    mainAxisAlignment: MainState.center,
-                                    children: [
-                                      Text(
-                                        "Don't have an account? ",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isDark
-                                              ? Colors.white70
-                                              : AppTheme.textSub,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: _controller.isLoading
-                                            ? null
-                                            : _onCreateAccountPressed,
-                                        child: Row(
-                                          children: const [
-                                            Text(
-                                              "Create Account",
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: AppTheme.lavenderPrimary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            SizedBox(width: 2),
-                                            Icon(
-                                              Icons.arrow_forward_rounded,
-                                              size: 14,
-                                              color: AppTheme.lavenderPrimary,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF334155)
+              : AppTheme.lavenderPrimary.withOpacity(0.08),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.lavenderPrimary.withOpacity(0.06),
+            blurRadius: 36,
+            offset: const Offset(0, 12),
           ),
         ],
+      ),
+      child: AutofillGroup(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Only the pieces that actually depend on controller state
+            // sit inside the ListenableBuilder now.
+            ListenableBuilder(
+              listenable: controller,
+              builder: (context, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AuthTextField(
+                    shakeKey: emailShakeKey,
+                    label: '📧 Email',
+                    semanticsLabel: 'Email address',
+                    icon: Icons.mail_outline_rounded,
+                    controller: emailController,
+                    focusNode: emailFocusNode,
+                    hintText: 'Enter your email',
+                    errorText: controller.emailError,
+                    enabled: !controller.isLoading,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.email],
+                    onSubmitted: (_) =>
+                        FocusScope.of(context).requestFocus(passwordFocusNode),
+                  ),
+                  const SizedBox(height: 18),
+                  AuthTextField(
+                    shakeKey: passwordShakeKey,
+                    label: '🔒 Password',
+                    semanticsLabel: 'Password',
+                    icon: Icons.lock_outline_rounded,
+                    controller: passwordController,
+                    focusNode: passwordFocusNode,
+                    hintText: 'Enter your password',
+                    errorText: controller.passwordError,
+                    obscureText: !controller.isPasswordVisible,
+                    enabled: !controller.isLoading,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        controller.isPasswordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppTheme.textMuted,
+                      ),
+                      tooltip: controller.isPasswordVisible
+                          ? 'Hide password'
+                          : 'Show password',
+                      onPressed: controller.togglePasswordVisibility,
+                    ),
+                    onSubmitted: (_) => onLoginPressed(),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed:
+                          controller.isLoading ? null : onForgotPasswordPressed,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.lavenderPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  PrimaryGradientButton(
+                    label: 'Continue',
+                    isLoading: controller.isLoading,
+                    onPressed: onLoginPressed,
+                  ),
+                  const SizedBox(height: 22),
+                  const OrDivider(),
+                  const SizedBox(height: 22),
+                  SocialAuthButton(
+                    label: 'Continue with Google',
+                    onPressed: controller.isLoading ? null : onGooglePressed,
+                  ),
+                  const SizedBox(height: 26),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white70 : AppTheme.textSub,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: controller.isLoading
+                            ? null
+                            : onCreateAccountPressed,
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.lavenderPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 2),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 14,
+                              color: AppTheme.lavenderPrimary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

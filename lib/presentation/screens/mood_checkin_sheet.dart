@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../controllers/mood_controller.dart';
 
 class MoodCheckInSheet extends StatelessWidget {
@@ -40,7 +41,7 @@ class MoodCheckInSheet extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
             child: Container(
@@ -72,45 +73,53 @@ class MoodCheckInSheet extends StatelessWidget {
 
           // Mood Emoji Selector Row
           Row(
-            mainAxisAlignment: MainState.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: controller.moodOptions.map((opt) {
               final isSelected = controller.selectedMood == opt['id'];
               return GestureDetector(
-                onTap: () => controller.selectMood(opt['id']!),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFFE8DEF8)
-                        : const Color(0xFFF8F7FC),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  controller.selectMood(opt['id']!);
+                },
+                child: AnimatedScale(
+                  scale: isSelected ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutBack,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF6750A4)
-                          : const Color(0xFFE6E1E5),
-                      width: isSelected ? 2 : 1,
+                          ? const Color(0xFFE8DEF8)
+                          : const Color(0xFFF8F7FC),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF6750A4)
+                            : const Color(0xFFE6E1E5),
+                        width: isSelected ? 2 : 1,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        opt['emoji']!,
-                        style: const TextStyle(fontSize: 28),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        opt['label']!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected
-                              ? const Color(0xFF6750A4)
-                              : const Color(0xFF49454F),
+                    child: Column(
+                      children: [
+                        Text(
+                          opt['emoji']!,
+                          style: const TextStyle(fontSize: 28),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          opt['label']!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected
+                                ? const Color(0xFF6750A4)
+                                : const Color(0xFF49454F),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -120,7 +129,7 @@ class MoodCheckInSheet extends StatelessWidget {
 
           // Mood Intensity Slider
           Row(
-            mainAxisAlignment: MainState.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 "Intensity",

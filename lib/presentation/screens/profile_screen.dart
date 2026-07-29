@@ -68,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
 
                   // Stats Row
                   Row(
-                    mainAxisAlignment: MainState.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: const [
                       _StatTile(number: "14", label: "Journals"),
                       _StatTile(number: "28", label: "Mood Logs"),
@@ -90,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFE6E1E5)),
               ),
               child: Column(
-                crossAxisAlignment: CrossAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
                     "Emotional Growth Summary",

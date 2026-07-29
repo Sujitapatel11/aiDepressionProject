@@ -130,7 +130,7 @@ class _CheckEmailScreenState extends State<CheckEmailScreen>
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Animated Floating Mail Envelope
                   AnimatedBuilder(

@@ -27,7 +27,7 @@ class ConnectScreen extends StatelessWidget {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
-              crossAxisAlignment: CrossAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Supportive Community Banner
                 Container(
@@ -47,7 +47,7 @@ class ConnectScreen extends StatelessWidget {
                       const SizedBox(width: 14),
                       const Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               "Empathetic Peer Circles",

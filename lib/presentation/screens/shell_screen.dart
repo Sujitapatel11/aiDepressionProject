@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/config/app_config.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../data/datasources/insights_remote_datasource.dart';
@@ -109,7 +110,10 @@ class _SoulCareShellScreenState extends State<SoulCareShellScreen> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
+        onDestinationSelected: (idx) {
+          HapticFeedback.selectionClick();
+          setState(() => _currentIndex = idx);
+        },
         indicatorColor: const Color(0xFFE8DEF8),
         destinations: const [
           NavigationDestination(
