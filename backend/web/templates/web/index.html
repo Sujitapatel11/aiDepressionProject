@@ -1,67 +1,74 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>SoulCare</title>
+<title>SoulCare — Emotional Wellness Sanctuary</title>
+
+<!-- Modern Typography Architecture: Plus Jakarta Sans (Headings) & Inter (Body/UI) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-tailwind.config={theme:{extend:{colors:{
-  primary:'#0095F6','primary-dk':'#0081d6',
-  ig:'#262626','ig-gray':'#8e8e8e','ig-border':'#dbdbdb','ig-bg':'#fafafa'
-}}}}
+tailwind.config={theme:{extend:{
+  fontFamily:{
+    heading:['Plus Jakarta Sans','system-ui','sans-serif'],
+    body:['Inter','system-ui','sans-serif']
+  },
+  colors:{
+    primary:'#6366f1','primary-dk':'#4f46e5',
+    ig:'#1e293b','ig-gray':'#64748b','ig-border':'rgba(255,255,255,0.08)','ig-bg':'#090d16'
+  }
+}}}
 </script>
+
 <style>
-/* ═══════════════════════════════════════
-   CLUE-STYLE DESIGN TOKENS
-═══════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════
+   SOULCARE TYPOGRAPHY SYSTEM & DESIGN TOKENS
+   ═════════════════════════════════════════════════════════════════ */
 :root {
-  /* Core palette — deep teal/navy + coral (Clue DNA) */
-  --clue-bg:       #0f1923;
-  --clue-surface:  #162030;
-  --clue-card:     #1c2b3a;
-  --clue-card2:    #1f3045;
-  --clue-border:   rgba(255,255,255,0.07);
-  --clue-border2:  rgba(255,255,255,0.12);
+  /* Typography System Fonts */
+  --font-heading:  'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body:     'Inter', system-ui, -apple-system, sans-serif;
 
-  --coral:         #ff6b6b;
-  --coral-lt:      #ff9494;
-  --coral-dk:      #e85555;
-  --coral-glow:    rgba(255,107,107,0.18);
-  --coral-glow2:   rgba(255,107,107,0.08);
+  /* Surface & Container Colors */
+  --clue-bg:       #090d16;
+  --clue-surface:  #0f172a;
+  --clue-card:     rgba(30, 41, 59, 0.75);
+  --clue-card2:    rgba(30, 41, 59, 0.9);
+  --clue-border:   rgba(255, 255, 255, 0.08);
+  --clue-border2:  rgba(255, 255, 255, 0.12);
 
-  --teal:          #4ecdc4;
-  --teal-lt:       #7eddd6;
-  --teal-dk:       #38b2aa;
-  --teal-bg:       rgba(78,205,196,0.1);
+  /* Primary Brand Tokens */
+  --coral:         #6366f1;
+  --coral-lt:      #818cf8;
+  --coral-dk:      #4f46e5;
+  --coral-glow:    rgba(99, 102, 241, 0.22);
+  --coral-glow2:   rgba(99, 102, 241, 0.1);
 
-  --lavender:      #a78bfa;
-  --amber:         #fbbf24;
-  --sage:          #6ee7b7;
+  --teal:          #14b8a6;
+  --teal-lt:       #2dd4bf;
+  --lavender:      #a855f7;
+  --amber:         #f59e0b;
+  --sage:          #10b981;
 
-  --text-1:        #f0f4f8;
-  --text-2:        #94a3b8;
-  --text-3:        #5a6e82;
-  --text-muted:    #3d5166;
+  /* Typography Contrast Hierarchy */
+  --text-1:        #f8fafc;
+  --text-2:        #cbd5e1;
+  --text-3:        #64748b;
+  --text-muted:    #475569;
 
-  --white:         #ffffff;
+  --shadow-coral:  0 8px 32px rgba(99, 102, 241, 0.25);
+  --shadow-card:   0 12px 36px -8px rgba(0, 0, 0, 0.5);
+  --shadow-sm:     0 4px 16px rgba(0, 0, 0, 0.3);
 
-  --shadow-coral:  0 8px 32px rgba(255,107,107,0.22);
-  --shadow-card:   0 4px 24px rgba(0,0,0,0.35);
-  --shadow-sm:     0 2px 12px rgba(0,0,0,0.25);
-
-  /* backwards compat aliases (keep old names so JS still works) */
+  /* Backward Compatibility Aliases */
   --rose:          var(--coral);
   --rose-lt:       var(--coral-lt);
-  --rose-bg:       rgba(255,107,107,0.08);
+  --rose-bg:       rgba(99, 102, 241, 0.1);
   --plum:          var(--lavender);
-  --plum-lt:       #c4b5fd;
-  --plum-bg:       rgba(167,139,250,0.08);
-  --peach:         #fbbf24;
-  --sage-lt:       var(--sage);
-  --sage-bg:       rgba(110,231,183,0.08);
+  --plum-lt:       #c084fc;
   --cream:         var(--clue-bg);
   --sand:          var(--clue-card);
   --ink:           var(--text-1);
@@ -69,439 +76,287 @@ tailwind.config={theme:{extend:{colors:{
   --ink-lt:        var(--text-3);
   --border:        var(--clue-border2);
   --card-shadow:   var(--shadow-card);
-  --card-shadow-hover: 0 12px 40px rgba(255,107,107,0.2);
 }
 
-*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0}
-body{
-  font-family:'Nunito Sans',system-ui,sans-serif;
-  background:var(--clue-bg);
-  color:var(--text-1);
-  -webkit-font-smoothing:antialiased;
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--clue-bg);
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   TYPOGRAPHY SCALE UTILITY CLASSES
+   ═════════════════════════════════════════════════════════════════ */
+.t-display { font-family: var(--font-heading); font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: -0.03em; color: var(--text-1); }
+.t-h1      { font-family: var(--font-heading); font-size: 30px; font-weight: 800; line-height: 1.2; letter-spacing: -0.025em; color: var(--text-1); }
+.t-h2      { font-family: var(--font-heading); font-size: 24px; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; color: var(--text-1); }
+.t-h3      { font-family: var(--font-heading); font-size: 20px; font-weight: 700; line-height: 1.3; letter-spacing: -0.015em; color: var(--text-1); }
+.t-h4      { font-family: var(--font-heading); font-size: 17px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; color: var(--text-1); }
+.t-h5      { font-family: var(--font-heading); font-size: 15px; font-weight: 600; line-height: 1.4; letter-spacing: 0em; color: var(--text-1); }
+.t-h6      { font-family: var(--font-heading); font-size: 13.5px; font-weight: 600; line-height: 1.4; letter-spacing: 0.01em; color: var(--text-1); }
+
+.t-subtitle { font-family: var(--font-body); font-size: 15px; font-weight: 400; line-height: 1.5; letter-spacing: 0.01em; color: var(--text-muted); }
+.t-body-lg  { font-family: var(--font-body); font-size: 16px; font-weight: 400; line-height: 1.65; letter-spacing: 0em; color: var(--text-1); }
+.t-body-md  { font-family: var(--font-body); font-size: 14px; font-weight: 400; line-height: 1.6; letter-spacing: 0.005em; color: var(--text-2); }
+.t-body-sm  { font-family: var(--font-body); font-size: 13px; font-weight: 400; line-height: 1.5; letter-spacing: 0.01em; color: var(--text-3); }
+
+.t-caption  { font-family: var(--font-body); font-size: 11.5px; font-weight: 500; line-height: 1.4; letter-spacing: 0.03em; color: var(--text-3); }
+.t-label    { font-family: var(--font-body); font-size: 10.5px; font-weight: 700; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.t-btn      { font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; line-height: 1.2; letter-spacing: 0.02em; }
+
+@media (max-width: 640px) {
+  .t-display { font-size: 30px; }
+  .t-h1      { font-size: 26px; }
+  .t-h2      { font-size: 20px; }
+  .t-h3      { font-size: 18px; }
 }
 
 /* ── SCREENS ── */
-.screen{display:none!important}.screen.active{display:flex!important;flex-direction:column}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--clue-border2);border-radius:4px}
-input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
-.fade-in{animation:fadeIn .22s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.screen { display: none !important; }
+.screen.active { display: flex !important; flex-direction: column; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+input:focus, textarea:focus, button:focus { outline: none; }
+textarea { resize: none; }
 
-/* ── TYPING DOTS ── */
-.dot-typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--coral-lt);animation:dotBounce 1.2s infinite}
-.dot-typing span:nth-child(2){animation-delay:.2s}.dot-typing span:nth-child(3){animation-delay:.4s}
-@keyframes dotBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.fade-in { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── INPUTS ── */
-.inp{
-  width:100%;padding:12px 16px;
-  border:1.5px solid var(--clue-border2);
-  border-radius:14px;
-  background:var(--clue-card);
-  font-size:14px;font-family:inherit;
-  color:var(--text-1);
-  transition:border-color .15s,box-shadow .15s;
+.inp {
+  width: 100%; padding: 12px 16px;
+  border: 1px solid var(--clue-border2);
+  border-radius: 14px;
+  background: var(--clue-card);
+  font-size: 14px; font-family: var(--font-body);
+  color: var(--text-1);
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
 }
-.inp:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-glow);background:var(--clue-card2)}
-.inp::placeholder{color:var(--text-3)}
+.inp:focus { border-color: var(--coral); box-shadow: 0 0 0 3.5px var(--coral-glow); background: var(--clue-surface); }
+.inp::placeholder { color: var(--text-3); }
 
 /* ── BUTTONS ── */
-.btn-blue{
-  background:linear-gradient(135deg,var(--coral),var(--coral-dk));
-  color:#fff;border:none;
-  border-radius:14px;padding:12px 16px;
-  font-size:14px;font-weight:700;font-family:inherit;
-  cursor:pointer;width:100%;
-  transition:all .18s;
-  box-shadow:var(--shadow-coral);
-  letter-spacing:.02em;
+.btn-blue {
+  background: linear-gradient(135deg, var(--coral), var(--coral-dk));
+  color: #fff; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 14px; padding: 12px 18px;
+  font-family: var(--font-heading); font-size: 14.5px; font-weight: 700;
+  line-height: 1.2; letter-spacing: 0.02em;
+  cursor: pointer; width: 100%;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-coral);
 }
-.btn-blue:hover{transform:translateY(-1px);box-shadow:0 10px 36px rgba(255,107,107,0.35)}
-.btn-blue:active{transform:scale(.98)}
-.btn-blue:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn-blue:hover { transform: translateY(-1px); box-shadow: 0 10px 36px rgba(99, 102, 241, 0.38); }
+.btn-blue:active { transform: scale(0.985); }
+.btn-blue:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
-.btn-gray{
-  background:var(--clue-card2);
-  color:var(--text-2);
-  border:1.5px solid var(--clue-border2);
-  border-radius:14px;padding:11px 16px;
-  font-size:13px;font-weight:600;font-family:inherit;
-  cursor:pointer;
-  transition:all .15s;
+.btn-gray {
+  background: var(--clue-card);
+  color: var(--text-2);
+  border: 1px solid var(--clue-border2);
+  border-radius: 14px; padding: 11px 16px;
+  font-family: var(--font-heading); font-size: 13.5px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
 }
-.btn-gray:hover{background:var(--clue-card);color:var(--text-1);border-color:var(--coral)}
+.btn-gray:hover { background: var(--clue-card2); color: var(--text-1); border-color: var(--coral-lt); }
 
 /* ── CARDS ── */
-.post-card{
-  background:var(--clue-card);
-  border:1.5px solid var(--clue-border2);
-  border-radius:20px;
-  overflow:hidden;margin-bottom:14px;
-  box-shadow:var(--shadow-card);
-  transition:box-shadow .2s,transform .2s;
+.post-card {
+  background: var(--clue-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--clue-border2);
+  border-radius: 20px;
+  overflow: hidden; margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
 }
-.post-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
-
-.post-card-flat{
-  background:var(--clue-card);
-  border-top:1.5px solid var(--clue-border2);
-  border-bottom:1.5px solid var(--clue-border2);
-  margin-bottom:2px;
-}
-
-/* ── STORY RING ── */
-.story-ring{padding:2px;background:linear-gradient(135deg,var(--coral),var(--lavender));border-radius:50%}
-.story-ring-inner{background:var(--clue-bg);padding:2.5px;border-radius:50%}
+.post-card:hover { box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); transform: translateY(-2px); border-color: rgba(99,102,241,0.3); }
 
 /* ── CHAT BUBBLES ── */
-.bubble{max-width:75%;padding:10px 14px;border-radius:22px;font-size:14px;line-height:1.55;word-break:break-word}
-.bubble-self{background:linear-gradient(135deg,var(--coral),var(--coral-dk));color:#fff;border-bottom-right-radius:6px}
-.bubble-other{background:var(--clue-card2);color:var(--text-1);border-bottom-left-radius:6px;border:1px solid var(--clue-border2)}
+.bubble { max-width: 78%; padding: 11px 16px; border-radius: 20px; font-family: var(--font-body); font-size: 14px; line-height: 1.55; word-break: break-word; }
+.bubble-self { background: linear-gradient(135deg, var(--coral), var(--coral-dk)); color: #fff; border-bottom-right-radius: 4px; box-shadow: 0 4px 16px var(--coral-glow); }
+.bubble-other { background: var(--clue-card2); color: var(--text-1); border-bottom-left-radius: 4px; border: 1px solid var(--clue-border2); }
 
 /* ── ONLINE DOT ── */
-.online-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;border:2px solid var(--clue-surface);position:absolute;bottom:0;right:0}
-
-/* ── TOAST ── */
-#toast{font-family:inherit}
+.online-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; border: 2px solid var(--clue-surface); position: absolute; bottom: 0; right: 0; box-shadow: 0 0 8px #10b981; }
 
 /* ── CYCLE RING ── */
-.cycle-ring{
-  width:56px;height:56px;border-radius:50%;
-  background:conic-gradient(var(--coral) 0% var(--cycle-pct,72%), var(--clue-card2) var(--cycle-pct,72%) 100%);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-  box-shadow:0 0 0 2px var(--clue-border2);
+.cycle-ring {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: conic-gradient(var(--coral) 0% var(--cycle-pct, 72%), var(--clue-card2) var(--cycle-pct, 72%) 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--clue-border2);
 }
-.cycle-ring-inner{width:40px;height:40px;border-radius:50%;background:var(--clue-surface);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--coral);text-align:center;font-family:'Nunito',sans-serif;letter-spacing:-.3px}
-
-/* ── AVATAR RING ── */
-.av-ring{background:linear-gradient(135deg,var(--coral),var(--lavender));border-radius:50%;padding:2.5px}
-.av-ring-inner{background:var(--clue-bg);border-radius:50%;padding:2px}
+.cycle-ring-inner { width: 40px; height: 40px; border-radius: 50%; background: var(--clue-surface); display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 800; color: var(--coral-lt); text-align: center; font-family: var(--font-heading); letter-spacing: -0.2px; }
 
 /* ── INSIGHT CARD ── */
-.insight-card{
-  background:var(--clue-card);
-  border:1.5px solid var(--clue-border2);
-  border-radius:20px;overflow:hidden;margin-bottom:12px;
-  transition:box-shadow .2s,transform .2s;
-  box-shadow:var(--shadow-card);
+.insight-card {
+  background: var(--clue-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--clue-border2);
+  border-radius: 20px; overflow: hidden; margin-bottom: 14px;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  box-shadow: var(--shadow-card);
 }
-.insight-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+.insight-card:hover { box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); transform: translateY(-2px); border-color: rgba(99,102,241,0.3); }
 
 /* ── MOOD PILLS ── */
-.mood-pill{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:7px 15px;border-radius:20px;
-  font-size:12px;font-weight:600;font-family:inherit;
-  cursor:pointer;
-  transition:all .15s;
-  border:1.5px solid var(--clue-border2);
-  white-space:nowrap;
-  background:var(--clue-card);color:var(--text-2);
+.mood-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 20px;
+  font-family: var(--font-heading); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+  border: 1px solid var(--clue-border2); white-space: nowrap;
+  background: var(--clue-card); color: var(--text-2);
 }
-.mood-pill.active-pill,.mood-pill:hover{background:var(--coral-glow2);color:var(--coral);border-color:var(--coral)}
+.mood-pill.active-pill, .mood-pill:hover { background: var(--coral-glow2); color: var(--coral-lt); border-color: var(--coral) }
 
 /* ── PEER ROW ── */
-.peer-row{
-  display:flex;align-items:center;gap:12px;
-  padding:14px 16px;
-  border-bottom:1px solid var(--clue-border);
-  cursor:pointer;transition:background .12s;
+.peer-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--clue-border);
+  cursor: pointer; transition: background 0.15s;
 }
-.peer-row:hover{background:rgba(255,255,255,0.03)}
-
-/* ── SUPPORT TABS ── */
-.mstab,.dstab{
-  border-bottom:2px solid transparent;
-  transition:all .15s;
-  font-family:inherit;
-}
+.peer-row:hover { background: rgba(255,255,255,0.03); }
 
 /* ── STAT TILE ── */
-.stat-tile{
-  background:var(--clue-card);
-  border:1.5px solid var(--clue-border2);
-  border-radius:18px;padding:16px 10px;
-  text-align:center;cursor:pointer;
-  transition:transform .15s,box-shadow .15s,border-color .15s;
-  box-shadow:var(--shadow-sm);
-  position:relative;overflow:hidden;
+.stat-tile {
+  background: var(--clue-card);
+  border: 1px solid var(--clue-border2);
+  border-radius: 20px; padding: 18px 12px;
+  text-align: center; cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
 }
-.stat-tile::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at top center,rgba(255,107,107,0.06),transparent 70%);
-  pointer-events:none;
+.stat-tile::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top center, rgba(99, 102, 241, 0.1), transparent 70%);
+  pointer-events: none;
 }
-.stat-tile:hover{transform:translateY(-3px);box-shadow:var(--card-shadow-hover);border-color:rgba(255,107,107,0.3)}
-.stat-tile .num{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:var(--text-1);line-height:1}
-.stat-tile .lbl{font-size:10px;color:var(--text-3);margin-top:4px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.stat-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); border-color: rgba(99,102,241,0.35); }
+.stat-tile .num { font-family: var(--font-heading); font-size: 28px; font-weight: 800; color: var(--text-1); line-height: 1; }
+.stat-tile .lbl { font-family: var(--font-body); font-size: 10.5px; color: var(--text-3); margin-top: 5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 
 /* ── TODAY'S PROMPT CARD ── */
-.prompt-card{
-  background:var(--clue-card);
-  border:1.5px solid rgba(255,107,107,0.2);
-  border-radius:20px;padding:18px;
-  position:relative;overflow:hidden;
-}
-.prompt-card::before{
-  content:'';position:absolute;
-  width:140px;height:140px;border-radius:50%;
-  background:var(--coral);opacity:.06;
-  right:-40px;bottom:-50px;filter:blur(40px);
-  pointer-events:none;
-}
-.prompt-card::after{
-  content:'';position:absolute;
-  width:80px;height:80px;border-radius:50%;
-  background:var(--teal);opacity:.05;
-  left:-20px;top:-20px;filter:blur(30px);
-  pointer-events:none;
+.prompt-card {
+  background: var(--clue-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 24px; padding: 22px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
 }
 
 /* ── JOURNAL ENTRY ── */
-.j-entry{
-  background:var(--clue-card);border:1.5px solid var(--clue-border2);
-  border-radius:16px;padding:14px 16px;
-  cursor:pointer;transition:all .15s;
-  box-shadow:var(--shadow-sm);
+.j-entry {
+  background: var(--clue-card); border: 1px solid var(--clue-border2);
+  border-radius: 18px; padding: 16px 18px;
+  cursor: pointer; transition: all 0.18s; box-shadow: var(--shadow-sm);
 }
-.j-entry:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-1px);border-color:rgba(255,107,107,0.25)}
-
-/* ── SECTION HEADING ── */
-.sc-heading{font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--text-1);line-height:1.2}
-.sc-sub{font-size:13px;color:var(--text-3);font-weight:500}
+.j-entry:hover { box-shadow: 0 16px 48px rgba(99, 102, 241, 0.22); transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.3); }
 
 /* ── TOP BAR ── */
-.top-bar{
-  background:var(--clue-surface);
-  border-bottom:1.5px solid var(--clue-border);
-  padding:0 16px;height:52px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;position:sticky;top:0;z-index:10;
+.top-bar {
+  background: var(--clue-surface); border-bottom: 1px solid var(--clue-border);
+  padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; position: sticky; top: 0; z-index: 10;
 }
 
 /* ── BOTTOM NAV ── */
-#bot-nav{
-  flex-shrink:0;
-  background:var(--clue-surface);
-  border-top:1.5px solid var(--clue-border);
-  display:flex;height:62px;
-  box-shadow:0 -8px 30px rgba(0,0,0,0.4);
+#bot-nav {
+  flex-shrink: 0; background: var(--clue-surface); border-top: 1px solid var(--clue-border);
+  display: flex; height: 64px; box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.5);
 }
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;position:relative;transition:opacity .1s;gap:2px}
-.nav-item svg{color:var(--text-muted);transition:color .15s;stroke-width:1.8}
-.nav-item .nav-label{font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted);transition:color .15s}
-.nav-item.active svg{color:var(--coral)}
-.nav-item.active .nav-label{color:var(--coral)}
-.nav-item:not(.active) svg{opacity:.5}
-.nav-item:not(.active) .nav-label{opacity:.4}
-
-/* active dot indicator */
-.nav-item.active::after{
-  content:'';
-  position:absolute;
-  top:6px;
-  width:4px;height:4px;
-  border-radius:50%;
-  background:var(--coral);
-  box-shadow:0 0 6px var(--coral);
-}
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent; position: relative; transition: opacity 0.15s; gap: 3px; }
+.nav-item svg { color: var(--text-muted); transition: color 0.18s; stroke-width: 1.8; }
+.nav-item .nav-label { font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); transition: color 0.18s; }
+.nav-item.active svg { color: var(--coral-lt); }
+.nav-item.active .nav-label { color: var(--coral-lt); }
 
 /* ── SIDEBAR ── */
-#sidebar{
-  width:256px;flex-shrink:0;
-  background:var(--clue-surface);
-  border-right:1.5px solid var(--clue-border);
-  display:flex;flex-direction:column;
-  padding:8px 0;
+#sidebar {
+  width: 260px; flex-shrink: 0; background: var(--clue-surface);
+  border-right: 1px solid var(--clue-border); display: flex; flex-direction: column; padding: 10px 0;
 }
+.snav-item {
+  display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 14px;
+  font-family: var(--font-heading); font-size: 14.5px; font-weight: 600;
+  color: var(--text-3); cursor: pointer; transition: all 0.18s; margin: 3px 12px; letter-spacing: 0.01em;
+}
+.snav-item:hover { background: rgba(99, 102, 241, 0.08); color: var(--text-1); }
+.snav-item.active { font-weight: 700; color: var(--coral-lt); background: rgba(99, 102, 241, 0.12); }
+.snav-item.active svg { stroke-width: 2.2; color: var(--coral-lt); }
 
-.snav-item{
-  display:flex;align-items:center;gap:13px;
-  padding:12px 16px;border-radius:14px;
-  font-size:13.5px;font-weight:600;
-  color:var(--text-3);cursor:pointer;
-  transition:all .14s;
-  margin:2px 10px;
-  letter-spacing:.01em;
+.snav-item.active::before {
+  content: ''; position: absolute; left: 0; width: 3.5px; height: 28px;
+  background: var(--coral); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--coral);
 }
-.snav-item:hover{background:rgba(255,107,107,0.07);color:var(--coral)}
-.snav-item.active{font-weight:700;color:var(--coral);background:rgba(255,107,107,0.1)}
-.snav-item.active svg{stroke-width:2.5}
-.snav-item svg{stroke:currentColor;flex-shrink:0}
-
-/* sidebar active left bar */
-.snav-item.active::before{
-  content:'';
-  position:absolute;
-  left:0;width:3px;height:28px;
-  background:var(--coral);border-radius:0 3px 3px 0;
-  box-shadow:0 0 8px var(--coral);
-}
-.snav-item{position:relative}
+.snav-item { position: relative; }
 
 /* ── DESKTOP MAIN ── */
-#desk{display:none;height:100vh;overflow:hidden;background:var(--clue-bg)}
-#desk.active{display:flex}
-#desk-main{flex:1;overflow:hidden;display:flex;flex-direction:column}
-#desk-content{flex:1;overflow-y:auto;background:var(--clue-bg)}
+#desk { display: none; height: 100vh; overflow: hidden; background: var(--clue-bg); }
+#desk.active { display: flex; }
+#desk-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+#desk-content { flex: 1; overflow-y: auto; background: var(--clue-bg); }
 
-.split{display:flex;height:100%;overflow:hidden}
-.split-l{width:340px;flex-shrink:0;border-right:1.5px solid var(--clue-border);overflow-y:auto;background:var(--clue-surface)}
-.split-r{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--clue-bg)}
+.split { display: flex; height: 100%; overflow: hidden; }
+.split-l { width: 360px; flex-shrink: 0; border-right: 1px solid var(--clue-border); overflow-y: auto; background: var(--clue-surface); }
+.split-r { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--clue-bg); }
 
 /* ── MOBILE SHELL ── */
-#mob{display:flex;flex-direction:column;height:100dvh;overflow:hidden;background:var(--clue-bg)}
-#mob-content{flex:1;overflow-y:auto;background:var(--clue-bg)}
+#mob { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; background: var(--clue-bg); }
+#mob-content { flex: 1; overflow-y: auto; background: var(--clue-bg); }
 
-/* ── RESPONSIVE ── */
-@media(max-width:1023px){#desk{display:none!important}}
-@media(min-width:1024px){#mob{display:none!important}}
-@media(min-width:600px) and (max-width:1023px){#sidebar{width:200px}.split-l{width:280px}}
-
-/* ── LOADING SKELETON ── */
-.skel{
-  background:linear-gradient(90deg,var(--clue-card) 25%,var(--clue-card2) 50%,var(--clue-card) 75%);
-  background-size:200% 100%;
-  border-radius:12px;
-  animation:skel-shimmer 1.8s infinite;
-}
-@keyframes skel-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@media(max-width: 1023px) { #desk { display: none !important; } }
+@media(min-width: 1024px) { #mob { display: none !important; } }
+@media(min-width: 600px) and (max-width: 1023px) { #sidebar { width: 210px; } .split-l { width: 300px; } }
 
 /* ── CYCLE GRADIENT HEADER ── */
-.cycle-header-bg{
-  background:linear-gradient(160deg,#1a0e24 0%,var(--clue-surface) 60%,var(--clue-bg) 100%);
-  position:relative;overflow:hidden;
-}
-.cycle-header-bg::before{
-  content:'';position:absolute;
-  width:220px;height:220px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(255,107,107,0.15),transparent 70%);
-  right:-40px;top:-60px;
-  pointer-events:none;
-}
-.cycle-header-bg::after{
-  content:'';position:absolute;
-  width:160px;height:160px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(78,205,196,0.08),transparent 70%);
-  left:-30px;bottom:-30px;
-  pointer-events:none;
+.cycle-header-bg {
+  background: linear-gradient(160deg, #13122b 0%, var(--clue-surface) 60%, var(--clue-bg) 100%);
+  position: relative; overflow: hidden;
 }
 
 /* ── PILL TAG ── */
-.pill-tag{
-  display:inline-flex;align-items:center;
-  padding:3px 10px;border-radius:20px;
-  font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+.pill-tag {
+  display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px;
+  font-family: var(--font-body); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
 }
-.pill-coral{background:rgba(255,107,107,0.15);color:var(--coral-lt)}
-.pill-teal{background:rgba(78,205,196,0.12);color:var(--teal)}
-.pill-lav{background:rgba(167,139,250,0.12);color:var(--lavender)}
-
-/* ── DIVIDER ── */
-.div-line{height:1px;background:var(--clue-border);margin:0}
-
-/* ── MODAL ── */
-#confirm-modal{font-family:inherit}
-
-/* ── AVATAR PICKER SHEET ── */
-#avatar-picker{font-family:inherit}
-
-/* ── CHAT SPECIFICS ── */
-#d-chat-messages,#m-chat-messages{background:var(--clue-bg)}
-
-/* ── CLUE CYCLE MINI BAR (decorative) ── */
-.mini-phase-bar{
-  display:flex;align-items:center;gap:3px;
-  padding:6px 12px;
-  background:rgba(255,107,107,0.08);
-  border:1px solid rgba(255,107,107,0.15);
-  border-radius:20px;
-}
-.mini-phase-dot{width:7px;height:7px;border-radius:50%}
-
-/* ── ICON BUTTON ── */
-.icon-btn{
-  width:36px;height:36px;
-  border-radius:10px;
-  background:var(--clue-card2);
-  border:1.5px solid var(--clue-border2);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s;flex-shrink:0;
-}
-.icon-btn:hover{background:rgba(255,107,107,0.12);border-color:var(--coral)}
-.icon-btn svg{color:var(--text-2)}
-.icon-btn:hover svg{color:var(--coral)}
-
-/* ── FORM PANEL ── */
-.auth-panel{
-  background:var(--clue-surface);
-  border:1.5px solid var(--clue-border2);
-  border-radius:24px;
-  padding:28px 24px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.5);
-}
-
-/* ── SUPPORT FIND INPUT ── */
-#d-find-search,#m-find-search{
-  background:var(--clue-card);
-  color:var(--text-1);
-  border-color:var(--clue-border2);
-}
+.pill-coral { background: rgba(99, 102, 241, 0.15); color: var(--coral-lt); }
+.pill-teal { background: rgba(20, 184, 166, 0.15); color: var(--teal); }
 
 /* ── TABS (SUPPORT) ── */
-.tab-bar{
-  display:flex;
-  background:var(--clue-card);
-  border-radius:12px;
-  padding:3px;
-  gap:2px;
+.tab-bar { display: flex; background: var(--clue-card); border-radius: 14px; padding: 4px; gap: 3px; }
+.tab-bar button {
+  flex: 1; padding: 8px 0; border-radius: 10px;
+  font-family: var(--font-heading); font-size: 12.5px; font-weight: 700;
+  border: none; background: transparent; cursor: pointer; color: var(--text-3); transition: all 0.18s;
 }
-.tab-bar button{
-  flex:1;padding:8px 0;
-  border-radius:9px;
-  font-size:12px;font-weight:700;font-family:inherit;
-  border:none;background:transparent;cursor:pointer;
-  color:var(--text-3);transition:all .15s;letter-spacing:.03em;
-}
-.tab-bar button.tab-active{
-  background:var(--coral);
-  color:#fff;
-  box-shadow:0 2px 10px rgba(255,107,107,0.35);
-}
-
-/* ── ANIMATIONS ── */
-@keyframes glow-pulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,0.4)}
-  50%{box-shadow:0 0 0 8px rgba(255,107,107,0)}
-}
-.glow-pulse{animation:glow-pulse 2.5s infinite}
+.tab-bar button.tab-active { background: var(--coral); color: #fff; box-shadow: 0 4px 14px var(--coral-glow); }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     SPLASH
-══════════════════════════════════════════ -->
+<!-- SPLASH SCREEN -->
 <div id="screen-splash" class="screen active fixed inset-0 z-50 items-center justify-center" style="background:var(--clue-bg)">
   <div class="text-center">
-    <!-- Clue-style cycle circle -->
     <div style="position:relative;width:88px;height:88px;margin:0 auto 20px">
       <svg width="88" height="88" viewBox="0 0 88 88" fill="none">
         <circle cx="44" cy="44" r="40" stroke="var(--clue-card2)" stroke-width="8"/>
         <circle cx="44" cy="44" r="40" stroke="url(#g1)" stroke-width="8"
-          stroke-linecap="round"
-          stroke-dasharray="201.06" stroke-dashoffset="56"
+          stroke-linecap="round" stroke-dasharray="201.06" stroke-dashoffset="56"
           transform="rotate(-90 44 44)"/>
         <defs>
           <linearGradient id="g1" x1="0" y1="0" x2="88" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#ff6b6b"/>
-            <stop offset="1" stop-color="#a78bfa"/>
+            <stop stop-color="#6366f1"/>
+            <stop offset="1" stop-color="#a855f7"/>
           </linearGradient>
         </defs>
       </svg>
@@ -511,128 +366,44 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
         </svg>
       </div>
     </div>
-    <h1 style="font-family:'Nunito',sans-serif;font-size:30px;font-weight:900;color:var(--text-1);letter-spacing:-.5px">SoulCare</h1>
-    <p style="font-size:11px;color:var(--text-3);margin-top:5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600">Track · Reflect · Connect</p>
+    <h1 class="t-display">SoulCare</h1>
+    <p class="t-label mt-2" style="color:var(--text-3)">Track · Reflect · Connect</p>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     AUTH
-══════════════════════════════════════════ -->
+<!-- AUTH FALLBACK -->
 <div id="screen-auth" class="screen fixed inset-0 z-40 overflow-y-auto" style="background:var(--clue-bg)">
-
-  <!-- ambient glows -->
-  <div style="position:fixed;top:-100px;left:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(255,107,107,0.12),transparent 70%);pointer-events:none"></div>
-  <div style="position:fixed;bottom:-80px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(167,139,250,0.1),transparent 70%);pointer-events:none"></div>
-  <!-- subtle grid -->
-  <div style="position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;opacity:.5"></div>
-
   <div class="min-h-full flex flex-col items-center justify-center px-6 py-10 relative z-10">
-    <div class="w-full max-w-[380px]">
-
-      <!-- Logo -->
+    <div class="w-full max-w-[390px]">
       <div class="text-center mb-8">
-        <div style="position:relative;width:72px;height:72px;margin:0 auto 16px">
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-            <circle cx="36" cy="36" r="32" stroke="rgba(255,107,107,0.2)" stroke-width="6"/>
-            <circle cx="36" cy="36" r="32" stroke="url(#ag)" stroke-width="6"
-              stroke-linecap="round"
-              stroke-dasharray="201.06" stroke-dashoffset="60"
-              transform="rotate(-90 36 36)"/>
-            <defs>
-              <linearGradient id="ag" x1="0" y1="0" x2="72" y2="0" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#ff6b6b"/>
-                <stop offset="1" stop-color="#a78bfa"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-              <path d="M13 2C9 2 6 5 6 9c0 5.5 7 13 7 13s7-7.5 7-13c0-4-3-7-7-7z" fill="var(--coral)"/>
-            </svg>
-          </div>
-        </div>
-        <h1 style="font-family:'Nunito',sans-serif;font-size:32px;font-weight:900;color:var(--text-1);letter-spacing:-.5px">SoulCare</h1>
-        <p style="font-size:12px;color:var(--text-3);margin-top:4px;font-weight:600">Your emotional wellness companion</p>
+        <h1 class="t-h1">SoulCare</h1>
+        <p class="t-subtitle mt-1">Your emotional wellness companion</p>
       </div>
-
-      <!-- LOGIN -->
-      <div id="auth-login" class="auth-panel">
-        <div id="login-error" class="hidden text-sm rounded-xl px-4 py-3 mb-4 text-center" style="background:rgba(255,107,107,0.12);color:var(--coral-lt);border:1px solid rgba(255,107,107,0.2)"></div>
+      <div id="auth-login" class="p-8 rounded-3xl" style="background:var(--clue-surface);border:1px solid var(--clue-border2)">
+        <div id="login-error" class="hidden t-body-sm rounded-xl px-4 py-3 mb-4 text-center" style="background:rgba(239,68,68,0.12);color:var(--error-text)"></div>
         <form id="login-form" class="space-y-3">
           <input id="login-username" type="text" placeholder="Username" required autocomplete="username" class="inp"/>
           <input id="login-password" type="password" placeholder="Password" required autocomplete="current-password" class="inp"/>
           <button type="submit" id="login-btn" class="btn-blue mt-1">Sign in</button>
         </form>
-        <div class="flex items-center gap-3 my-5">
-          <div class="flex-1 h-px" style="background:var(--clue-border2)"></div>
-          <span style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:.1em">OR</span>
-          <div class="flex-1 h-px" style="background:var(--clue-border2)"></div>
-        </div>
-        <p class="text-center text-sm font-bold cursor-pointer" style="color:var(--coral)" onclick="authPanel('forgot')">Forgot password?</p>
-        <div class="mt-5 text-center text-sm py-4 rounded-xl" style="background:var(--clue-card);border:1.5px solid var(--clue-border2)">
-          <span style="color:var(--text-3)">New here?</span> <button onclick="authPanel('signup')" class="font-bold" style="color:var(--coral)">Create account</button>
-        </div>
       </div>
-
-      <!-- SIGNUP -->
-      <div id="auth-signup" class="hidden auth-panel">
-        <p style="font-family:'Nunito',sans-serif;font-weight:800;font-size:18px;color:var(--text-1);margin-bottom:16px">Create your account</p>
-        <div id="signup-error" class="hidden text-sm rounded-xl px-4 py-3 mb-3 text-center" style="background:rgba(255,107,107,0.12);color:var(--coral-lt);border:1px solid rgba(255,107,107,0.2)"></div>
-        <form id="signup-form" class="space-y-3">
-          <input id="signup-email" type="email" placeholder="Email" required class="inp"/>
-          <input id="signup-username" type="text" placeholder="Username" required class="inp"/>
-          <input id="signup-password" type="password" placeholder="Password" required class="inp"/>
-          <input id="signup-password2" type="password" placeholder="Confirm password" required class="inp"/>
-          <button type="submit" class="btn-blue mt-1">Create account</button>
-        </form>
-        <div class="mt-4 text-center text-sm py-4 rounded-xl" style="background:var(--clue-card);border:1.5px solid var(--clue-border2)">
-          <span style="color:var(--text-3)">Already have one?</span> <button onclick="authPanel('login')" class="font-bold" style="color:var(--coral)">Sign in</button>
-        </div>
-      </div>
-
-      <!-- FORGOT -->
-      <div id="auth-forgot" class="hidden auth-panel">
-        <p style="font-family:'Nunito',sans-serif;font-weight:800;font-size:18px;color:var(--text-1);margin-bottom:4px">Reset password</p>
-        <p class="text-sm mb-5" style="color:var(--text-3)">We'll send you a reset link.</p>
-        <div id="forgot-success" class="hidden text-sm rounded-xl px-4 py-3 mb-3 text-center" style="background:rgba(110,231,183,0.1);color:var(--sage);border:1px solid rgba(110,231,183,0.2)"></div>
-        <form id="forgot-form" class="space-y-3">
-          <input id="forgot-email" type="email" placeholder="Email address" required class="inp"/>
-          <button type="submit" class="btn-blue">Send reset link</button>
-        </form>
-        <div class="mt-4 text-center">
-          <button onclick="authPanel('login')" class="text-sm font-bold" style="color:var(--text-2)">← Back to sign in</button>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
 
-
-<!-- ══════════════════════════════════════════
-     DESKTOP SHELL
-══════════════════════════════════════════ -->
+<!-- DESKTOP SHELL -->
 <div id="desk">
-  <!-- Sidebar -->
   <div id="sidebar">
-    <div class="px-5 py-5 mb-3">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="position:relative;width:34px;height:34px;flex-shrink:0">
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <circle cx="17" cy="17" r="15" stroke="rgba(255,107,107,0.25)" stroke-width="4"/>
-            <circle cx="17" cy="17" r="15" stroke="var(--coral)" stroke-width="4"
-              stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="26"
-              transform="rotate(-90 17 17)"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M6.5 1C4.3 1 2.5 2.8 2.5 5c0 3.2 4 7 4 7s4-3.8 4-7c0-2.2-1.8-4-4-4z" fill="var(--coral)"/>
-            </svg>
-          </div>
-        </div>
-        <h1 style="font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:var(--text-1)">SoulCare</h1>
+    <div class="px-6 py-6 mb-2 flex items-center gap-3">
+      <div style="position:relative;width:36px;height:36px;flex-shrink:0">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="16" stroke="rgba(99,102,241,0.25)" stroke-width="4"/>
+          <circle cx="18" cy="18" r="16" stroke="var(--coral)" stroke-width="4"
+            stroke-linecap="round" stroke-dasharray="100.53" stroke-dashoffset="28"
+            transform="rotate(-90 18 18)"/>
+        </svg>
       </div>
+      <h1 class="t-h3">SoulCare</h1>
     </div>
 
     <div class="flex-1 px-2" id="sidebar-nav">
@@ -654,39 +425,33 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
       </div>
     </div>
 
-    <div class="px-3 py-4" style="border-top:1.5px solid var(--clue-border)">
+    <div class="px-3 py-4" style="border-top:1px solid var(--clue-border)">
       <div class="snav-item" onclick="logout()" style="margin:0">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-        <span id="desk-username" class="truncate flex-1 text-sm" style="color:var(--text-3)"></span>
+        <span id="desk-username" class="truncate flex-1 t-body-sm"></span>
       </div>
     </div>
   </div>
 
-  <!-- Main -->
   <div id="desk-main">
     <div id="desk-content" class="flex-1 overflow-y-auto">
 
       <!-- DASHBOARD -->
       <div id="desk-dashboard" class="max-w-2xl mx-auto py-8 px-5">
-
-        <!-- Hero header -->
-        <div class="cycle-header-bg rounded-2xl p-6 mb-6 relative overflow-hidden" style="border:1.5px solid rgba(255,107,107,0.15)">
+        <div class="cycle-header-bg rounded-3xl p-7 mb-6 relative overflow-hidden" style="border:1px solid rgba(99,102,241,0.25)">
           <div class="flex items-center justify-between relative z-10">
             <div>
-              <p class="sc-sub mb-1" id="d-dash-greeting">Good morning</p>
-              <h2 style="font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:var(--text-1)" id="d-dash-username2">—</h2>
-              <div class="mini-phase-bar mt-2" style="display:inline-flex">
-                <div class="mini-phase-dot" style="background:var(--coral)"></div>
-                <div class="mini-phase-dot" style="background:rgba(255,107,107,0.3)"></div>
-                <div class="mini-phase-dot" style="background:rgba(255,107,107,0.2)"></div>
-                <span style="font-size:11px;font-weight:700;color:var(--coral-lt);margin-left:4px">Cycle Day 14</span>
+              <p class="t-subtitle mb-1" id="d-dash-greeting">Good morning</p>
+              <h2 class="t-display" id="d-dash-username2">—</h2>
+              <div class="mini-phase-bar mt-3" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:20px">
+                <div style="width:7px;height:7px;border-radius:50%;background:var(--coral-lt)"></div>
+                <span class="t-caption" style="color:var(--coral-lt);font-weight:700">Cycle Day 14</span>
               </div>
             </div>
-            <div id="desk-user-av" class="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg glow-pulse" style="background:linear-gradient(135deg,var(--coral),var(--lavender));box-shadow:0 4px 20px rgba(255,107,107,0.4)"></div>
+            <div id="desk-user-av" class="w-16 h-16 rounded-full flex items-center justify-center text-white font-black text-xl" style="background:linear-gradient(135deg,var(--coral),var(--lavender));box-shadow:0 6px 24px rgba(99,102,241,0.45)"></div>
           </div>
         </div>
 
-        <!-- Stats -->
         <div class="grid grid-cols-4 gap-3 mb-6">
           <div class="stat-tile" onclick="showTab('journal')">
             <div class="num" id="d-dash-journals">—</div>
@@ -706,80 +471,75 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
           </div>
         </div>
 
-        <!-- Prompt card -->
         <div class="prompt-card mb-6">
           <div class="flex items-center gap-2 mb-3">
-            <span class="pill-coral">✦ Today's reflection</span>
+            <span class="pill-tag pill-coral">✦ Today's reflection</span>
           </div>
-          <p style="font-size:16px;font-weight:600;color:var(--text-1);line-height:1.55" id="d-dash-prompt-text">Loading...</p>
-          <button onclick="showTab('journal')" style="margin-top:14px;font-size:12px;font-weight:800;color:var(--coral);background:none;border:none;cursor:pointer;padding:0;letter-spacing:.02em">Write about this →</button>
+          <p class="t-body-lg" id="d-dash-prompt-text">Loading...</p>
+          <button onclick="showTab('journal')" class="t-btn mt-4 inline-block" style="color:var(--coral-lt);background:none;border:none;cursor:pointer;padding:0">Write about this →</button>
         </div>
 
-        <!-- Actions -->
         <div class="flex gap-3 mb-6">
-          <button onclick="showTab('journal')" class="btn-blue flex-1 py-2.5 text-sm">✏️ Write</button>
-          <button onclick="showTab('insights')" class="btn-gray flex-1 py-2.5 text-sm">📊 Insights</button>
-          <button onclick="showTab('support')" class="btn-gray flex-1 py-2.5 text-sm">💬 Connect</button>
+          <button onclick="showTab('journal')" class="btn-blue flex-1 py-3">✏️ Write</button>
+          <button onclick="showTab('insights')" class="btn-gray flex-1 py-3">📊 Insights</button>
+          <button onclick="showTab('support')" class="btn-gray flex-1 py-3">💬 Connect</button>
         </div>
 
-        <!-- Latest entry -->
         <div class="post-card">
-          <div class="flex items-center gap-3 px-4 py-3" style="border-bottom:1px solid var(--clue-border)">
-            <div class="av-ring flex-shrink-0"><div class="av-ring-inner">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="d-dash-av-inner">—</div>
-            </div></div>
+          <div class="flex items-center gap-3 px-5 py-4" style="border-bottom:1px solid var(--clue-border)">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="d-dash-av-inner">—</div>
             <div>
-              <p class="font-bold text-sm" style="color:var(--text-1)" id="d-dash-uname">—</p>
-              <p class="text-xs" style="color:var(--text-3)">Latest entry</p>
+              <p class="t-h5" id="d-dash-uname">—</p>
+              <p class="t-caption">Latest reflection entry</p>
             </div>
           </div>
-          <div class="px-4 py-4"><p class="text-sm leading-relaxed" style="color:var(--text-2)" id="d-dash-latest">No entries yet. Start writing!</p></div>
+          <div class="px-5 py-4"><p class="t-body-md" id="d-dash-latest">No entries yet. Start writing!</p></div>
         </div>
       </div>
 
-      <!-- JOURNAL split -->
+      <!-- JOURNAL Split View -->
       <div id="desk-journal" class="hidden split" style="height:100vh">
         <div class="split-l">
-          <div class="px-4 py-3 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-            <p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">Past Entries</p>
+          <div class="px-5 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+            <h2 class="t-h3">Past Entries</h2>
           </div>
-          <div id="d-journal-list" class="p-3 space-y-2"><p class="text-center text-sm py-8" style="color:var(--text-3)">Loading...</p></div>
+          <div id="d-journal-list" class="p-4 space-y-3"><p class="t-body-sm text-center py-8">Loading...</p></div>
         </div>
         <div class="split-r">
-          <div class="px-5 py-3 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-            <p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">New Entry</p>
+          <div class="px-6 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+            <h2 class="t-h3">New Entry</h2>
           </div>
-          <div class="p-5 flex flex-col gap-3 h-full">
-            <textarea id="d-journal-input" rows="12" placeholder="What's on your mind today?" class="inp flex-1" style="height:auto;border-radius:18px;font-size:15px;line-height:1.7;font-family:inherit"></textarea>
-            <div id="d-journal-error" class="hidden text-xs" style="color:var(--coral)"></div>
-            <button id="d-journal-save-btn" onclick="saveJournal()" class="btn-blue">Save Entry</button>
+          <div class="p-6 flex flex-col gap-4 h-full">
+            <textarea id="d-journal-input" rows="12" placeholder="What's on your mind today?" class="inp flex-1 t-body-lg" style="height:auto;border-radius:20px"></textarea>
+            <div id="d-journal-error" class="hidden t-body-sm" style="color:var(--coral-lt)"></div>
+            <button id="d-journal-save-btn" onclick="saveJournal()" class="btn-blue py-3.5">Save Entry</button>
           </div>
         </div>
       </div>
 
       <!-- INSIGHTS -->
       <div id="desk-insights" class="hidden max-w-2xl mx-auto py-8 px-5">
-        <div class="mb-5">
-          <h2 class="sc-heading mb-1">AI Insights</h2>
-          <p class="sc-sub">Emotional patterns from your entries.</p>
+        <div class="mb-6">
+          <h2 class="t-h1 mb-1">AI Insights</h2>
+          <p class="t-subtitle">Emotional patterns from your reflection logs.</p>
         </div>
         <div id="d-insights-filter" class="flex gap-2 flex-wrap mb-5"></div>
-        <div class="mb-5 p-4 rounded-2xl" style="background:var(--clue-card);border:1.5px solid var(--clue-border2)">
-          <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px">This week's mood</p>
-          <div id="d-mood-chart" class="flex items-end gap-2 h-16 mb-2"></div>
+        <div class="mb-6 p-5 rounded-2xl" style="background:var(--clue-card);border:1px solid var(--clue-border2)">
+          <p class="t-label mb-3">This week's mood trend</p>
+          <div id="d-mood-chart" class="flex items-end gap-2 h-20 mb-2"></div>
           <div id="d-mood-chart-labels" class="flex gap-2"></div>
         </div>
-        <div id="d-insights-list"><p class="text-sm text-center py-8" style="color:var(--text-3)">Loading...</p></div>
+        <div id="d-insights-list"><p class="t-body-sm text-center py-8">Loading...</p></div>
       </div>
 
-      <!-- SUPPORT split -->
+      <!-- SUPPORT Split View -->
       <div id="desk-support" class="hidden split" style="height:100vh">
         <div class="split-l">
-          <div class="px-4 py-3 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-            <p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">Messages</p>
-            <p style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:500">Connect with people who understand</p>
+          <div class="px-5 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+            <h2 class="t-h3">Messages</h2>
+            <p class="t-caption mt-0.5">Connect with peers who understand</p>
           </div>
-          <div class="px-3 py-2" style="border-bottom:1.5px solid var(--clue-border)">
+          <div class="px-4 py-3" style="border-bottom:1px solid var(--clue-border)">
             <div class="tab-bar">
               <button onclick="supportTab('connections')" id="d-stab-connections" class="dstab">Chats</button>
               <button onclick="supportTab('requests')" id="d-stab-requests" class="dstab">Requests</button>
@@ -787,40 +547,32 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
             </div>
           </div>
           <div id="d-support-connections" class="dsupport-panel"></div>
-          <div id="d-support-requests" class="dsupport-panel hidden p-3 space-y-2"></div>
-          <div id="d-support-find" class="dsupport-panel hidden p-3">
+          <div id="d-support-requests" class="dsupport-panel hidden p-4 space-y-2"></div>
+          <div id="d-support-find" class="dsupport-panel hidden p-4">
             <input id="d-find-search" type="text" placeholder="Search by username..." oninput="filterUsers()" class="inp mb-3"/>
             <div id="d-find-list" class="space-y-2"></div>
           </div>
         </div>
         <div class="split-r" id="d-chat-area">
           <div id="d-chat-placeholder" class="flex-1 flex flex-col items-center justify-center" style="background:var(--clue-bg)">
-            <div style="width:72px;height:72px;background:var(--clue-card);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border:1.5px solid var(--clue-border2)">
-              <svg class="w-8 h-8" style="color:var(--text-muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-            </div>
-            <p class="font-bold" style="color:var(--text-1)">Your messages</p>
-            <p class="text-sm mt-1" style="color:var(--text-3)">Select a conversation to start</p>
+            <p class="t-h4" style="color:var(--text-1)">Your messages</p>
+            <p class="t-body-sm mt-1">Select a conversation to start messaging</p>
           </div>
           <div id="d-chat-window" class="hidden flex-col h-full">
-            <div class="flex items-center gap-3 px-4 py-3 flex-shrink-0" style="border-bottom:1.5px solid var(--clue-border);background:var(--clue-surface)">
+            <div class="flex items-center gap-3 px-5 py-4 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
               <div class="relative flex-shrink-0">
-                <div id="d-chat-avatar" class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))"></div>
+                <div id="d-chat-avatar" class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))"></div>
                 <div id="d-chat-online" class="online-dot hidden"></div>
               </div>
               <div class="flex-1 min-w-0">
-                <div class="font-bold text-sm truncate" style="color:var(--text-1)" id="d-chat-peer-name">—</div>
-                <div class="text-xs" style="color:var(--text-3)" id="d-chat-status">Connecting...</div>
+                <div class="t-h5 truncate" id="d-chat-peer-name">—</div>
+                <div class="t-caption" id="d-chat-status">Connecting...</div>
               </div>
             </div>
-            <div id="d-chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-2"></div>
-            <div id="d-typing-indicator" class="hidden px-4 py-2" style="background:var(--clue-surface)">
-              <div class="inline-flex items-center gap-1 rounded-2xl px-3 py-2" style="background:var(--clue-card)">
-                <div class="dot-typing"><span></span><span></span><span></span></div>
-              </div>
-            </div>
-            <form id="d-chat-form" onsubmit="sendMessage(event,'d')" class="flex items-center gap-2 px-4 py-3 flex-shrink-0" style="background:var(--clue-surface);border-top:1.5px solid var(--clue-border)">
-              <input id="d-chat-input" type="text" placeholder="Message..." oninput="sendTyping()" class="inp flex-1" style="border-radius:22px;padding:10px 16px"/>
-              <button type="submit" class="font-black text-sm px-3 py-2 rounded-xl" style="color:var(--coral);background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2)">Send</button>
+            <div id="d-chat-messages" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
+            <form id="d-chat-form" onsubmit="sendMessage(event,'d')" class="flex items-center gap-3 px-5 py-4 flex-shrink-0" style="background:var(--clue-surface);border-top:1px solid var(--clue-border)">
+              <input id="d-chat-input" type="text" placeholder="Type your message..." oninput="sendTyping()" class="inp flex-1 t-body-md" style="border-radius:24px;padding:12px 18px"/>
+              <button type="submit" class="btn-blue py-3 px-5" style="width:auto">Send</button>
             </form>
           </div>
         </div>
@@ -830,85 +582,66 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
   </div>
 </div>
 
-
-<!-- ══════════════════════════════════════════
-     MOBILE SHELL
-══════════════════════════════════════════ -->
+<!-- MOBILE SHELL -->
 <div id="mob">
   <div id="mob-content">
 
     <!-- DASHBOARD -->
     <div id="mob-dashboard" class="screen">
-      <!-- Top bar -->
       <div class="top-bar">
-        <h1 style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:var(--text-1)">SoulCare</h1>
+        <h1 class="t-h3">SoulCare</h1>
         <div class="flex items-center gap-2">
-          <div class="mini-phase-bar">
-            <div class="mini-phase-dot" style="background:var(--coral)"></div>
-            <span style="font-size:10px;font-weight:700;color:var(--coral-lt)">Day 14</span>
-          </div>
-          <button onclick="logout()" class="icon-btn" style="width:32px;height:32px">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-          </button>
+          <button onclick="logout()" class="p-2 text-xs font-bold rounded-lg" style="color:var(--text-3)">Sign out</button>
         </div>
       </div>
 
-      <!-- User hero -->
-      <div class="cycle-header-bg px-4 py-5 flex items-center gap-4" style="border-bottom:1.5px solid var(--clue-border)">
-        <div class="av-ring flex-shrink-0"><div class="av-ring-inner">
-          <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-dash-av">?</div>
-        </div></div>
+      <div class="cycle-header-bg px-5 py-6 flex items-center gap-4" style="border-bottom:1px solid var(--clue-border)">
+        <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-dash-av">?</div>
         <div class="flex-1">
-          <p class="text-xs font-semibold" style="color:var(--text-3)" id="m-dash-greeting">Good morning</p>
-          <p class="font-black text-base" style="color:var(--text-1);font-family:'Nunito',sans-serif" id="m-dash-username">—</p>
+          <p class="t-subtitle" id="m-dash-greeting">Good morning</p>
+          <p class="t-h2" id="m-dash-username">—</p>
         </div>
         <div class="cycle-ring"><div class="cycle-ring-inner">72%<br/>cycle</div></div>
       </div>
 
-      <!-- Stats row -->
-      <div class="grid grid-cols-4" style="border-bottom:1.5px solid var(--clue-border);background:var(--clue-surface)">
+      <div class="grid grid-cols-4" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
         <div onclick="showTab('journal')" class="text-center py-4 cursor-pointer" style="border-right:1px solid var(--clue-border)">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;color:var(--text-1)" id="m-dash-journals">—</div>
-          <div class="text-xs font-semibold" style="color:var(--text-3);letter-spacing:.04em">LOG</div>
+          <div class="t-h2" id="m-dash-journals">—</div>
+          <div class="t-label">LOG</div>
         </div>
         <div onclick="showTab('support')" class="text-center py-4 cursor-pointer" style="border-right:1px solid var(--clue-border)">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;color:var(--text-1)" id="m-dash-connections">—</div>
-          <div class="text-xs font-semibold" style="color:var(--text-3);letter-spacing:.04em">CHATS</div>
+          <div class="t-h2" id="m-dash-connections">—</div>
+          <div class="t-label">CHATS</div>
         </div>
         <div onclick="showTab('support')" class="text-center py-4 cursor-pointer" style="border-right:1px solid var(--clue-border)">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;color:var(--text-1)" id="m-dash-requests">—</div>
-          <div class="text-xs font-semibold" style="color:var(--text-3);letter-spacing:.04em">REQ</div>
+          <div class="t-h2" id="m-dash-requests">—</div>
+          <div class="t-label">REQ</div>
         </div>
         <div onclick="showTab('insights')" class="text-center py-4 cursor-pointer">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;color:var(--text-1)" id="m-dash-insights">—</div>
-          <div class="text-xs font-semibold" style="color:var(--text-3);letter-spacing:.04em">IDEAS</div>
+          <div class="t-h2" id="m-dash-insights">—</div>
+          <div class="t-label">IDEAS</div>
         </div>
       </div>
 
-      <!-- Quick actions -->
-      <div class="flex gap-2 px-4 py-3" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-        <button onclick="showTab('journal')" class="btn-blue flex-1 py-2.5 text-sm">✏️ Write</button>
-        <button onclick="showTab('insights')" class="btn-gray flex-1 py-2.5 text-sm">📊 Data</button>
-        <button onclick="showTab('support')" class="btn-gray flex-1 py-2.5 text-sm">💬 Chat</button>
+      <div class="flex gap-2 px-4 py-3" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+        <button onclick="showTab('journal')" class="btn-blue flex-1 py-2.5">✏️ Write</button>
+        <button onclick="showTab('insights')" class="btn-gray flex-1 py-2.5">📊 Data</button>
+        <button onclick="showTab('support')" class="btn-gray flex-1 py-2.5">💬 Chat</button>
       </div>
 
-      <!-- Prompt -->
       <div class="mx-4 mt-4 prompt-card">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="pill-coral">Today's reflection</span>
-        </div>
-        <p class="text-sm font-semibold leading-snug" style="color:var(--text-1)" id="m-dash-prompt-text">Loading...</p>
-        <button onclick="showTab('journal')" style="margin-top:12px;font-size:12px;font-weight:800;color:var(--coral);background:none;border:none;cursor:pointer;padding:0">Write about this →</button>
+        <span class="pill-tag pill-coral mb-2">Today's reflection</span>
+        <p class="t-body-md" id="m-dash-prompt-text">Loading...</p>
+        <button onclick="showTab('journal')" class="t-btn mt-3 inline-block" style="color:var(--coral-lt);background:none;border:none;cursor:pointer">Write about this →</button>
       </div>
 
-      <!-- Latest entry -->
       <div class="pb-24">
         <div class="mx-4 mt-4 post-card">
           <div class="flex items-center gap-3 px-4 py-3" style="border-bottom:1px solid var(--clue-border)">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-dash-av2">?</div>
-            <p class="font-bold text-sm" style="color:var(--text-1)" id="m-dash-uname2">—</p>
+            <p class="t-h5" id="m-dash-uname2">—</p>
           </div>
-          <div class="px-4 py-4"><p class="text-sm leading-relaxed" style="color:var(--text-2)" id="m-dash-latest">No entries yet. Start writing!</p></div>
+          <div class="px-4 py-4"><p class="t-body-md" id="m-dash-latest">No entries yet. Start writing!</p></div>
         </div>
       </div>
     </div>
@@ -916,38 +649,34 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
     <!-- JOURNAL -->
     <div id="mob-journal" class="screen pb-20">
       <div class="top-bar">
-        <p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">Journal</p>
-        <button onclick="saveJournal()" id="m-journal-save-btn" class="font-black text-sm px-3 py-1.5 rounded-lg" style="color:var(--coral);background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2)">Save</button>
+        <p class="t-h3">Journal</p>
+        <button onclick="saveJournal()" id="m-journal-save-btn" class="btn-blue" style="width:auto;padding:6px 16px">Save</button>
       </div>
-      <div class="px-4 pt-4 pb-3" style="border-bottom:1.5px solid var(--clue-border);background:var(--clue-surface)">
+      <div class="px-4 pt-4 pb-3" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
         <div class="flex items-start gap-3">
           <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))" id="m-journal-av">?</div>
-          <textarea id="m-journal-input" rows="5" placeholder="What's on your mind today?" class="flex-1" style="font-size:15px;line-height:1.65;font-family:inherit;color:var(--text-1);background:transparent;border:none;resize:none;outline:none"></textarea>
+          <textarea id="m-journal-input" rows="5" placeholder="What's on your mind today?" class="flex-1 t-body-lg" style="background:transparent;border:none;outline:none"></textarea>
         </div>
-        <div id="m-journal-error" class="hidden text-xs mt-1" style="color:var(--coral)"></div>
       </div>
-      <div id="m-journal-list"><p class="text-center text-sm py-8" style="color:var(--text-3)">Loading...</p></div>
+      <div id="m-journal-list"><p class="t-body-sm text-center py-8">Loading...</p></div>
     </div>
 
     <!-- INSIGHTS -->
     <div id="mob-insights" class="screen pb-20">
-      <div class="top-bar"><p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">AI Insights</p></div>
-      <div class="px-4 pt-3 pb-3" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-        <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px">This week's mood</p>
-        <div id="m-mood-chart" class="flex items-end gap-1.5 h-12 mb-2"></div>
-        <div id="m-mood-chart-labels" class="flex gap-1.5"></div>
+      <div class="top-bar"><p class="t-h3">AI Insights</p></div>
+      <div class="px-4 pt-4 pb-3" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
+        <p class="t-label mb-2">This week's mood</p>
+        <div id="m-mood-chart" class="flex items-end gap-2 h-14 mb-2"></div>
+        <div id="m-mood-chart-labels" class="flex gap-2"></div>
       </div>
-      <div class="flex gap-2 overflow-x-auto px-4 py-3" style="border-bottom:1.5px solid var(--clue-border);background:var(--clue-surface)" id="m-insights-filter"></div>
-      <div id="m-insights-list"><p class="text-center text-sm py-8" style="color:var(--text-3)">Loading...</p></div>
+      <div class="flex gap-2 overflow-x-auto px-4 py-3" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)" id="m-insights-filter"></div>
+      <div id="m-insights-list"><p class="t-body-sm text-center py-8">Loading...</p></div>
     </div>
 
     <!-- SUPPORT -->
     <div id="mob-support" class="screen pb-20">
-      <div class="top-bar">
-        <p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">Messages</p>
-        <svg class="w-5 h-5" style="color:var(--text-3)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-      </div>
-      <div class="px-3 py-2" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
+      <div class="top-bar"><p class="t-h3">Messages</p></div>
+      <div class="px-3 py-2.5" style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)">
         <div class="tab-bar">
           <button onclick="supportTab('connections')" id="m-stab-connections" class="mstab">Chats</button>
           <button onclick="supportTab('requests')" id="m-stab-requests" class="mstab">Requests</button>
@@ -964,199 +693,83 @@ input:focus,textarea:focus,button:focus{outline:none}textarea{resize:none}
 
     <!-- CHAT -->
     <div id="mob-chat" class="screen" style="height:100dvh">
-      <div class="flex items-center gap-3 px-3 py-2 flex-shrink-0" style="border-bottom:1.5px solid var(--clue-border);background:var(--clue-surface)">
-        <button onclick="showTab('support')" class="icon-btn" style="width:34px;height:34px">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <div class="relative flex-shrink-0">
-          <div id="m-chat-avatar" class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-black" style="background:linear-gradient(135deg,var(--coral),var(--lavender))"></div>
-          <div id="m-chat-online" class="online-dot hidden"></div>
-        </div>
+      <div class="flex items-center gap-3 px-4 py-3 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:var(--clue-surface)">
+        <button onclick="showTab('support')" class="p-2 text-sm font-bold" style="color:var(--text-3)">← Back</button>
         <div class="flex-1 min-w-0">
-          <div class="font-bold text-sm truncate" style="color:var(--text-1)" id="m-chat-peer-name">—</div>
-          <div class="text-xs" style="color:var(--text-3)" id="m-chat-status">Connecting...</div>
+          <div class="t-h5 truncate" id="m-chat-peer-name">—</div>
+          <div class="t-caption" id="m-chat-status">Connecting...</div>
         </div>
       </div>
       <div id="m-chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-2"></div>
-      <div id="m-typing-indicator" class="hidden px-4 py-2 flex-shrink-0" style="background:var(--clue-surface)">
-        <div class="inline-flex items-center gap-1 rounded-2xl px-3 py-2" style="background:var(--clue-card)">
-          <div class="dot-typing"><span></span><span></span><span></span></div>
-        </div>
-      </div>
-      <form id="m-chat-form" onsubmit="sendMessage(event,'m')" class="flex items-center gap-2 px-3 py-2 flex-shrink-0" style="background:var(--clue-surface);border-top:1.5px solid var(--clue-border)">
-        <input id="m-chat-input" type="text" placeholder="Message..." oninput="sendTyping()" class="inp flex-1" style="border-radius:22px;padding:10px 14px;font-size:14px"/>
-        <button type="submit" class="font-black text-sm px-3 py-2 rounded-xl" style="color:var(--coral);background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2)">Send</button>
+      <form id="m-chat-form" onsubmit="sendMessage(event,'m')" class="flex items-center gap-2 px-4 py-3 flex-shrink-0" style="background:var(--clue-surface);border-top:1px solid var(--clue-border)">
+        <input id="m-chat-input" type="text" placeholder="Type your message..." oninput="sendTyping()" class="inp flex-1 t-body-md" style="border-radius:24px"/>
+        <button type="submit" class="btn-blue py-2.5 px-4" style="width:auto">Send</button>
       </form>
     </div>
 
     <!-- PROFILE -->
     <div id="mob-profile" class="screen pb-20">
-      <div class="top-bar"><p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">Profile</p></div>
-
-      <div style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)" class="px-4 py-8 flex flex-col items-center cycle-header-bg">
-        <div style="position:relative">
-          <div style="position:absolute;inset:-20px;background:radial-gradient(circle,rgba(255,107,107,0.12),transparent 70%);border-radius:50%;pointer-events:none"></div>
-          <div class="relative">
-            <div id="profile-avatar-display" class="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-white font-black text-2xl" style="background:linear-gradient(135deg,var(--coral),var(--lavender));box-shadow:0 8px 30px rgba(255,107,107,0.35)">
-              <span id="profile-avatar-initials"></span>
-            </div>
-            <button onclick="openAvatarPicker()" class="absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center border-2" style="background:var(--coral);border-color:var(--clue-bg)">
-              <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-            </button>
-          </div>
+      <div class="top-bar"><p class="t-h3">Profile</p></div>
+      <div style="background:var(--clue-surface);border-bottom:1px solid var(--clue-border)" class="px-4 py-8 flex flex-col items-center cycle-header-bg">
+        <div id="profile-avatar-display" class="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center text-white font-black text-2xl" style="background:linear-gradient(135deg,var(--coral),var(--lavender))">
+          <span id="profile-avatar-initials"></span>
         </div>
-        <p style="font-family:'Nunito',sans-serif;font-weight:900;font-size:18px;color:var(--text-1);margin-top:16px" id="profile-username-display"></p>
-        <p class="text-xs mt-1" style="color:var(--text-3)">Tap ✏️ to choose your anonymous avatar</p>
+        <p class="t-h2 mt-4" id="profile-username-display"></p>
       </div>
-
-      <!-- Stats -->
-      <div class="grid grid-cols-3" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-        <div class="text-center py-5" style="border-right:1px solid var(--clue-border)">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:var(--text-1)" id="profile-stat-journals">—</div>
-          <div class="text-xs mt-1 font-semibold" style="color:var(--text-3);letter-spacing:.04em">JOURNALS</div>
-        </div>
-        <div class="text-center py-5" style="border-right:1px solid var(--clue-border)">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:var(--text-1)" id="profile-stat-connections">—</div>
-          <div class="text-xs mt-1 font-semibold" style="color:var(--text-3);letter-spacing:.04em">CONNECTED</div>
-        </div>
-        <div class="text-center py-5">
-          <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:var(--text-1)" id="profile-stat-insights">—</div>
-          <div class="text-xs mt-1 font-semibold" style="color:var(--text-3);letter-spacing:.04em">INSIGHTS</div>
-        </div>
-      </div>
-
-      <!-- Actions -->
       <div class="px-4 py-4 space-y-3">
-        <button onclick="openAvatarPicker()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl transition" style="background:var(--clue-card);border:1.5px solid var(--clue-border2);color:var(--text-2)">
-          <svg class="w-5 h-5" style="color:var(--coral)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-          Choose anonymous avatar
-        </button>
-        <button id="profile-remove-btn" onclick="removeAvatar()" class="hidden w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl" style="background:var(--clue-card);border:1.5px solid rgba(255,107,107,0.2);color:var(--coral)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          Remove avatar
-        </button>
-        <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl" style="background:var(--clue-card);border:1.5px solid var(--clue-border2);color:var(--text-3)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-          Sign out
-        </button>
+        <button onclick="openAvatarPicker()" class="w-full py-3.5 t-btn rounded-2xl btn-gray">Choose anonymous avatar</button>
+        <button onclick="logout()" class="w-full py-3.5 t-btn rounded-2xl btn-gray">Sign out</button>
       </div>
     </div>
 
     <!-- AVATAR PICKER SHEET -->
-    <div id="avatar-picker" class="hidden fixed inset-0 z-[300] flex flex-col justify-end" style="background:rgba(0,0,0,0.7)">
-      <div class="rounded-t-3xl" style="background:var(--clue-surface);border-top:1.5px solid var(--clue-border2);max-height:80vh;overflow-y:auto">
-        <div class="flex items-center justify-between px-4 py-4 sticky top-0 z-10" style="background:var(--clue-surface);border-bottom:1.5px solid var(--clue-border)">
-          <p style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-1)">Choose your avatar</p>
+    <div id="avatar-picker" class="hidden fixed inset-0 z-[300] flex flex-col justify-end" style="background:rgba(0,0,0,0.75)">
+      <div class="rounded-t-3xl p-5" style="background:var(--clue-surface);border-top:1px solid var(--clue-border2)">
+        <div class="flex items-center justify-between mb-4">
+          <p class="t-h3">Choose your avatar</p>
           <button onclick="closeAvatarPicker()" class="text-2xl leading-none" style="color:var(--text-3)">×</button>
         </div>
-        <p class="text-xs px-4 pt-3 pb-1" style="color:var(--text-3)">Anonymous avatars — your identity stays private</p>
-
-        <!-- Tabs: Presets | Custom Builder -->
-        <div class="flex px-4 pt-2 pb-0 gap-2">
-          <button id="av-tab-presets" onclick="switchAvatarTab('presets')"
-            class="flex-1 py-2 rounded-xl text-xs font-bold transition"
-            style="background:var(--coral);color:#fff">Presets</button>
-          <button id="av-tab-custom" onclick="switchAvatarTab('custom')"
-            class="flex-1 py-2 rounded-xl text-xs font-bold transition"
-            style="background:var(--clue-card);color:var(--text-2);border:1.5px solid var(--clue-border2)">✨ Build Your Own</button>
-        </div>
-
-        <!-- PRESETS GRID -->
-        <div id="avatar-grid" class="grid grid-cols-4 gap-3 p-4"></div>
-
-        <!-- CUSTOM BUILDER -->
-        <div id="avatar-builder" class="hidden p-4">
-          <!-- Live preview -->
-          <div class="flex justify-center mb-5">
-            <div id="av-preview" class="w-24 h-24 rounded-full overflow-hidden" style="box-shadow:0 0 24px rgba(0,0,0,.4)"></div>
-          </div>
-
-          <!-- Neon color -->
-          <p class="text-xs font-bold mb-2" style="color:var(--text-3);letter-spacing:.06em">NEON COLOR</p>
-          <div class="flex gap-2 flex-wrap mb-4" id="av-neon-row">
-            <button onclick="setAvatarOpt('neon','00d4ff')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#00d4ff" data-key="neon" data-val="00d4ff"></button>
-            <button onclick="setAvatarOpt('neon','bf00ff')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#bf00ff" data-key="neon" data-val="bf00ff"></button>
-            <button onclick="setAvatarOpt('neon','ff2020')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#ff2020" data-key="neon" data-val="ff2020"></button>
-            <button onclick="setAvatarOpt('neon','00ff88')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#00ff88" data-key="neon" data-val="00ff88"></button>
-            <button onclick="setAvatarOpt('neon','ffaa00')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#ffaa00" data-key="neon" data-val="ffaa00"></button>
-            <button onclick="setAvatarOpt('neon','ff00cc')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#ff00cc" data-key="neon" data-val="ff00cc"></button>
-            <button onclick="setAvatarOpt('neon','ff6600')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#ff6600" data-key="neon" data-val="ff6600"></button>
-            <button onclick="setAvatarOpt('neon','0066ff')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#0066ff" data-key="neon" data-val="0066ff"></button>
-          </div>
-
-          <!-- Background -->
-          <p class="text-xs font-bold mb-2" style="color:var(--text-3);letter-spacing:.06em">BACKGROUND</p>
-          <div class="flex gap-2 flex-wrap mb-4" id="av-bg-row">
-            <button onclick="setAvatarOpt('bg','0a0a1a')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#0a0a1a;border-color:#444" data-key="bg" data-val="0a0a1a"></button>
-            <button onclick="setAvatarOpt('bg','0a0010')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#0a0010;border-color:#444" data-key="bg" data-val="0a0010"></button>
-            <button onclick="setAvatarOpt('bg','100000')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#100000;border-color:#444" data-key="bg" data-val="100000"></button>
-            <button onclick="setAvatarOpt('bg','001008')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#001008;border-color:#444" data-key="bg" data-val="001008"></button>
-            <button onclick="setAvatarOpt('bg','0f0800')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#0f0800;border-color:#444" data-key="bg" data-val="0f0800"></button>
-            <button onclick="setAvatarOpt('bg','080808')" class="av-opt w-8 h-8 rounded-full border-2 border-transparent" style="background:#080808;border-color:#444" data-key="bg" data-val="080808"></button>
-          </div>
-
-          <!-- Mask style -->
-          <p class="text-xs font-bold mb-2" style="color:var(--text-3);letter-spacing:.06em">MASK STYLE</p>
-          <div class="flex gap-2 flex-wrap mb-5" id="av-mask-row">
-            <button onclick="setAvatarOpt('mask','visor')" class="av-opt px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-transparent" style="background:var(--clue-card);color:var(--text-2)" data-key="mask" data-val="visor">Visor</button>
-            <button onclick="setAvatarOpt('mask','eyes')" class="av-opt px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-transparent" style="background:var(--clue-card);color:var(--text-2)" data-key="mask" data-val="eyes">Eyes</button>
-            <button onclick="setAvatarOpt('mask','circuit')" class="av-opt px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-transparent" style="background:var(--clue-card);color:var(--text-2)" data-key="mask" data-val="circuit">Circuit</button>
-            <button onclick="setAvatarOpt('mask','minimal')" class="av-opt px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-transparent" style="background:var(--clue-card);color:var(--text-2)" data-key="mask" data-val="minimal">Minimal</button>
-          </div>
-
-          <!-- Save button -->
-          <button onclick="saveCustomAvatar()" class="w-full py-3 rounded-2xl text-sm font-bold text-white" style="background:var(--coral)">
-            Use This Avatar
-          </button>
-        </div>
+        <div id="avatar-grid" class="grid grid-cols-4 gap-3"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- Bottom Nav -->
   <nav id="bot-nav">
     <button class="nav-item active" onclick="showTab('dashboard')" data-tab="dashboard">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path d="M12 8v4l3 3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
       <span class="nav-label">Today</span>
     </button>
     <button class="nav-item" onclick="showTab('journal')" data-tab="journal">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
       <span class="nav-label">Log</span>
     </button>
     <button class="nav-item" onclick="showTab('insights')" data-tab="insights">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       <span class="nav-label">Data</span>
     </button>
     <button class="nav-item" onclick="showTab('support')" data-tab="support">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
       <span class="nav-label">Chat</span>
     </button>
     <button class="nav-item" onclick="showTab('profile')" data-tab="profile">
-      <div id="nav-profile-av" class="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center text-white font-black text-xs" style="background:linear-gradient(135deg,var(--coral),var(--lavender))"></div>
       <span class="nav-label">Me</span>
     </button>
   </nav>
 </div>
 
-<!-- TOAST -->
-<div id="toast" class="hidden fixed bottom-16 left-1/2 -translate-x-1/2 text-sm px-5 py-2.5 rounded-full z-[100] shadow-lg whitespace-nowrap" style="background:var(--clue-card2);color:var(--text-1);border:1px solid var(--clue-border2);font-family:inherit;backdrop-filter:blur(10px)"></div>
+<div id="toast" class="hidden fixed bottom-16 left-1/2 -translate-x-1/2 t-body-sm px-5 py-2.5 rounded-full z-[100] shadow-lg whitespace-nowrap" style="background:var(--clue-card2);color:var(--text-1);border:1px solid var(--clue-border2);backdrop-filter:blur(10px)"></div>
 
-<!-- CONFIRM MODAL -->
-<div id="confirm-modal" class="hidden fixed inset-0 flex items-end sm:items-center justify-center z-[200] p-4" style="background:rgba(0,0,0,0.7)">
-  <div class="w-full max-w-sm overflow-hidden rounded-3xl" style="background:var(--clue-surface);border:1.5px solid var(--clue-border2)">
-    <div class="p-5 text-center" style="border-bottom:1.5px solid var(--clue-border)">
-      <p id="confirm-msg" class="text-sm leading-relaxed" style="color:var(--text-1)"></p>
+<div id="confirm-modal" class="hidden fixed inset-0 flex items-end sm:items-center justify-center z-[200] p-4" style="background:rgba(0,0,0,0.75)">
+  <div class="w-full max-w-sm overflow-hidden rounded-3xl" style="background:var(--clue-surface);border:1px solid var(--clue-border2)">
+    <div class="p-5 text-center" style="border-bottom:1px solid var(--clue-border)">
+      <p id="confirm-msg" class="t-body-md" style="color:var(--text-1)"></p>
     </div>
     <div class="flex">
-      <button id="confirm-ok" class="flex-1 py-3 text-sm font-bold" style="border-right:1.5px solid var(--clue-border);color:var(--coral)"></button>
-      <button onclick="closeConfirm()" class="flex-1 py-3 text-sm font-bold" style="color:var(--text-3)">Cancel</button>
+      <button id="confirm-ok" class="flex-1 py-3.5 t-btn" style="border-right:1px solid var(--clue-border);color:var(--coral-lt)"></button>
+      <button onclick="closeConfirm()" class="flex-1 py-3.5 t-btn" style="color:var(--text-3)">Cancel</button>
     </div>
   </div>
 </div>
 
 {% load static %}
-<script src="{% static 'web/app.js' %}"></script>
+<script src="{% static 'web/app.js' %}?v=2"></script>
 <script>
 const _patchDash = () => {
   const init = (username||'?').slice(0,2).toUpperCase()
@@ -1167,15 +780,12 @@ const _patchDash = () => {
   applyProfilePic()
 }
 
-// Tab switching — sync tab-bar buttons
 const _origSupportTab = supportTab
 window.supportTab = function(name) {
   _origSupportTab(name)
-  // Mobile pill tabs
   document.querySelectorAll('.mstab').forEach(b=>b.classList.remove('tab-active'))
   const mb=document.getElementById('m-stab-'+name)
   if(mb) mb.classList.add('tab-active')
-  // Desktop pill tabs
   document.querySelectorAll('.dstab').forEach(b=>b.classList.remove('tab-active'))
   const db=document.getElementById('d-stab-'+name)
   if(db) db.classList.add('tab-active')

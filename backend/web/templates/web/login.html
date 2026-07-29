@@ -5,56 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Log In — SoulCare</title>
   
-  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <!-- Premium Typography System: Plus Jakarta Sans (Headings) & Inter (Body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   
   <style>
     /* ═════════════════════════════════════════════════════════════════
-       SOULCARE DESIGN TOKENS (M3 + Calming Lavender & Mint Palette)
+       SOULCARE TYPOGRAPHY SYSTEM & SAAS DESIGN TOKENS
        ═════════════════════════════════════════════════════════════════ */
     :root {
-      --lavender-100: #F3EDF7;
-      --lavender-200: #E8DEF8;
-      --lavender-300: #D0BCFF;
-      --lavender-500: #7D5260;
-      --lavender-700: #4A4458;
-      --lavender-900: #1D192B;
-      --lavender-primary: #6750A4;
+      /* Typography Tokens */
+      --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
-      --mint-100: #E8F5E9;
-      --mint-200: #C8E6C9;
-      --mint-400: #81C784;
-      --mint-600: #388E3C;
-      --mint-800: #1B5E20;
-      --mint-accent: #2D6A4F;
+      /* Core Dark SaaS Palette */
+      --bg-surface: #090d16;
+      --card-bg: rgba(18, 26, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-glow: rgba(99, 102, 241, 0.3);
 
-      --white: #FFFFFF;
-      --bg-page: #F7F5FA;
-      
-      --card-bg: #FFFFFF;
-      --card-border: rgba(103, 80, 164, 0.08);
-      --card-shadow: 0 12px 36px rgba(103, 80, 164, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+      /* Primary Brand Tokens */
+      --brand-primary: #6366f1;
+      --brand-primary-hover: #4f46e5;
+      --brand-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+      --brand-glow: rgba(99, 102, 241, 0.25);
 
-      --text-main: #1D1B20;
-      --text-sub: #49454F;
-      --text-muted: #79747E;
-      --text-placeholder: #A09CAB;
+      /* Neutral Contrast Hierarchy */
+      --text-heading: #f8fafc;
+      --text-body: #cbd5e1;
+      --text-muted: #64748b;
+      --text-placeholder: #475569;
 
-      --input-bg: #F8F7FC;
-      --input-border: #E6E1E5;
-      --input-focus: #6750A4;
-      --error-bg: #FDF2F2;
-      --error-text: #B3261E;
-      --error-border: #F8B4B4;
+      /* Form Field Tokens */
+      --input-bg: rgba(15, 23, 42, 0.6);
+      --input-border: rgba(255, 255, 255, 0.1);
+      --input-focus-border: #6366f1;
+      --input-focus-glow: rgba(99, 102, 241, 0.2);
 
-      --radius-full: 9999px;
+      /* Feedback Status Tokens */
+      --error-bg: rgba(239, 68, 68, 0.12);
+      --error-border: rgba(239, 68, 68, 0.25);
+      --error-text: #fca5a5;
+
+      /* Radii & Motion */
+      --radius-md: 14px;
+      --radius-lg: 20px;
       --radius-xl: 28px;
-      --radius-lg: 18px;
-
+      --shadow-elevation: 0 24px 60px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.12);
       --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-bounce: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     *, *::before, *::after {
@@ -65,109 +64,108 @@
     }
 
     body {
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      background-color: var(--bg-page);
-      color: var(--text-main);
+      font-family: var(--font-body);
+      background-color: var(--bg-surface);
+      color: var(--text-body);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px 16px;
+      padding: 24px 16px;
       position: relative;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .bg-orb {
+    /* Ambient Glow Background Orbs */
+    .ambient-glow {
       position: absolute;
       border-radius: 50%;
-      filter: blur(80px);
+      filter: blur(100px);
       z-index: 0;
       pointer-events: none;
-      opacity: 0.6;
-      animation: floatOrb 12s infinite alternate ease-in-out;
+      opacity: 0.45;
+      animation: floatGlow 14s infinite alternate ease-in-out;
     }
-    .bg-orb-1 {
-      top: -80px;
-      left: -80px;
-      width: 320px;
-      height: 320px;
-      background: radial-gradient(circle, var(--lavender-300) 0%, rgba(208, 188, 255, 0) 70%);
-    }
-    .bg-orb-2 {
-      bottom: -60px;
-      right: -60px;
-      width: 340px;
-      height: 340px;
-      background: radial-gradient(circle, var(--mint-200) 0%, rgba(200, 230, 201, 0) 70%);
-      animation-delay: -6s;
-    }
+    .glow-orb-1 { top: -120px; left: -100px; width: 450px; height: 450px; background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0) 70%); }
+    .glow-orb-2 { bottom: -100px; right: -80px; width: 420px; height: 420px; background: radial-gradient(circle, rgba(20, 184, 166, 0.25) 0%, rgba(20, 184, 166, 0) 70%); animation-delay: -7s; }
 
-    @keyframes floatOrb {
+    @keyframes floatGlow {
       0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(25px, 20px) scale(1.08); }
+      100% { transform: translate(30px, 25px) scale(1.1); }
     }
 
+    .bg-grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* Glassmorphism Card Container */
     .login-card {
       width: 100%;
-      max-width: 420px;
+      max-width: 430px;
       background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-radius: var(--radius-xl);
       border: 1px solid var(--card-border);
-      box-shadow: var(--card-shadow);
-      padding: 36px 28px 32px;
+      box-shadow: var(--shadow-elevation);
+      padding: 40px 32px 36px;
       z-index: 1;
       position: relative;
-      animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: cardSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    @keyframes cardEntrance {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    @keyframes cardSlideUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .header-section {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
 
-    .logo-container {
-      width: 68px;
-      height: 68px;
-      margin: 0 auto 16px;
-      background: linear-gradient(135deg, var(--lavender-200) 0%, var(--mint-100) 100%);
-      border-radius: 22px;
+    .logo-badge {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 18px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 20px rgba(103, 80, 164, 0.12);
-      transition: transform var(--transition-bounce);
+      box-shadow: 0 0 24px var(--brand-glow);
+      transition: transform var(--transition-fast);
     }
-    .logo-container:hover {
-      transform: scale(1.05) rotate(2deg);
-    }
+    .logo-badge:hover { transform: scale(1.06) rotate(3deg); }
 
+    /* TYPOGRAPHY SCALE IMPLEMENTATION */
     .brand-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--lavender-900);
-      letter-spacing: -0.02em;
+      font-family: var(--font-heading);
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+      color: var(--text-heading);
       margin-bottom: 6px;
     }
 
     .brand-tagline {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-sub);
-      line-height: 1.4;
-      max-width: 280px;
-      margin: 0 auto;
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      font-weight: 400;
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+      color: var(--text-muted);
     }
 
     /* Error Alert Banner */
@@ -177,40 +175,44 @@
       border: 1px solid var(--error-border);
       color: var(--error-text);
       padding: 12px 16px;
-      border-radius: var(--radius-lg);
-      font-size: 13.5px;
-      font-weight: 600;
-      margin-bottom: 20px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.5;
+      margin-bottom: 22px;
       align-items: center;
-      gap: 10px;
-      animation: fadeIn 0.25s ease;
+      gap: 12px;
+      animation: bannerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .error-banner.visible {
-      display: flex;
-    }
+    .error-banner.visible { display: flex; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
+    @keyframes bannerSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Form Layout & Field Labels */
     .login-form {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 20px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .field-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-sub);
-      margin-left: 4px;
+      font-family: var(--font-body);
+      font-size: 10.5px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-body);
     }
 
     .input-wrapper {
@@ -232,34 +234,30 @@
 
     .form-input {
       width: 100%;
-      height: 52px;
-      padding: 0 44px 0 46px;
+      height: 50px;
+      padding: 0 46px 0 46px;
       background-color: var(--input-bg);
-      border: 1.5px solid var(--input-border);
-      border-radius: var(--radius-lg);
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--text-heading);
       transition: all var(--transition-fast);
     }
 
-    .form-input::placeholder {
-      color: var(--text-placeholder);
-      font-weight: 400;
-    }
+    .form-input::placeholder { color: var(--text-placeholder); }
 
     .form-input:focus {
       outline: none;
-      background-color: var(--white);
-      border-color: var(--input-focus);
-      box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.12);
+      background-color: rgba(15, 23, 42, 0.85);
+      border-color: var(--input-focus-border);
+      box-shadow: 0 0 0 3.5px var(--input-focus-glow);
     }
 
-    .form-input:focus + .input-icon,
-    .input-wrapper:focus-within .input-icon {
-      color: var(--input-focus);
-    }
+    .form-input:focus ~ .input-icon,
+    .input-wrapper:focus-within .input-icon { color: var(--brand-primary); }
 
     .toggle-password {
       position: absolute;
@@ -269,16 +267,13 @@
       color: var(--text-muted);
       cursor: pointer;
       padding: 6px;
-      border-radius: var(--radius-full);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all var(--transition-fast);
     }
-    .toggle-password:hover {
-      color: var(--lavender-primary);
-      background-color: rgba(103, 80, 164, 0.06);
-    }
+    .toggle-password:hover { color: var(--text-heading); background-color: rgba(255, 255, 255, 0.06); }
 
     .forgot-link-wrapper {
       display: flex;
@@ -287,175 +282,136 @@
     }
 
     .forgot-link {
+      font-family: var(--font-body);
       font-size: 13px;
-      font-weight: 600;
-      color: var(--lavender-primary);
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--brand-primary);
       text-decoration: none;
       cursor: pointer;
       transition: color var(--transition-fast);
     }
-    .forgot-link:hover {
-      color: #4F378B;
-      text-decoration: underline;
-    }
+    .forgot-link:hover { color: #818cf8; text-decoration: underline; }
 
+    /* Button Typography Token */
     .btn-submit {
       width: 100%;
-      height: 52px;
-      background: linear-gradient(135deg, var(--lavender-primary) 0%, #4F378B 100%);
-      color: var(--white);
-      border: none;
-      border-radius: var(--radius-full);
-      font-family: inherit;
-      font-size: 16px;
+      height: 50px;
+      background: var(--brand-gradient);
+      color: var(--text-heading);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-size: 14.5px;
       font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 6px 20px rgba(103, 80, 164, 0.25);
+      box-shadow: 0 6px 20px var(--brand-glow);
       transition: all var(--transition-fast);
       margin-top: 4px;
     }
 
-    .btn-submit:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(103, 80, 164, 0.35);
-    }
-
-    .btn-submit:active {
-      transform: scale(0.98);
-      box-shadow: 0 3px 12px rgba(103, 80, 164, 0.2);
-    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(99, 102, 241, 0.35); }
+    .btn-submit:active { transform: scale(0.985); }
 
     .spinner {
-      width: 22px;
-      height: 22px;
-      border: 2.5px solid rgba(255, 255, 255, 0.3);
-      border-top-color: var(--white);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: var(--text-heading);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.75s linear infinite;
       display: none;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-submit.loading .btn-text { display: none; }
+    .btn-submit.loading .spinner { display: block; }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .btn-submit.loading .btn-text {
-      display: none;
-    }
-    .btn-submit.loading .spinner {
-      display: block;
-    }
-
+    /* Divider & Label Token */
     .divider-container {
       display: flex;
       align-items: center;
-      margin: 22px 0;
-      gap: 12px;
+      margin: 24px 0;
+      gap: 14px;
     }
-
-    .divider-line {
-      flex: 1;
-      height: 1px;
-      background-color: var(--input-border);
-    }
-
+    .divider-line { flex: 1; height: 1px; background-color: var(--input-border); }
     .divider-text {
-      font-size: 12px;
+      font-family: var(--font-body);
+      font-size: 10.5px;
       font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 0.05em;
+      line-height: 1.2;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 0 4px;
+      color: var(--text-placeholder);
     }
 
+    /* Google Sign In Button */
     .btn-google {
       width: 100%;
-      height: 52px;
-      background-color: var(--white);
-      color: #3C4043;
-      border: 1px solid #DADCE0;
-      border-radius: var(--radius-full);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 15px;
+      height: 50px;
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--text-heading);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-size: 14.5px;
       font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
       transition: all var(--transition-fast);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
+    .btn-google:hover { background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
 
-    .btn-google:hover {
-      background-color: #F8F9FA;
-      border-color: #D2E3FC;
-      box-shadow: 0 3px 10px rgba(60, 64, 67, 0.08);
-      transform: translateY(-1px);
-    }
-
-    .btn-google:active {
-      background-color: #EEEEEE;
-      transform: scale(0.98);
-    }
-
-    .google-icon-svg {
-      width: 20px;
-      height: 20px;
-    }
-
+    /* Footer Section */
     .footer-section {
       text-align: center;
-      margin-top: 26px;
-      font-size: 14px;
-      color: var(--text-sub);
-      font-weight: 500;
+      margin-top: 28px;
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 400;
+      color: var(--text-muted);
     }
-
-    .signup-link {
-      font-weight: 700;
-      color: var(--mint-accent);
-      text-decoration: none;
-      margin-left: 4px;
-      transition: color var(--transition-fast);
-    }
-
-    .signup-link:hover {
-      color: var(--mint-800);
-      text-decoration: underline;
-    }
+    .signup-link { font-weight: 600; color: var(--brand-primary); text-decoration: none; margin-left: 4px; transition: color var(--transition-fast); }
+    .signup-link:hover { color: #818cf8; text-decoration: underline; }
 
     @media (max-width: 480px) {
-      body { padding: 12px; }
-      .login-card { padding: 28px 20px 24px; border: none; }
+      body { padding: 16px 12px; }
+      .login-card { padding: 32px 20px 28px; }
+      .brand-title { font-size: 26px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="bg-orb bg-orb-1"></div>
-  <div class="bg-orb bg-orb-2"></div>
+  <div class="ambient-glow glow-orb-1"></div>
+  <div class="ambient-glow glow-orb-2"></div>
+  <div class="bg-grid-overlay"></div>
 
   <main class="login-card" role="main">
     
     <header class="header-section">
-      <div class="logo-container" aria-label="SoulCare Logo">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 6C20 6 24.5 13.5 24.5 18C24.5 20.4853 22.4853 22.5 20 22.5C17.5147 22.5 15.5 20.4853 15.5 18C15.5 13.5 20 6 20 6Z" fill="#6750A4" />
-          <path d="M12.5 13.5C12.5 13.5 20 16 22 19.5C23.1046 21.433 22.433 23.9046 20.5 25C18.567 26.0954 16.0954 25.4234 15 23.4904C13.5 20.5 12.5 13.5 12.5 13.5Z" fill="#388E3C" fill-opacity="0.85" />
-          <path d="M27.5 13.5C27.5 13.5 20 16 18 19.5C16.8954 21.433 17.567 23.9046 19.5 25C21.433 26.0954 23.9046 25.4234 25 23.4904C26.5 20.5 27.5 13.5 27.5 13.5Z" fill="#81C784" fill-opacity="0.9" />
-          <circle cx="20" cy="27" r="3.5" fill="#D0BCFF" />
+      <div class="logo-badge" aria-label="SoulCare Logo">
+        <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 6C20 6 24.5 13.5 24.5 18C24.5 20.4853 22.4853 22.5 20 22.5C17.5147 22.5 15.5 20.4853 15.5 18C15.5 13.5 20 6 20 6Z" fill="#6366f1" />
+          <path d="M12.5 13.5C12.5 13.5 20 16 22 19.5C23.1046 21.433 22.433 23.9046 20.5 25C18.567 26.0954 16.0954 25.4234 15 23.4904C13.5 20.5 12.5 13.5 12.5 13.5Z" fill="#14b8a6" fill-opacity="0.85" />
+          <path d="M27.5 13.5C27.5 13.5 20 16 18 19.5C16.8954 21.433 17.567 23.9046 19.5 25C21.433 26.0954 23.9046 25.4234 25 23.4904C26.5 20.5 27.5 13.5 27.5 13.5Z" fill="#38b2aa" fill-opacity="0.9" />
+          <circle cx="20" cy="27" r="3.5" fill="#a5b4fc" />
         </svg>
       </div>
       <h1 class="brand-title">SoulCare</h1>
-      <p class="brand-tagline">You're not alone. Let's begin your journey.</p>
+      <p class="brand-tagline">Welcome back. Please sign in to your sanctuary.</p>
     </header>
 
-    <!-- Error Alert Message Banner -->
     <div class="error-banner" id="errorBanner" role="alert">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
@@ -465,7 +421,6 @@
       <span id="errorMessage">Invalid credentials.</span>
     </div>
 
-    <!-- Login Form -->
     <form class="login-form" id="loginForm" onsubmit="handleLoginSubmit(event)" novalidate>
       
       <div class="form-group">
@@ -481,7 +436,7 @@
             autocomplete="username" 
           />
           <div class="input-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
               <polyline points="22,6 12,13 2,6"></polyline>
             </svg>
@@ -502,7 +457,7 @@
             autocomplete="current-password" 
           />
           <div class="input-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
@@ -514,7 +469,7 @@
             onclick="togglePasswordVisibility()" 
             aria-label="Show password"
           >
-            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
@@ -527,7 +482,7 @@
       </div>
 
       <button type="submit" class="btn-submit" id="submitBtn">
-        <span class="btn-text">Log In</span>
+        <span class="btn-text">Sign In</span>
         <div class="spinner" id="btnSpinner"></div>
       </button>
 
@@ -556,7 +511,6 @@
 
   </main>
 
-  <!-- Interactive JavaScript & Backend API Integration -->
   <script>
     function togglePasswordVisibility() {
       const passwordInput = document.getElementById('password');
@@ -592,7 +546,6 @@
       banner.classList.remove('visible');
     }
 
-    // Backend Authentication API Integration
     async function handleLoginSubmit(event) {
       event.preventDefault();
       hideError();
@@ -612,25 +565,17 @@
       try {
         const response = await fetch('/api/auth/login/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username: usernameInput,
-            password: passwordInput,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // Store JWT tokens & User info in localStorage
           localStorage.setItem('soulcare_token', data.token);
           localStorage.setItem('soulcare_refresh', data.refresh);
           localStorage.setItem('soulcare_user_id', data.user_id);
           localStorage.setItem('soulcare_username', data.username);
-
-          // Redirect user to the main SoulCare application dashboard
           window.location.href = '/';
         } else {
           const detail = data.detail || (data.username ? data.username[0] : null) || 'Invalid credentials. Please try again.';
@@ -644,7 +589,6 @@
       }
     }
 
-    // Password Reset Business Logic Integration
     async function handleForgotPassword() {
       hideError();
       const email = prompt('Enter your registered email address for password reset:');
@@ -663,7 +607,6 @@
       }
     }
 
-    // Google Sign-In Business Logic Integration
     function handleGoogleSignIn() {
       alert('Google Sign-In integration ready. Send OAuth ID token to /api/auth/google/');
     }
