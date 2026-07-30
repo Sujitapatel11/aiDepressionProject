@@ -17,12 +17,28 @@ if not SECRET_KEY:
         raise RuntimeError("CRITICAL SECURITY ERROR: SECRET_KEY environment variable is missing in production!")
     SECRET_KEY = "dev-secret-key-unsafe-change-in-prod"
 
-ALLOWED_HOSTS = os.environ.get(
+raw_hosts = os.environ.get(
     "ALLOWED_HOSTS",
-    "127.0.0.1,localhost,aidepressionproject.onrender.com,staging-api.soulcare.app,api.soulcare.app,testserver"
-).split(",")
+    "127.0.0.1,localhost,localhost:5173,127.0.0.1:5173,localhost:3000,127.0.0.1:3000,aidepressionproject.onrender.com,staging-api.soulcare.app,api.soulcare.app,testserver"
+)
+ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(",") if h.strip()]
 
-# Trust Railway's proxy for HTTPS detection
+# Add FRONTEND_URL and BACKEND_URL domain hosts if provided via environment
+frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+if frontend_url:
+    from urllib.parse import urlparse
+    parsed_fe = urlparse(frontend_url).netloc or urlparse(frontend_url).path
+    if parsed_fe and parsed_fe not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(parsed_fe)
+
+backend_url = os.environ.get("BACKEND_URL", "").strip()
+if backend_url:
+    from urllib.parse import urlparse
+    parsed_be = urlparse(backend_url).netloc or urlparse(backend_url).path
+    if parsed_be and parsed_be not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(parsed_be)
+
+# Trust proxy for HTTPS detection
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Production security headers (only when DEBUG=False)
@@ -36,10 +52,13 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-CSRF_TRUSTED_ORIGINS = os.environ.get(
+raw_csrf = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://aidepressionproject.onrender.com,https://staging-api.soulcare.app,https://api.soulcare.app"
-).split(",")
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,https://aidepressionproject.onrender.com,https://staging-api.soulcare.app,https://api.soulcare.app"
+)
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in raw_csrf.split(",") if o.strip()]
+if frontend_url and frontend_url not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(frontend_url)
 
 # =========================
 # APPLICATIONS
@@ -218,9 +237,10 @@ SIMPLE_JWT = {
 # CORS
 # =========================
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS", ""
-).split(",") if not DEBUG else []
+raw_cors = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+CORS_ALLOWED_ORIGINS = [c.strip() for c in raw_cors.split(",") if c.strip()]
+if frontend_url and frontend_url not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append(frontend_url)
 
 # =========================
 # GOOGLE OAUTH

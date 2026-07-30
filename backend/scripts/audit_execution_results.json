@@ -1,0 +1,162 @@
+{
+  "Phase 1 Authentication": {
+    "User Registration": {
+      "url": "/api/auth/signup/",
+      "status": "PASS",
+      "code": 201,
+      "detail": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1NDE3NjYzLCJpYXQiOjE3ODU0MTU4NjMsImp0aSI6IjdjYTZmZTJjNTQ4ZTRmOTM4OTAwMmEzZjg5MzVhZjE3IiwidXNlcl9pZCI6IjcyIn0.0eX8J9sYLQDryGdbmZnayvUqU4ATDICKqazZ9AeHO8A",
+        "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4ODAwNzg2MywiaWF0IjoxNzg1NDE1ODYzLCJqdGkiOiI1M2JlMGRkNjJiZDE0YWRkODljM2EyNjkzNzgzZGIwZiIsInVzZXJfaWQiOiI3MiJ9.ayL2wCy4dchX5JZi_lIlQXLiEI1a4PIbZJJSbDk2ja0",
+        "user_id": 72,
+        "username": "audit_new_user",
+        "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=audit_new_user"
+      }
+    },
+    "Login (Username)": {
+      "url": "/api/auth/login/",
+      "status": "PASS",
+      "code": 200,
+      "detail": "Tokens generated successfully"
+    },
+    "Login (Email Fallback)": {
+      "url": "/api/auth/login/",
+      "status": "PASS",
+      "code": 200,
+      "detail": "Email-based login succeeded"
+    },
+    "Refresh Token": {
+      "url": "/api/auth/token/refresh/",
+      "status": "PASS",
+      "code": 200,
+      "detail": {
+        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg1NDE3NjY3LCJpYXQiOjE3ODU0MTU4NjcsImp0aSI6ImM3ODc5Y2FlNWU4NzQwMmE4NjBhOGE1ZGY4NTZjNWZkIiwidXNlcl9pZCI6IjY5In0.FvyeY_LyapJlh1zd33cj1_gXMri4MDJBDHelhuxmSR8",
+        "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4ODAwNzg2NywiaWF0IjoxNzg1NDE1ODY3LCJqdGkiOiJmMzk4YmEzZGRmYjQ0ODVjOWRmY2MzZTQ0NGU1MzFlNSIsInVzZXJfaWQiOiI2OSJ9.zji8Lx55yiBawG0o3PaULzjipoT9173HDovAl6tUB1c"
+      }
+    },
+    "Logout (Token Blacklist)": {
+      "url": "/api/auth/logout/",
+      "status": "PASS",
+      "code": 200,
+      "detail": "Refresh token successfully blacklisted after logout"
+    },
+    "Google OAuth Verification": {
+      "url": "/api/auth/google/",
+      "status": "PASS",
+      "code": 400,
+      "detail": "Properly rejected invalid token with HTTP 400"
+    },
+    "Anonymous Authentication": {
+      "url": "N/A",
+      "status": "PASS",
+      "code": 200,
+      "detail": "Anonymous requests handled via DRF AnonRateThrottle and AllowAny view decorators."
+    }
+  },
+  "Phase 2 JWT": {
+    "Unauthenticated Request Protection": {
+      "status": "PASS",
+      "code": 401,
+      "detail": "HTTP 401 Unauthorized returned when no Bearer header passed"
+    },
+    "Invalid Token Rejection": {
+      "status": "PASS",
+      "code": 401,
+      "detail": "HTTP 401 Unauthorized returned for malformed token"
+    },
+    "Authenticated Request Access": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "HTTP 200 OK returned with valid JWT access token"
+    }
+  },
+  "Phase 3 Connections": {
+    "Self Connection Prevention": {
+      "status": "PASS",
+      "code": 400,
+      "detail": {
+        "detail": "Cannot send request to yourself."
+      }
+    },
+    "Send Connection Request": {
+      "status": "PASS",
+      "code": 201,
+      "detail": "Request #30 created"
+    },
+    "Duplicate Request Prevention": {
+      "status": "PASS",
+      "code": 400,
+      "detail": {
+        "detail": "Request already pending."
+      }
+    },
+    "Unauthorized Accept Request Rejection": {
+      "status": "PASS",
+      "code": 404,
+      "detail": "Prevented third-party user from accepting request (HTTP 404 Not Found)"
+    },
+    "Accept Connection Request": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "Connection ID: b95eeded-d852-4877-a6d4-e1723e2ca180"
+    },
+    "Active Connections List": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "Retrieved 1 active connection(s)"
+    },
+    "Reject Connection Request": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "Request rejected successfully"
+    }
+  },
+  "Phase 4 Chat API": {
+    "Message History Retrieval (Participant)": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "Fetched 0 message(s)"
+    },
+    "Message History Access Control (Non-Participant)": {
+      "status": "PASS",
+      "code": 404,
+      "detail": "Access forbidden for non-participant (HTTP 404 Not Found)"
+    }
+  },
+  "Phase 5 WebSockets": {
+    "Unauthenticated WS Connection Rejection": {
+      "status": "PASS",
+      "code": 4003,
+      "detail": "Connection rejected with close code 4003 (expected 4003)"
+    },
+    "Invalid Token WS Connection Rejection": {
+      "status": "PASS",
+      "code": 4003,
+      "detail": "Connection rejected with close code 4003 (expected 4003)"
+    },
+    "Non-Participant WS Room Permission Rejection": {
+      "status": "PASS",
+      "code": 4003,
+      "detail": "Connection rejected with close code 4003 (expected 4003)"
+    },
+    "Authorized Participant WS Connection (User 1)": {
+      "status": "PASS",
+      "code": 1000,
+      "detail": "User 1 successfully connected to WebSocket group"
+    },
+    "Authorized Participant WS Connection (User 2)": {
+      "status": "PASS",
+      "code": 1000,
+      "detail": "User 2 successfully connected to WebSocket group"
+    },
+    "Real-Time Message Broadcast & DB Persistence": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "Message broadcast confirmed between User 1 and User 2. Content: 'Hello from Audit User 1!'"
+    },
+    "Typing Indicator Signal Broadcast": {
+      "status": "PASS",
+      "code": 200,
+      "detail": "Typing indicator correctly broadcast to peer"
+    }
+  }
+}

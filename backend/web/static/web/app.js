@@ -959,10 +959,27 @@ async function loadMessages(connId,pfx){
   }
 }
 
+function getWsHost(){
+  let targetUrl = window.WS_BASE_URL || window.API_BASE_URL || ''
+  if(targetUrl){
+    if(targetUrl.startsWith('http://')){
+      return targetUrl.replace('http://', 'ws://').replace(/\/+$/, '')
+    } else if(targetUrl.startsWith('https://')){
+      return targetUrl.replace('https://', 'wss://').replace(/\/+$/, '')
+    } else if(!targetUrl.startsWith('ws://') && !targetUrl.startsWith('wss://')){
+      const proto = location.protocol === 'https:' ? 'wss://' : 'ws://'
+      return (proto + targetUrl).replace(/\/+$/, '')
+    }
+    return targetUrl.replace(/\/+$/, '')
+  }
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return proto + '//' + location.host
+}
+
 function connectWS(connId,pfx){
   if(ws){ws.close();ws=null}
-  const proto=location.protocol==='https:'?'wss':'ws'
-  ws=new WebSocket(proto+'://'+location.host+'/ws/chat/'+connId+'/?token='+token)
+  const wsHost = getWsHost()
+  ws=new WebSocket(wsHost+'/ws/chat/'+connId+'/?token='+token)
   ws.onopen=function(){
     ;['d','m'].forEach(p=>{
       const s=el(p+'-chat-status');if(s){s.textContent='Online';s.style.color='#10b981'}
@@ -990,6 +1007,9 @@ function connectWS(connId,pfx){
 
 function appendMessage(content,isSelf,time,animate,pfx){
   const container=el(pfx+'-chat-messages');if(!container)return
+  if(container.querySelector('.shadow-inner') || (container.innerText && container.innerText.includes('Start your conversation'))){
+    container.innerHTML=''
+  }
   const wrap=document.createElement('div')
   wrap.className='flex flex-col mb-3 '+(isSelf?'items-end':'items-start')
   if(animate)wrap.classList.add('fade-in')

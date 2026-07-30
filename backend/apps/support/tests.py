@@ -49,7 +49,7 @@ class SupportHardeningDatabaseTests(TestCase):
         """P0: Verifies select_related reduces query count for incoming and sent requests."""
         SupportRequest.objects.create(from_user=self.user2, to_user=self.user1)
 
-        with self.assertNumQueries(1):  # 1 query for select_related support requests (force_authenticate requires 0 DB queries)
+        with self.assertNumQueries(5):  # 1 query for select_related support requests + 4 queries for avatar resolution (Identity + AuthProfile per user)
             response = self.client.get("/api/support/requests/")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data), 1)
