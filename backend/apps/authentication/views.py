@@ -74,8 +74,11 @@ def logout_view(request):
     return Response({"detail": "Logged out."})
 
 
+from django.db import transaction
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@transaction.atomic
 def google_auth_view(request):
     serializer = GoogleAuthSerializer(data=request.data)
     if not serializer.is_valid():
@@ -112,7 +115,7 @@ def google_auth_view(request):
     if not id_info:
         return Response({"detail": "Invalid Google token."}, status=status.HTTP_400_BAD_REQUEST)
 
-    email = id_info.get("email")
+    email = id_info.get("email", "").strip().lower()
     if not email:
         return Response({"detail": "Missing email claim in Google token."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -123,18 +126,18 @@ def google_auth_view(request):
     name = id_info.get("name") or email.split("@")[0]
     picture = id_info.get("picture", "")
 
-    # 1. Check if user profile already linked via google_id
+    # 1. Lookup by linked google_id in UserAuthProfile
     user = None
     if google_id:
         auth_profile = UserAuthProfile.objects.filter(google_id=google_id).select_related('user').first()
         if auth_profile:
             user = auth_profile.user
 
-    # 2. Search by email address if not found by google_id
+    # 2. If not found by google_id, lookup by normalized email
     if not user:
         user = User.objects.filter(email__iexact=email).first()
 
-    # 3. If user does not exist, create new account
+    # 3. If user still does not exist, create new account under atomic transaction
     if not user:
         import re
         base_username = email.split("@")[0].lower()
@@ -156,9 +159,9 @@ def google_auth_view(request):
             last_name=last_name[:150],
         )
 
-    # 4. Attach/Update UserAuthProfile
+    # 4. Attach or update UserAuthProfile cleanly
     auth_profile, _ = UserAuthProfile.objects.get_or_create(user=user)
-    if google_id and not auth_profile.google_id:
+    if google_id and auth_profile.google_id != google_id:
         auth_profile.google_id = google_id
     if auth_profile.auth_provider != 'google':
         auth_profile.auth_provider = 'google'

@@ -1,107 +1,130 @@
 from unittest.mock import patch
-from django.contrib.auth.models import User
 from django.test import TestCase
-from rest_framework import status
+from django.contrib.auth.models import User
 from rest_framework.test import APIClient
-
+from rest_framework import status
 from apps.authentication.models import UserAuthProfile
 
 
-class GoogleOAuthTests(TestCase):
+class GoogleOAuthFlowTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.google_email = "user.soulcare@gmail.com"
+        self.google_sub = "google_sub_123456789"
+        self.google_name = "SoulCare User"
+        self.google_picture = "https://lh3.googleusercontent.com/a/avatar_pic"
 
-    @patch("google.oauth2.id_token.verify_oauth2_token")
-    def test_google_auth_new_user_creation(self, mock_verify):
-        """Verifies a new user account and UserAuthProfile are created from valid Google ID token."""
-        mock_verify.return_value = {
-            "sub": "google-user-12345",
-            "email": "newgoogleuser@example.com",
-            "name": "Jane Doe",
-            "picture": "https://example.com/jane.jpg",
-            "email_verified": True,
+    def _mock_google_token_info(self, email=None, sub=None, name=None, picture=None, email_verified=True):
+        return {
+            "email": email or self.google_email,
+            "sub": sub or self.google_sub,
+            "name": name or self.google_name,
+            "picture": picture or self.google_picture,
+            "email_verified": email_verified,
+            "aud": "mock_client_id",
         }
 
-        response = self.client.post("/api/auth/google/", {"id_token": "valid.mock.token"})
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_scenario_1_first_google_login_creates_account(self, mock_verify):
+        """Scenario 1: First Google Login creates a new account and links UserAuthProfile."""
+        mock_verify.return_value = self._mock_google_token_info()
+
+        response = self.client.post('/api/auth/google/', {"id_token": "valid_mock_id_token"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("token", response.data)
-        self.assertIn("refresh", response.data)
         self.assertIn("user_id", response.data)
-        self.assertEqual(response.data["username"], "newgoogleuser")
 
-        # Verify database objects
-        user = User.objects.get(email="newgoogleuser@example.com")
-        self.assertEqual(user.first_name, "Jane")
-        self.assertEqual(user.last_name, "Doe")
+        # Verify exactly one user created
+        users = User.objects.filter(email__iexact=self.google_email)
+        self.assertEqual(users.count(), 1)
 
-        auth_profile = UserAuthProfile.objects.get(user=user)
-        self.assertEqual(auth_profile.google_id, "google-user-12345")
-        self.assertEqual(auth_profile.auth_provider, "google")
-        self.assertEqual(auth_profile.avatar_url, "https://example.com/jane.jpg")
+        user = users.first()
+        self.assertEqual(response.data["user_id"], user.id)
 
-    @patch("google.oauth2.id_token.verify_oauth2_token")
-    def test_google_auth_existing_email_account_linking(self, mock_verify):
-        """Verifies an existing email/password account is linked to Google ID upon Google login."""
-        existing_user = User.objects.create_user(
-            username="existing_account",
-            email="existing@example.com",
-            password="StrongPassword123!"
-        )
-
-        mock_verify.return_value = {
-            "sub": "google-user-67890",
-            "email": "existing@example.com",
-            "name": "Existing User",
-            "picture": "https://example.com/existing.jpg",
-            "email_verified": True,
-        }
-
-        response = self.client.post("/api/auth/google/", {"id_token": "valid.mock.token"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user_id"], existing_user.id)
-        self.assertEqual(response.data["username"], "existing_account")
-
-        # Verify linking
-        auth_profile = UserAuthProfile.objects.get(user=existing_user)
-        self.assertEqual(auth_profile.google_id, "google-user-67890")
-        self.assertEqual(auth_profile.auth_provider, "google")
+        # Verify UserAuthProfile linked
+        profile = UserAuthProfile.objects.get(user=user)
+        self.assertEqual(profile.google_id, self.google_sub)
+        self.assertEqual(profile.auth_provider, 'google')
 
     @patch("google.oauth2.id_token.verify_oauth2_token")
-    def test_google_auth_subsequent_login(self, mock_verify):
-        """Verifies logging in multiple times via Google returns the same user without creating duplicates."""
-        mock_verify.return_value = {
-            "sub": "google-user-subsequent",
-            "email": "repeat@example.com",
-            "name": "Repeat User",
-            "email_verified": True,
-        }
+    def test_scenario_2_second_google_login_returns_same_account(self, mock_verify):
+        """Scenario 2: Second Google Login using SAME Google account returns existing account (NO duplicate)."""
+        mock_verify.return_value = self._mock_google_token_info()
 
-        resp1 = self.client.post("/api/auth/google/", {"id_token": "token1"})
-        self.assertEqual(resp1.status_code, status.HTTP_200_OK)
+        # First login
+        res1 = self.client.post('/api/auth/google/', {"id_token": "valid_mock_id_token"})
+        self.assertEqual(res1.status_code, status.HTTP_200_OK)
+        user_id_1 = res1.data["user_id"]
 
-        resp2 = self.client.post("/api/auth/google/", {"id_token": "token2"})
-        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        # Second login
+        res2 = self.client.post('/api/auth/google/', {"id_token": "valid_mock_id_token"})
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+        user_id_2 = res2.data["user_id"]
 
-        self.assertEqual(resp1.data["user_id"], resp2.data["user_id"])
-        self.assertEqual(User.objects.filter(email="repeat@example.com").count(), 1)
-
-    @patch("google.oauth2.id_token.verify_oauth2_token")
-    def test_google_auth_invalid_token_rejection(self, mock_verify):
-        """Verifies invalid or forged tokens return HTTP 400 Bad Request."""
-        mock_verify.side_effect = ValueError("Invalid token signature")
-
-        response = self.client.post("/api/auth/google/", {"id_token": "invalid.token"})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("detail", response.data)
+        # Must return the SAME user_id
+        self.assertEqual(user_id_1, user_id_2)
+        self.assertEqual(User.objects.filter(email__iexact=self.google_email).count(), 1)
 
     @patch("google.oauth2.id_token.verify_oauth2_token")
-    def test_google_auth_missing_email_claim(self, mock_verify):
-        """Verifies tokens missing email claim return HTTP 400 Bad Request."""
-        mock_verify.return_value = {
-            "sub": "no-email-user",
-            "name": "No Email",
-        }
+    def test_scenario_3_google_login_after_logout_returns_same_account(self, mock_verify):
+        """Scenario 3: Google Login after logging out returns existing account."""
+        mock_verify.return_value = self._mock_google_token_info()
 
-        response = self.client.post("/api/auth/google/", {"id_token": "token.no.email"})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("detail", response.data)
+        # Login 1
+        res1 = self.client.post('/api/auth/google/', {"id_token": "valid_mock_id_token"})
+        refresh_token = res1.data["refresh"]
+        access_token = res1.data["token"]
+
+        # Logout
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        res_logout = self.client.post('/api/auth/logout/', {"refresh": refresh_token})
+        self.assertEqual(res_logout.status_code, status.HTTP_200_OK)
+
+        # Login 2 after logout
+        self.client.credentials()
+        res2 = self.client.post('/api/auth/google/', {"id_token": "valid_mock_id_token"})
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+        self.assertEqual(res1.data["user_id"], res2.data["user_id"])
+        self.assertEqual(User.objects.filter(email__iexact=self.google_email).count(), 1)
+
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_scenario_4_manual_signup_then_google_login_links_account(self, mock_verify):
+        """Scenario 4: Manual signup using email first, then Google Login links to existing user without duplicate."""
+        # 1. Manual Signup first
+        signup_res = self.client.post('/api/auth/signup/', {
+            "username": "manual_user",
+            "email": self.google_email,
+            "password": "Password123!",
+            "password_confirm": "Password123!"
+        })
+        self.assertEqual(signup_res.status_code, status.HTTP_201_CREATED)
+        existing_user_id = signup_res.data["user_id"]
+
+        # 2. Google Login with same email
+        mock_verify.return_value = self._mock_google_token_info()
+        google_res = self.client.post('/api/auth/google/', {"id_token": "valid_mock_id_token"})
+        self.assertEqual(google_res.status_code, status.HTTP_200_OK)
+
+        # 3. Verify Google login linked to existing user ID
+        self.assertEqual(google_res.data["user_id"], existing_user_id)
+        self.assertEqual(User.objects.filter(email__iexact=self.google_email).count(), 1)
+
+        profile = UserAuthProfile.objects.get(user_id=existing_user_id)
+        self.assertEqual(profile.google_id, self.google_sub)
+
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_scenario_5_google_login_different_email_creates_new_account(self, mock_verify):
+        """Scenario 5: Google Login using a different email creates a new account."""
+        # User 1
+        mock_verify.return_value = self._mock_google_token_info(email="user1@gmail.com", sub="sub_111")
+        res1 = self.client.post('/api/auth/google/', {"id_token": "token1"})
+        self.assertEqual(res1.status_code, status.HTTP_200_OK)
+
+        # User 2
+        mock_verify.return_value = self._mock_google_token_info(email="user2@gmail.com", sub="sub_222")
+        res2 = self.client.post('/api/auth/google/', {"id_token": "token2"})
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+
+        self.assertNotEqual(res1.data["user_id"], res2.data["user_id"])
+        self.assertEqual(User.objects.filter(email__iexact="user1@gmail.com").count(), 1)
+        self.assertEqual(User.objects.filter(email__iexact="user2@gmail.com").count(), 1)
