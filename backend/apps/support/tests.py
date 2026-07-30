@@ -53,3 +53,59 @@ class SupportHardeningDatabaseTests(TestCase):
             response = self.client.get("/api/support/requests/")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data), 1)
+
+    def test_available_users_excludes_active_and_blocked_connections(self):
+        """Verifies active and blocked connections are excluded from recommendations, while normal users remain."""
+        user3 = User.objects.create_user(username="user_gamma", password="password123")
+        user4 = User.objects.create_user(username="user_delta", password="password123")
+
+        # Active connection with user2
+        SupportConnection.objects.create(
+            user_one=min(self.user1, self.user2, key=lambda u: u.id),
+            user_two=max(self.user1, self.user2, key=lambda u: u.id),
+            status=SupportConnection.STATUS_ACTIVE,
+        )
+
+        # Blocked connection with user3
+        SupportConnection.objects.create(
+            user_one=min(self.user1, user3, key=lambda u: u.id),
+            user_two=max(self.user1, user3, key=lambda u: u.id),
+            status=SupportConnection.STATUS_BLOCKED,
+        )
+
+        response = self.client.get("/api/support/users/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [u["id"] for u in response.data]
+
+        # Active (user2) and Blocked (user3) should be excluded
+        self.assertNotIn(self.user2.id, user_ids)
+        self.assertNotIn(user3.id, user_ids)
+
+        # Normal user (user4) should be present
+        self.assertIn(user4.id, user_ids)
+
+    def test_available_users_excludes_inactive_accounts(self):
+        """Verifies inactive users (is_active=False) are excluded while active users are returned."""
+        # 5 active users
+        active_users = [
+            User.objects.create_user(username=f"active_{i}", password="password123", is_active=True)
+            for i in range(5)
+        ]
+
+        # 3 inactive users
+        inactive_users = [
+            User.objects.create_user(username=f"inactive_{i}", password="password123", is_active=False)
+            for i in range(3)
+        ]
+
+        response = self.client.get("/api/support/users/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {u["id"] for u in response.data}
+
+        # Active users (user2 + 5 active users) must be present
+        for au in active_users:
+            self.assertIn(au.id, returned_ids)
+
+        # Inactive users must NOT be present
+        for iu in inactive_users:
+            self.assertNotIn(iu.id, returned_ids)

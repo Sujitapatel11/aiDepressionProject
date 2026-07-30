@@ -585,8 +585,8 @@ const supportSkeletonHtml = `
 
 // SUPPORT
 async function loadSupport(){
-  supportTab(activeSupportTab || 'connections')
-  ;['d-support-connections','m-support-connections'].forEach(id=>{
+  if(!activeSupportTab) activeSupportTab = 'connections'
+  ;['d-support-connections','m-support-connections','d-support-requests','m-support-requests','d-find-list','m-find-list'].forEach(id=>{
     const e=el(id);if(e)e.innerHTML=supportSkeletonHtml
   })
   try {
@@ -744,7 +744,7 @@ function renderRequests(){
                 </p>
               </div>
             </div>
-            <button onclick="event.stopPropagation();cancelRequest(${r.id},'${uname.replace(/'/g, "\\'")}')" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border border-rose-200 cursor-pointer flex-shrink-0 relative z-10">Cancel Request</button>
+            <button onclick="event.stopPropagation();cancelRequest(${r.id},'${uname.replace(/'/g, "\\'")}',this)" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border border-rose-200 cursor-pointer flex-shrink-0 relative z-10">Cancel Request</button>
           </div>
         `
       }).join('')
@@ -796,7 +796,7 @@ function renderFindUsers(users){
             <span class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Waiting for response
             </span>
-            <button onclick="event.stopPropagation();cancelRequest(${sentReq.id},'${uname.replace(/'/g, "\\'")}')" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border border-rose-200 cursor-pointer flex-shrink-0 relative z-10">Cancel Request</button>
+            <button onclick="event.stopPropagation();cancelRequest(${sentReq.id},'${uname.replace(/'/g, "\\'")}',this)" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border border-rose-200 cursor-pointer flex-shrink-0 relative z-10">Cancel Request</button>
           </div>
         `
       } else {
@@ -831,19 +831,41 @@ async function acceptRequest(id,uname){
   if(res&&res.ok){showToast('Connected with '+uname);loadSupport();supportTab('connections')}
 }
 async function rejectRequest(id){await api('POST','/support/reject/'+id+'/',{});loadSupport()}
-async function cancelRequest(id,uname){
+async function cancelRequest(id,uname,btn){
   if(typeof event !== 'undefined' && event && event.stopPropagation) event.stopPropagation()
+  const targetBtn = btn || (typeof event !== 'undefined' && event && event.currentTarget ? event.currentTarget : null)
   showConfirm('Cancel Connection Request?\nThis request will be removed. The other person will no longer see your invitation.',async function(){
+    let origText = ''
+    if(targetBtn){
+      origText = targetBtn.textContent
+      targetBtn.disabled = true
+      targetBtn.textContent = 'Cancelling...'
+      targetBtn.style.opacity = '0.6'
+      targetBtn.style.pointerEvents = 'none'
+    }
     try {
       const res=await api('POST','/support/requests/'+id+'/cancel/',{})
       if(res&&res.ok){
         showToast('✓ Connection request cancelled.')
         await loadSupport()
       }else{
-        showToast('We couldn\'t cancel your request. Please try again.')
+        const errData = res ? await res.json().catch(function(){return {}}) : {}
+        showToast(errData.detail || 'We couldn\'t cancel your request. Please try again.')
+        if(targetBtn){
+          targetBtn.disabled = false
+          targetBtn.textContent = origText
+          targetBtn.style.opacity = '1'
+          targetBtn.style.pointerEvents = 'auto'
+        }
       }
     } catch(e) {
       showToast('We couldn\'t cancel your request. Please try again.')
+      if(targetBtn){
+        targetBtn.disabled = false
+        targetBtn.textContent = origText
+        targetBtn.style.opacity = '1'
+        targetBtn.style.pointerEvents = 'auto'
+      }
     }
   },true)
 }
@@ -1012,9 +1034,21 @@ function showConfirm(msg,cb,danger){
   if(el('confirm-msg'))el('confirm-msg').textContent=msg
   const ok=el('confirm-ok')
   if(ok){
+    ok.disabled=false
     ok.textContent=danger?'Yes, Cancel Request':'Yes'
     ok.style.color=danger?'var(--error-text)':'var(--coral-lt)'
-    ok.onclick=async function(){closeConfirm();if(confirmCallback)await confirmCallback()}
+    ok.onclick=async function(){
+      if(!confirmCallback) return
+      const callback = confirmCallback
+      confirmCallback = null
+      ok.disabled = true
+      try {
+        await callback()
+      } finally {
+        ok.disabled = false
+        closeConfirm()
+      }
+    }
   }
   if(el('confirm-modal'))el('confirm-modal').classList.remove('hidden')
 }
@@ -1068,6 +1102,7 @@ async function loadProfile(){
   if(el('profile-username-display'))el('profile-username-display').textContent=username
   if(el('d-prof-username'))el('d-prof-username').textContent=username
   if(el('settings-username'))el('settings-username').textContent=username
+  if(el('settings-email'))el('settings-email').textContent=localStorage.getItem('sc_email')||(username?username+'@soulcare.app':'—')
   applyProfilePic()
   const res=await api('GET','/dashboard/')
   if(!res||!res.ok)return

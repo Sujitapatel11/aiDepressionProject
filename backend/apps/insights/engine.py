@@ -258,7 +258,7 @@ def analyze_journal(content: str) -> dict:
     }
 
 
-def create_insight_from_journal(journal):
+def create_insight_from_journal(journal, request_id=None):
     from .models import Insight
 
     if Insight.objects.filter(journal=journal).exists():
@@ -293,13 +293,14 @@ def create_insight_from_journal(journal):
 
     # After saving insight, update personality profile in background
     try:
-        _update_personality_profile(journal.user)
+        _update_personality_profile(journal.user, request_id=request_id)
     except Exception as e:
-        logger.debug("Personality profile update skipped: %s", e)
+        req_label = request_id or "sys"
+        logger.warning("[PERF_AUDIT][%s] Stage: Personality Profile Update | Status: Exception | ExceptionType: %s", req_label, type(e).__name__)
 
 
 # ── Big Five personality scoring ─────────────────────────────────────────────
-def _update_personality_profile(user):
+def _update_personality_profile(user, request_id=None):
     """
     Compute Big Five scores from user's last 10 journal entries.
     Uses keyword heuristics (no model needed) — upgradeable to
@@ -309,16 +310,20 @@ def _update_personality_profile(user):
     from apps.journal.models import JournalEntry
     from apps.support.models import UserProfile
 
-    entries = JournalEntry.objects.filter(
-        user=user, is_deleted=False
-    ).order_by("-created_at")[:10]
+    req_label = request_id or "sys"
+    t_prof_start = time.perf_counter()
 
-    if entries.count() < 3:
+    entries = list(JournalEntry.objects.filter(
+        user=user, is_deleted=False
+    ).order_by("-created_at")[:10])
+
+    if len(entries) < 3:
         return  # Not enough data yet
 
     combined = " ".join(e.content for e in entries).lower()
 
     # Keyword heuristics for Big Five (OCEAN)
+    t_kw_start = time.perf_counter()
     scores = {
         "openness":          _keyword_score(combined, ["curious","creative","imagine","wonder","explore","art","music","ideas","novel","dream","philosophy","learn"]),
         "conscientiousness": _keyword_score(combined, ["plan","organize","goal","discipline","work","focus","achieve","responsible","careful","schedule","productive"]),
@@ -326,13 +331,23 @@ def _update_personality_profile(user):
         "agreeableness":     _keyword_score(combined, ["kind","help","care","support","empathy","gentle","trust","cooperate","warm","compassion","understand"]),
         "neuroticism":       _keyword_score(combined, ["worry","anxious","stress","nervous","fear","upset","mood","sensitive","overwhelm","panic","tense","unstable"]),
     }
+    t_kw_ms = (time.perf_counter() - t_kw_start) * 1000
+    logger.info("[PERF_AUDIT][%s] Stage: Keyword Scoring | Duration: %.2f ms", req_label, t_kw_ms)
 
     # If HF API available, try the Personality LM for better scores
+    t_hf_ms = 0.0
     if HF_API_KEY and len(combined) > 200:
-        hf_scores = _hf_personality_scores(combined[:1000])
-        if hf_scores:
-            scores.update(hf_scores)
+        t_hf_start = time.perf_counter()
+        try:
+            hf_scores = _hf_personality_scores(combined[:1000])
+            if hf_scores:
+                scores.update(hf_scores)
+        except Exception as e:
+            logger.warning("[PERF_AUDIT][%s] Stage: HF API | Status: Exception | ExceptionType: %s", req_label, type(e).__name__)
+        t_hf_ms = (time.perf_counter() - t_hf_start) * 1000
+        logger.info("[PERF_AUDIT][%s] Stage: HF API | Duration: %.2f ms", req_label, t_hf_ms)
 
+    t_db_start = time.perf_counter()
     profile, _ = UserProfile.objects.get_or_create(user=user)
     profile.openness          = scores["openness"]
     profile.conscientiousness = scores["conscientiousness"]
@@ -340,6 +355,11 @@ def _update_personality_profile(user):
     profile.agreeableness     = scores["agreeableness"]
     profile.neuroticism       = scores["neuroticism"]
     profile.save(update_fields=["openness","conscientiousness","extraversion","agreeableness","neuroticism"])
+    t_db_ms = (time.perf_counter() - t_db_start) * 1000
+    logger.info("[PERF_AUDIT][%s] Stage: UserProfile Update | Duration: %.2f ms", req_label, t_db_ms)
+
+    t_prof_total_ms = (time.perf_counter() - t_prof_start) * 1000
+    logger.info("[PERF_AUDIT][%s] Stage: Profile Update Total | Duration: %.2f ms", req_label, t_prof_total_ms)
     logger.debug("Updated personality profile for %s: %s", user.username, scores)
 
 

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.contrib.auth.models import User
 from django.db import transaction, IntegrityError
 from django.db.models import Q
@@ -40,13 +41,13 @@ def available_users(request):
 
     connected_ids = SupportConnection.objects.filter(
         Q(user_one=user) | Q(user_two=user),
-        status=SupportConnection.STATUS_ACTIVE,
+        status__in=[SupportConnection.STATUS_ACTIVE, SupportConnection.STATUS_BLOCKED],
     ).values_list('user_one_id', 'user_two_id')
 
     excluded = {uid for pair in connected_ids for uid in pair}
     excluded.add(user.id)
 
-    candidates = User.objects.exclude(id__in=excluded)
+    candidates = User.objects.filter(is_active=True).exclude(id__in=excluded)
 
     if mode != "smart":
         return Response(UserSerializer(candidates, many=True).data)
@@ -65,6 +66,7 @@ def available_users(request):
         p.user_id: p for p in UserProfile.objects.filter(user__in=candidates)
     }
 
+    seven_days_ago = timezone.now() - timedelta(days=7)
     results = []
     for candidate in candidates:
         cp = candidate_profiles.get(candidate.id)
@@ -80,15 +82,27 @@ def available_users(request):
         else:
             similarity = 0.5  # neutral score when no data
 
+        if has_profile:
+            tier = 1
+        elif candidate.date_joined and candidate.date_joined >= seven_days_ago:
+            tier = 2
+        else:
+            tier = 3
+
         results.append({
             "id": candidate.id,
             "username": candidate.username,
             "match_score": round(similarity * 100),  # 0–100
             "has_profile": has_profile,
+            "_tier": tier,
+            "_last_login": candidate.last_login.timestamp() if candidate.last_login else 0.0,
         })
 
-    # Sort: users with profiles first, then by match score desc
-    results.sort(key=lambda x: (-int(x["has_profile"]), -x["match_score"]))
+    # Sort: Tier 1 (profiled) -> Tier 2 (new <= 7d) -> Tier 3 (older unprofiled), then match score desc, then recent activity desc
+    results.sort(key=lambda x: (x["_tier"], -x["match_score"], -x["_last_login"]))
+    for item in results:
+        item.pop("_tier", None)
+        item.pop("_last_login", None)
     return Response(results)
 
 
@@ -112,8 +126,17 @@ def send_request(request, user_id):
     except User.DoesNotExist:
         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
+    # Prevent requests if an active or blocked connection already exists
+    if SupportConnection.objects.filter(
+        Q(user_one=request.user, user_two=to_user) | Q(user_one=to_user, user_two=request.user),
+        status__in=[SupportConnection.STATUS_ACTIVE, SupportConnection.STATUS_BLOCKED]
+    ).exists():
+        return Response({"detail": "Cannot send request to this user."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Prevent duplicate pending requests in either direction
     if SupportRequest.objects.filter(
-        from_user=request.user, to_user=to_user, status=SupportRequest.PENDING
+        Q(from_user=request.user, to_user=to_user) | Q(from_user=to_user, to_user=request.user),
+        status=SupportRequest.PENDING
     ).exists():
         return Response({"detail": "Request already pending."}, status=status.HTTP_400_BAD_REQUEST)
 

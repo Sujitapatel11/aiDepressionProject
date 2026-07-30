@@ -337,7 +337,10 @@ async function dismissInsight(id){
 
 // SUPPORT
 async function loadSupport(){
-  supportTab('connections')
+  if(!activeSupportTab) activeSupportTab = 'connections'
+  ;['d-support-connections','m-support-connections','d-support-requests','m-support-requests','d-find-list','m-find-list'].forEach(id=>{
+    const e=el(id);if(e)e.innerHTML=supportSkeletonHtml
+  })
   const results=await Promise.all([api('GET','/support/connections/'),api('GET','/support/requests/'),api('GET','/support/requests/sent/'),api('GET','/support/users/')])
   const c=results[0],inc=results[1],snt=results[2],usr=results[3]
   const parseRes=async r=>(r&&r.ok)?(await r.json()):[]
