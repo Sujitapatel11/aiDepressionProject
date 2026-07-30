@@ -977,7 +977,7 @@ function getWsHost(){
 }
 
 function connectWS(connId,pfx){
-  if(ws){ws.close();ws=null}
+  if(ws){ws.onclose=null;ws.close();ws=null}
   const wsHost = getWsHost()
   ws=new WebSocket(wsHost+'/ws/chat/'+connId+'/?token='+token)
   ws.onopen=function(){

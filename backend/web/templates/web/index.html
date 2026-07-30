@@ -1287,6 +1287,10 @@ textarea { resize: none; }
     <div id="mob-chat" class="screen" style="height:100dvh">
       <div class="flex items-center gap-3 px-5 py-3.5 flex-shrink-0" style="border-bottom:1px solid var(--clue-border);background:#FFFFFF">
         <button onclick="showTab('support')" class="p-2 text-sm font-bold" style="color:var(--coral-dk)">← Back</button>
+        <div class="relative flex-shrink-0">
+          <div id="m-chat-avatar" class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)"></div>
+          <div id="m-chat-online" class="online-dot hidden"></div>
+        </div>
         <div class="flex-1 min-w-0">
           <div class="t-h5 truncate" id="m-chat-peer-name">—</div>
           <div class="t-caption" id="m-chat-status">Connecting...</div>
