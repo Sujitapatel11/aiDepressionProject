@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render
 
 
@@ -6,7 +7,8 @@ def index(request):
 
 
 def login_view(request):
-    return render(request, 'web/login.html')
+    google_client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    return render(request, 'web/login.html', {'google_client_id': google_client_id})
 
 
 def beta_admin(request):

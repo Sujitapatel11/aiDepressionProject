@@ -1,0 +1,1 @@
+# apps.identity module initialization

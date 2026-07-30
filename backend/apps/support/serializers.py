@@ -4,9 +4,15 @@ from .models import SupportRequest, SupportConnection
 
 
 class UserSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'avatar_url']
+
+    def get_avatar_url(self, obj):
+        from apps.identity.services.identity_service import IdentityService
+        return IdentityService.resolve_avatar_url(obj)
 
 
 class SupportRequestSerializer(serializers.ModelSerializer):

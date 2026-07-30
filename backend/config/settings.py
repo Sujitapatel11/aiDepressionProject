@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 
     # Domain apps
     'apps.authentication',
+    'apps.identity',
     'apps.journal',
     'apps.insights',
     'apps.support',

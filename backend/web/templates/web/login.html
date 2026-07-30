@@ -955,49 +955,76 @@
       }
     }
 
+    const GOOGLE_CLIENT_ID = "{{ google_client_id|escapejs }}";
+
     window.addEventListener('DOMContentLoaded', function() {
       initGoogleSignIn();
     });
 
     function initGoogleSignIn() {
+      if (!GOOGLE_CLIENT_ID) {
+        console.warn("GOOGLE_CLIENT_ID is not configured in backend environment.");
+        return;
+      }
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.initialize({
-          client_id: "7219481938-soulcare.apps.googleusercontent.com",
+          client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleCredentialResponse,
           auto_select: false,
         });
       }
     }
 
+    function setGoogleButtonLoading(isLoading) {
+      const btn = document.getElementById('googleSignInBtn');
+      const spinner = document.getElementById('googleSpinner');
+      const text = document.getElementById('googleBtnText');
+      if (btn) btn.disabled = isLoading;
+      if (spinner) spinner.style.display = isLoading ? 'block' : 'none';
+      if (text) text.style.opacity = isLoading ? '0.6' : '1';
+    }
+
     function handleGoogleSignIn() {
       hideAlert();
+      if (!GOOGLE_CLIENT_ID) {
+        showAlert('Google Sign-In is not configured. Please set GOOGLE_CLIENT_ID in the backend environment.');
+        return;
+      }
       if (window.google && google.accounts && google.accounts.id) {
+        setGoogleButtonLoading(true);
         initGoogleSignIn();
         google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setGoogleButtonLoading(false);
             const container = document.getElementById('google-btn-container');
-            container.innerHTML = '';
-            google.accounts.id.renderButton(container, {
-              theme: 'outline',
-              size: 'large',
-              width: '100%',
-              text: 'continue_with',
-              shape: 'pill'
-            });
+            if (container) {
+              container.innerHTML = '';
+              google.accounts.id.renderButton(container, {
+                theme: 'outline',
+                size: 'large',
+                width: '100%',
+                text: 'continue_with',
+                shape: 'pill'
+              });
+            }
+          } else if (notification.isDismissedMoment()) {
+            setGoogleButtonLoading(false);
           }
         });
       } else {
-        showAlert('Google Sign-In is loading. Please try again in a moment.');
+        showAlert('Google Sign-In SDK is loading. Please try again in a moment.');
       }
     }
 
     async function handleGoogleCredentialResponse(response) {
       const idToken = response.credential;
       if (!idToken) {
-        showAlert('Google Sign-In cancelled or failed.');
+        setGoogleButtonLoading(false);
+        showAlert('Google Sign-In was cancelled or failed.');
         return;
       }
 
+      setGoogleButtonLoading(true);
       showAlert('Verifying Google account...', true);
 
       try {
@@ -1020,9 +1047,11 @@
           showAlert('Google Sign-In successful! Welcome to SoulCare.', true);
           setTimeout(() => { window.location.href = '/'; }, 800);
         } else {
+          setGoogleButtonLoading(false);
           showAlert(data.detail || 'Google authentication failed.');
         }
       } catch (err) {
+        setGoogleButtonLoading(false);
         showAlert('Network error while verifying Google sign-in.');
       }
     }

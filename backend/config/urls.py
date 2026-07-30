@@ -12,6 +12,7 @@ urlpatterns = [
 
     # REST API
     path('api/auth/', include('apps.authentication.urls')),
+    path('api/identity/', include('apps.identity.urls')),
     path('api/journal/', include('apps.journal.urls')),
     path('api/insights/', include('apps.insights.urls')),
     path('api/support/', include('apps.support.urls')),

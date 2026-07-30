@@ -10,15 +10,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from config.throttles import PasswordResetRateThrottle
 from .serializers import SignupSerializer, LoginSerializer, GoogleAuthSerializer, PasswordResetSerializer
+from .models import UserAuthProfile
 
 
 def _token_response(user):
     refresh = RefreshToken.for_user(user)
+    from apps.identity.services.identity_service import IdentityService
+    avatar_url = IdentityService.resolve_avatar_url(user)
     return {
         "token": str(refresh.access_token),
         "refresh": str(refresh),
         "user_id": user.id,
         "username": user.username,
+        "avatar_url": avatar_url,
     }
 
 
@@ -78,7 +82,7 @@ def google_auth_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     id_token_str = serializer.validated_data['id_token']
-    client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     id_info = None
 
     # Method 1: Try official google-auth library
@@ -88,7 +92,7 @@ def google_auth_view(request):
         id_info = google_id_token.verify_oauth2_token(
             id_token_str,
             google_requests.Request(),
-            client_id if client_id else None,
+            audience=client_id if client_id else None,
         )
     except Exception:
         # Method 2: Fallback to Google TokenInfo API Endpoint over HTTPS
@@ -100,32 +104,67 @@ def google_auth_view(request):
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status == 200:
                     id_info = json.loads(resp.read().decode('utf-8'))
+                    if client_id and id_info.get("aud") != client_id:
+                        return Response({"detail": "Google token audience mismatch."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as err:
             return Response({"detail": f"Failed to verify Google token: {str(err)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not id_info or not id_info.get("email"):
-        return Response({"detail": "Invalid Google token or missing email claim."}, status=status.HTTP_400_BAD_REQUEST)
+    if not id_info:
+        return Response({"detail": "Invalid Google token."}, status=status.HTTP_400_BAD_REQUEST)
 
     email = id_info.get("email")
-    name = id_info.get("name", email.split("@")[0])
+    if not email:
+        return Response({"detail": "Missing email claim in Google token."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 1. Check if user already exists with this email (Primary Identity)
-    user = User.objects.filter(email__iexact=email).first()
+    if id_info.get("email_verified") is False or id_info.get("email_verified") == "false":
+        return Response({"detail": "Google email address is unverified."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 2. If user does not exist, create user with unique username
+    google_id = id_info.get("sub")
+    name = id_info.get("name") or email.split("@")[0]
+    picture = id_info.get("picture", "")
+
+    # 1. Check if user profile already linked via google_id
+    user = None
+    if google_id:
+        auth_profile = UserAuthProfile.objects.filter(google_id=google_id).select_related('user').first()
+        if auth_profile:
+            user = auth_profile.user
+
+    # 2. Search by email address if not found by google_id
     if not user:
+        user = User.objects.filter(email__iexact=email).first()
+
+    # 3. If user does not exist, create new account
+    if not user:
+        import re
         base_username = email.split("@")[0].lower()
+        base_username = re.sub(r'[^a-zA-Z0-9_]', '', base_username) or "user"
         username = base_username
         counter = 1
         while User.objects.filter(username=username).exists():
             username = f"{base_username}{counter}"
             counter += 1
 
+        name_parts = name.split() if name else []
+        first_name = name_parts[0] if name_parts else ""
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
         user = User.objects.create_user(
             username=username,
             email=email,
-            first_name=name
+            first_name=first_name[:30],
+            last_name=last_name[:150],
         )
+
+    # 4. Attach/Update UserAuthProfile
+    auth_profile, _ = UserAuthProfile.objects.get_or_create(user=user)
+    if google_id and not auth_profile.google_id:
+        auth_profile.google_id = google_id
+    if auth_profile.auth_provider != 'google':
+        auth_profile.auth_provider = 'google'
+    if picture and auth_profile.avatar_url != picture:
+        auth_profile.avatar_url = picture
+    auth_profile.save()
 
     return Response(_token_response(user))
 

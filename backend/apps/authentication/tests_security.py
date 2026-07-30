@@ -10,6 +10,8 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 class SecurityHardeningTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(username="sec_user", password="StrongPassword123!")
 
