@@ -17,7 +17,10 @@ if not SECRET_KEY:
         raise RuntimeError("CRITICAL SECURITY ERROR: SECRET_KEY environment variable is missing in production!")
     SECRET_KEY = "dev-secret-key-unsafe-change-in-prod"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost,staging-api.soulcare.app,api.soulcare.app,testserver").split(",")
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost,aidepressionproject.onrender.com,staging-api.soulcare.app,api.soulcare.app,testserver"
+).split(",")
 
 # Trust Railway's proxy for HTTPS detection
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -34,7 +37,8 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS", "https://staging-api.soulcare.app,https://api.soulcare.app"
+    "CSRF_TRUSTED_ORIGINS",
+    "https://aidepressionproject.onrender.com,https://staging-api.soulcare.app,https://api.soulcare.app"
 ).split(",")
 
 # =========================
