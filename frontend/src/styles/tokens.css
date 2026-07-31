@@ -1,0 +1,84 @@
+:root {
+  --coral: #7C3AED;
+  --coral-lt: #8B5CF6;
+  --coral-dk: #6D28D9;
+  --coral-glow: rgba(124, 58, 237, 0.2);
+  --teal: #10B981;
+  --teal-lt: #34D399;
+  --lavender: #C4B5FD;
+  --amber: #F59E0B;
+  --sage: #059669;
+
+  --text-1: #1F2937;
+  --text-2: #4B5563;
+  --text-3: #6B7280;
+  --text-muted: #9CA3AF;
+
+  --clue-bg: #FAF8FE;
+  --clue-surface: #FFFFFF;
+  --clue-card: #FFFFFF;
+  --clue-card2: #F5F3FF;
+  --clue-border: rgba(229, 231, 235, 0.8);
+  --clue-border2: #E5E7EB;
+
+  --shadow-sm: 0 2px 8px rgba(124, 58, 237, 0.06);
+  --shadow-md: 0 8px 24px rgba(124, 58, 237, 0.08);
+  --shadow-lg: 0 16px 36px rgba(124, 58, 237, 0.12);
+  --shadow-coral: 0 8px 24px rgba(124, 58, 237, 0.25);
+  --shadow-teal: 0 8px 24px rgba(16, 185, 129, 0.25);
+
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Typography Classes */
+.t-display { font-family: var(--font-heading); font-size: 32px; font-weight: 800; line-height: 1.15; letter-spacing: -0.025em; }
+.t-h1 { font-family: var(--font-heading); font-size: 26px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+.t-h2 { font-family: var(--font-heading); font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.015em; }
+.t-h3 { font-family: var(--font-heading); font-size: 19px; font-weight: 700; line-height: 1.3; }
+.t-h4 { font-family: var(--font-heading); font-size: 16.5px; font-weight: 700; line-height: 1.35; }
+.t-h5 { font-family: var(--font-heading); font-size: 15px; font-weight: 600; line-height: 1.4; }
+.t-h6 { font-family: var(--font-heading); font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+
+.t-subtitle { font-family: var(--font-body); font-size: 14.5px; font-weight: 500; color: var(--text-2); line-height: 1.45; }
+.t-body-lg { font-family: var(--font-body); font-size: 15.5px; font-weight: 400; color: var(--text-1); line-height: 1.55; }
+.t-body-md { font-family: var(--font-body); font-size: 14px; font-weight: 400; color: var(--text-1); line-height: 1.5; }
+.t-body-sm { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--text-2); line-height: 1.45; }
+.t-caption { font-family: var(--font-body); font-size: 11.5px; font-weight: 500; color: var(--text-3); }
+.t-label { font-family: var(--font-heading); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-3); }
+.t-btn { font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+
+/* Custom Inputs & Buttons */
+.inp { width: 100%; padding: 13px 18px; border-radius: 18px; background: var(--clue-surface); border: 1.5px solid var(--clue-border2); font-family: var(--font-body); font-size: 14px; color: var(--text-1); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }
+.inp:focus { border-color: var(--coral-lt); box-shadow: 0 0 0 4px var(--coral-glow); background: #FFFFFF; }
+.inp::placeholder { color: var(--text-muted); }
+
+.btn-blue { width: 100%; padding: 13.5px 24px; border-radius: 18px; background: linear-gradient(135deg, var(--coral), var(--coral-dk)); color: #FFFFFF; font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-coral); display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.btn-blue:hover { transform: translateY(-1.5px); box-shadow: 0 12px 28px rgba(124, 58, 237, 0.32); }
+.btn-blue:active { transform: translateY(0); }
+.btn-blue:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.btn-gray { width: 100%; padding: 13.5px 24px; border-radius: 18px; background: var(--clue-surface); color: var(--text-1); font-family: var(--font-heading); font-size: 14.5px; font-weight: 600; border: 1.5px solid var(--clue-border2); cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.btn-gray:hover { background: var(--clue-card2); border-color: var(--lavender); color: var(--coral-dk); }
+
+.post-card { background: var(--clue-surface); border: 1.5px solid var(--clue-border); border-radius: 24px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; overflow: hidden; }
+.post-card:hover { border-color: var(--lavender); box-shadow: var(--shadow-md); }
+
+.mood-pill { padding: 8px 16px; border-radius: 9999px; background: var(--clue-card); border: 1.5px solid var(--clue-border2); font-family: var(--font-heading); font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.mood-pill:hover { border-color: var(--lavender); color: var(--coral); background: var(--clue-card2); }
+.mood-pill.active-pill { background: var(--coral-glow); border-color: var(--coral); color: var(--coral-dk); font-weight: 700; }
+
+.stat-tile { background: var(--clue-surface); border: 1.5px solid var(--clue-border); border-radius: 20px; padding: 16px 20px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; text-align: center; cursor: pointer; }
+.stat-tile:hover { border-color: var(--lavender); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-tile .num { font-family: var(--font-heading); font-size: 26px; font-weight: 800; color: var(--coral-dk); line-height: 1.1; }
+.stat-tile .lbl { font-family: var(--font-body); font-size: 11.5px; font-weight: 600; color: var(--text-3); margin-top: 4px; }
+
+.prompt-card { background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); border-radius: 24px; padding: 22px 24px; color: #FFFFFF; box-shadow: var(--shadow-coral); position: relative; overflow: hidden; }
+
+.online-dot { width: 10px; height: 10px; border-radius: 50%; background: #10B981; border: 2px solid #FFFFFF; position: absolute; bottom: 0; right: 0; }
+
+.mstab, .dstab { padding: 8px 16px; border-radius: 12px; font-family: var(--font-heading); font-size: 13px; font-weight: 600; color: var(--text-3); background: transparent; border: none; cursor: pointer; transition: all 0.15s ease; }
+.mstab.tab-active, .dstab.tab-active { background: var(--coral-glow); color: var(--coral-dk); font-weight: 700; }
+
+.fade-in { animation: fadeIn 0.25s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
