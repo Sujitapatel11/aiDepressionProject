@@ -1,8 +1,23 @@
+/**
+ * WebSocket Chat Client for SoulCare
+ * Resolves WebSocket host dynamically from VITE_WS_BASE_URL or VITE_API_BASE_URL.
+ */
+
 export function getWsHost() {
-  const envWs = import.meta.env.VITE_WS_BASE_URL || '';
+  const envWs = (import.meta.env.VITE_WS_BASE_URL || '').trim();
   if (envWs) {
     return envWs.replace(/\/+$/, '');
   }
+
+  const envApi = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  if (envApi.startsWith('http')) {
+    try {
+      const parsed = new URL(envApi);
+      const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${wsProto}//${parsed.host}`;
+    } catch (e) {}
+  }
+
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${proto}//${window.location.host}`;
 }
