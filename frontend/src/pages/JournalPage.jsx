@@ -37,15 +37,19 @@ export const JournalPage = () => {
   };
 
   const handleSave = async () => {
-    const content = inputVal.trim();
-    if (!content) {
+    const rawContent = inputVal.trim();
+    if (!rawContent) {
       setError('Entry cannot be empty.');
       return;
     }
     setError('');
     setSaving(true);
 
-    const res = await api('POST', '/journal/', { content });
+    const payloadContent = selectedMood && !rawContent.startsWith('[Feeling')
+      ? `[Feeling ${selectedMood}] ${rawContent}`
+      : rawContent;
+
+    const res = await api('POST', '/journal/', { content: payloadContent });
     setSaving(false);
 
     if (res && res.ok) {
@@ -110,19 +114,23 @@ export const JournalPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-3">
           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">How are you feeling right now?</span>
           <div className="flex items-center gap-2 overflow-x-auto py-1">
-            {['Happy', 'Calm', 'Neutral', 'Sad', 'Angry', 'Tired'].map((mood) => (
-              <button
-                key={mood}
-                type="button"
-                onClick={() => setSelectedMood(mood)}
-                className={`mood-pill ${selectedMood === mood ? 'active-pill' : ''}`}
-              >
-                <span>
-                  {mood === 'Happy' ? '😊' : mood === 'Calm' ? '😌' : mood === 'Neutral' ? '😐' : mood === 'Sad' ? '😔' : mood === 'Angry' ? '😡' : '😴'}
-                </span>{' '}
-                {mood}
-              </button>
-            ))}
+            {['Happy', 'Calm', 'Neutral', 'Sad', 'Angry', 'Tired'].map((mood) => {
+              const isSelected = selectedMood === mood;
+              return (
+                <button
+                  key={mood}
+                  type="button"
+                  onClick={() => setSelectedMood(mood)}
+                  className={`mood-pill ${isSelected ? 'active-pill shadow-sm' : ''}`}
+                  style={isSelected ? { backgroundColor: '#7C3AED', color: '#FFFFFF', borderColor: '#7C3AED', fontWeight: 700 } : {}}
+                >
+                  <span>
+                    {mood === 'Happy' ? '😊' : mood === 'Calm' ? '😌' : mood === 'Neutral' ? '😐' : mood === 'Sad' ? '😔' : mood === 'Angry' ? '😡' : '😴'}
+                  </span>{' '}
+                  {mood}
+                </button>
+              );
+            })}
           </div>
         </div>
 

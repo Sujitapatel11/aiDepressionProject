@@ -132,11 +132,16 @@ export const PeersPage = () => {
     }
   };
 
-  const availablePeers = supportData.users.filter(
-    (u) =>
-      !supportData.connections.some((c) => c.peer && c.peer.id === u.id) &&
-      u.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const cleanQuery = searchQuery.trim().toLowerCase();
+  const availablePeers = supportData.users.filter((u) => {
+    const isConnected = supportData.connections.some((c) => c.peer && c.peer.id === u.id);
+    if (isConnected) return false;
+    if (!cleanQuery) return true;
+    const nameMatch = (u.username || '').toLowerCase().includes(cleanQuery);
+    const aliasMatch = (u.alias || u.display_name || '').toLowerCase().includes(cleanQuery);
+    const idMatch = String(u.id) === cleanQuery;
+    return nameMatch || aliasMatch || idMatch;
+  });
 
   const reqCount = supportData.incoming.length;
 
@@ -402,9 +407,11 @@ export const PeersPage = () => {
               <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1 shadow-inner">
                 🌱
               </div>
-              <h3 className="t-h3 font-bold text-gray-900">No supportive peers found.</h3>
+              <h3 className="t-h3 font-bold text-gray-900">
+                {searchQuery.trim() ? `No peers found matching "${searchQuery.trim()}".` : 'No supportive peers found.'}
+              </h3>
               <p className="t-body-md text-gray-500 max-w-sm">
-                Try another search term or come back later as more people join our community sanctuary.
+                {searchQuery.trim() ? 'Check for typos or try searching for another username.' : 'Come back later as more people join our community sanctuary.'}
               </p>
             </div>
           ) : (
