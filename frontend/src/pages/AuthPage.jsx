@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/auth.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -385,6 +386,7 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
 // Mirrors id="loginForm" in login.html exactly.
 function LoginForm({ onForgotPassword, onSuccessAlert }) {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [username, setUsername]           = useState('');
   const [password, setPassword]           = useState('');
@@ -422,7 +424,7 @@ function LoginForm({ onForgotPassword, onSuccessAlert }) {
       const data = await response.json();
 
       if (response.ok) {
-        setAuthData(data);
+        login(data);
         navigate('/');
       } else {
         showAlert(
@@ -544,6 +546,7 @@ function LoginForm({ onForgotPassword, onSuccessAlert }) {
 // Mirrors id="signupForm" in login.html exactly.
 function SignupForm() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [signupUsername,    setSignupUsername]    = useState('');
   const [signupEmail,       setSignupEmail]       = useState('');
@@ -604,7 +607,7 @@ function SignupForm() {
       const data = await response.json();
 
       if (response.status === 201) {
-        setAuthData(data);
+        login(data);
         showAlert('Account created successfully! Welcome to SoulCare.', true);
         // 800ms delay before redirect (mirrors original setTimeout)
         setTimeout(() => navigate('/'), 800);
@@ -774,6 +777,7 @@ function SignupForm() {
 // GOOGLE_CLIENT_ID comes from VITE_GOOGLE_CLIENT_ID env var.
 function GoogleButton({ onAlert }) {
   const navigate      = useNavigate();
+  const { login }     = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Initialize GIS once on mount (mirrors initGoogleSignIn + DOMContentLoaded)
@@ -820,7 +824,7 @@ function GoogleButton({ onAlert }) {
       const data = await res.json();
 
       if (res.ok) {
-        setAuthData(data);
+        login(data);
         onAlert('Google Sign-In successful! Welcome to SoulCare.', true);
         setTimeout(() => navigate('/'), 800);
       } else {

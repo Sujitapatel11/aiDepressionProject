@@ -1,0 +1,41 @@
+[
+    {
+        "old_user_id": 2,
+        "old_username": "sujii_merged_4",
+        "old_email": "sujitapatel3@gmail.com.merged_4",
+        "canonical_user_id": 4,
+        "canonical_username": "Sujita Patel",
+        "journals_reassigned": 2,
+        "connections_reassigned": 0,
+        "connections_archived_as_conflict": 3,
+        "requests_reassigned": 0,
+        "requests_archived_as_conflict": 4,
+        "action": "DEACTIVATED_AND_MERGED"
+    },
+    {
+        "old_user_id": 5,
+        "old_username": "Suji_merged_4",
+        "old_email": "Sujitapatel3@gmail.com.merged_4",
+        "canonical_user_id": 4,
+        "canonical_username": "Sujita Patel",
+        "journals_reassigned": 0,
+        "connections_reassigned": 0,
+        "connections_archived_as_conflict": 2,
+        "requests_reassigned": 0,
+        "requests_archived_as_conflict": 3,
+        "action": "DEACTIVATED_AND_MERGED"
+    },
+    {
+        "old_user_id": 6,
+        "old_username": "Sujiiiiii_merged_4",
+        "old_email": "sujitapatel3@gmail.com.merged_4",
+        "canonical_user_id": 4,
+        "canonical_username": "Sujita Patel",
+        "journals_reassigned": 0,
+        "connections_reassigned": 0,
+        "connections_archived_as_conflict": 0,
+        "requests_reassigned": 0,
+        "requests_archived_as_conflict": 2,
+        "action": "DEACTIVATED_AND_MERGED"
+    }
+]

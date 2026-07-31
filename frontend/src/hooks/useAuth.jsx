@@ -9,6 +9,7 @@ import {
   getStoredUsername,
   setAuthData,
   clearAuthData,
+  api,
 } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -30,19 +31,41 @@ export function AuthProvider({ children }) {
   }, []);
 
   function login(data) {
-    setAuthData(data);
-    setToken(data.token);
-    setUserId(data.user_id);
-    setUsername(data.username);
+    const tokenVal = data.token || data.access || '';
+    const userIdVal = Number(data.user_id) || 0;
+    const usernameVal = data.username || '';
+    const refreshVal = data.refresh || '';
+
+    const normData = {
+      token: tokenVal,
+      refresh: refreshVal,
+      user_id: userIdVal,
+      username: usernameVal,
+    };
+
+    setAuthData(normData);
+    setToken(tokenVal);
+    setUserId(userIdVal);
+    setUsername(usernameVal);
   }
 
-  // Mirrors logout() in app.js: clear localStorage
-  // WS lifecycle is managed in the Chat feature, not at auth level
-  function logout() {
+  // Complete logout workflow: blacklists refresh token, clears localStorage, resets context state, and redirects to /login
+  async function logout() {
+    const refresh = localStorage.getItem('sc_refresh') || localStorage.getItem('soulcare_refresh');
+    if (refresh) {
+      try {
+        await api('POST', '/auth/logout/', { refresh });
+      } catch (err) {
+        console.error('Logout endpoint error:', err);
+      }
+    }
     clearAuthData();
     setToken('');
     setUserId(0);
     setUsername('');
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   }
 
   return (

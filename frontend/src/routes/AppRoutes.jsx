@@ -14,9 +14,11 @@ import BetaAdminPage from '../pages/BetaAdminPage';
 import NotFoundPage  from '../pages/NotFoundPage';
 import MainLayout    from '../layouts/MainLayout';
 
+import { useAuth } from '../hooks/useAuth';
+
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('sc_token') || '';
-  if (!token) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   return children;
