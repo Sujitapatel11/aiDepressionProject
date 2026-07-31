@@ -773,32 +773,63 @@ function SignupForm() {
   );
 }
 
-// ─── GoogleButton ──────────────────────────────────────────────────────────────
-// Mirrors the Google Sign-In button + GIS integration in login.html exactly.
-// GOOGLE_CLIENT_ID comes from VITE_GOOGLE_CLIENT_ID env var.
 function GoogleButton({ onAlert }) {
-  const navigate      = useNavigate();
-  const { login }     = useAuth();
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const googleBtnRef = useRef(null);
 
-  // Initialize GIS once on mount (mirrors initGoogleSignIn + DOMContentLoaded)
+  // Dynamically load Google GIS script if not present
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
-    function tryInit() {
-      if (window.google && window.google.accounts && window.google.accounts.id) {
+    if (!document.getElementById('google-gsi-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  // Initialize GIS and render standard Google button
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    function initGIS() {
+      if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
-          callback:  handleGoogleCredentialResponse,
+          callback: handleGoogleCredentialResponse,
           auto_select: false,
         });
+
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = '';
+          try {
+            window.google.accounts.id.renderButton(googleBtnRef.current, {
+              theme: 'outline',
+              size: 'large',
+              width: '100%',
+              type: 'standard',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+            });
+          } catch (e) {
+            console.warn('GIS renderButton error:', e);
+          }
+        }
       }
     }
-    // GIS script may still be loading — poll until ready
-    if (window.google) {
-      tryInit();
+
+    if (window.google?.accounts?.id) {
+      initGIS();
     } else {
       const interval = setInterval(() => {
-        if (window.google) { tryInit(); clearInterval(interval); }
+        if (window.google?.accounts?.id) {
+          initGIS();
+          clearInterval(interval);
+        }
       }, 200);
       return () => clearInterval(interval);
     }
@@ -806,18 +837,18 @@ function GoogleButton({ onAlert }) {
   }, []);
 
   async function handleGoogleCredentialResponse(response) {
-    const idToken = response.credential;
+    const idToken = response?.credential;
     if (!idToken) {
       setLoading(false);
-      onAlert('Google Sign-In was cancelled or failed.');
+      onAlert('Google Sign-In was cancelled or failed to return credentials.');
       return;
     }
 
     setLoading(true);
-    onAlert('Verifying Google account...', true);
+    onAlert('Verifying Google account with backend...', true);
 
     try {
-      const res  = await fetch(getApiUrl('/auth/google/'), {
+      const res = await fetch(getApiUrl('/auth/google/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token: idToken }),
@@ -827,58 +858,73 @@ function GoogleButton({ onAlert }) {
       if (res.ok) {
         login(data);
         onAlert('Google Sign-In successful! Welcome to SoulCare.', true);
-        setTimeout(() => navigate('/'), 800);
+        setTimeout(() => navigate('/'), 600);
       } else {
         setLoading(false);
-        onAlert(data.detail || 'Google authentication failed.');
+        const errMsg = data.detail || (data.non_field_errors ? data.non_field_errors[0] : null) || 'Google authentication failed.';
+        console.error('Google Auth Backend Error:', res.status, data);
+        onAlert(errMsg);
       }
-    } catch {
+    } catch (err) {
       setLoading(false);
-      onAlert('Network error while verifying Google sign-in.');
+      console.error('Google Auth Network Exception:', err);
+      onAlert('Network error while verifying Google sign-in: ' + err.message);
     }
   }
 
   function handleClick() {
-    onAlert(''); // clear alert
+    onAlert('');
     if (!GOOGLE_CLIENT_ID) {
-      onAlert('Google Sign-In is not configured. Please set GOOGLE_CLIENT_ID in the backend environment.');
+      onAlert('Google Sign-In is not configured. Please set GOOGLE_CLIENT_ID in environment.');
       return;
     }
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      setLoading(true);
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          setLoading(false);
-        } else if (notification.isDismissedMoment()) {
-          setLoading(false);
-        }
-      });
+
+    // Try to trigger GIS prompt / iframe click if GIS is initialized
+    if (window.google?.accounts?.id) {
+      const iframeBtn = googleBtnRef.current?.querySelector('div[role="button"], iframe');
+      if (iframeBtn) {
+        iframeBtn.click();
+      } else {
+        setLoading(true);
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment()) {
+            setLoading(false);
+          }
+        });
+      }
     } else {
       onAlert('Google Sign-In SDK is loading. Please try again in a moment.');
     }
   }
 
   return (
-    <button
-      type="button"
-      className="auth-btn-google"
-      onClick={handleClick}
-      disabled={loading}
-    >
-      {loading ? (
-        <>
-          <div
-            className="auth-spinner"
-            style={{ display: 'block', borderTopColor: '#7C3AED' }}
-          />
-        </>
-      ) : (
-        <>
-          <GoogleLogo />
-          <span>Continue with Google</span>
-        </>
+    <div style={{ width: '100%' }}>
+      {/* Official GIS Button Container */}
+      <div ref={googleBtnRef} style={{ display: 'block', width: '100%', minHeight: '40px' }} />
+
+      {/* Fallback Custom Button (hidden when official button is mounted) */}
+      {(!googleBtnRef.current || googleBtnRef.current.children.length === 0) && (
+        <button
+          type="button"
+          className="auth-btn-google"
+          onClick={handleClick}
+          disabled={loading}
+          style={{ marginTop: '8px' }}
+        >
+          {loading ? (
+            <div
+              className="auth-spinner"
+              style={{ display: 'block', borderTopColor: '#7C3AED' }}
+            />
+          ) : (
+            <>
+              <GoogleLogo />
+              <span>Continue with Google</span>
+            </>
+          )}
+        </button>
       )}
-    </button>
+    </div>
   );
 }
 
