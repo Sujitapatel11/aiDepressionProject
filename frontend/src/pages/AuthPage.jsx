@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { getApiUrl } from '../services/api';
 import '../styles/auth.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -181,7 +182,7 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
 
     setLoading(true);
     try {
-      const res  = await fetch('/api/auth/password/reset/', {
+      const res  = await fetch(getApiUrl('/auth/password/reset/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail.trim() }),
@@ -218,7 +219,7 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
 
     setLoading(true);
     try {
-      const res  = await fetch('/api/auth/password/reset/confirm/', {
+      const res  = await fetch(getApiUrl('/auth/password/reset/confirm/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -416,7 +417,7 @@ function LoginForm({ onForgotPassword, onSuccessAlert }) {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/login/', {
+      const response = await fetch(getApiUrl('/auth/login/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput, password: passwordInput }),
@@ -594,7 +595,7 @@ function SignupForm() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/signup/', {
+      const response = await fetch(getApiUrl('/auth/signup/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -816,7 +817,7 @@ function GoogleButton({ onAlert }) {
     onAlert('Verifying Google account...', true);
 
     try {
-      const res  = await fetch('/api/auth/google/', {
+      const res  = await fetch(getApiUrl('/auth/google/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token: idToken }),

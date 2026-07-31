@@ -3,6 +3,8 @@
  * Handles network communication with backend.
  */
 
+import { getApiUrl } from '../../../services/api';
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('sc_token') || localStorage.getItem('soulcare_token');
   return {
@@ -12,7 +14,7 @@ const getAuthHeaders = () => {
 };
 
 export const fetchMyIdentity = async () => {
-  const response = await fetch('/api/identity/me/', {
+  const response = await fetch(getApiUrl('/identity/me/'), {
     method: 'GET',
     headers: getAuthHeaders()
   });
@@ -24,7 +26,7 @@ export const fetchMyIdentity = async () => {
 };
 
 export const updateMyIdentity = async (payload) => {
-  const response = await fetch('/api/identity/me/', {
+  const response = await fetch(getApiUrl('/identity/me/'), {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload)
@@ -37,7 +39,7 @@ export const updateMyIdentity = async (payload) => {
 };
 
 export const fetchPublicIdentity = async (userId) => {
-  const response = await fetch(`/api/identity/public/${userId}/`, {
+  const response = await fetch(getApiUrl(`/identity/public/${userId}/`), {
     method: 'GET',
     headers: getAuthHeaders()
   });
@@ -48,7 +50,7 @@ export const fetchPublicIdentity = async (userId) => {
 };
 
 export const fetchCosmeticCatalog = async () => {
-  const response = await fetch('/api/identity/cosmetics/', {
+  const response = await fetch(getApiUrl('/identity/cosmetics/'), {
     method: 'GET',
     headers: getAuthHeaders()
   });
