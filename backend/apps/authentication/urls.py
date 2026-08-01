@@ -6,6 +6,7 @@ urlpatterns = [
     path('signup/', views.signup_view, name='auth_signup'),
     path('login/', views.login_view, name='auth_login'),
     path('logout/', views.logout_view, name='auth_logout'),
+    path('me/', views.me_view, name='auth_me'),
     path('google/', views.google_auth_view, name='auth_google'),
     path('password/reset/', views.password_reset_view, name='auth_password_reset'),
     path('password/reset/confirm/', views.password_reset_confirm_api, name='auth_password_reset_confirm'),

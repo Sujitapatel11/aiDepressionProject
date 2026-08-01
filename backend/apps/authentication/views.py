@@ -193,6 +193,22 @@ def password_reset_view(request):
     return Response({"detail": "If that email exists, a reset link has been sent."})
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def me_view(request):
+    """
+    GET /api/auth/me/
+    Returns the authenticated user's non-sensitive profile fields.
+    Email is always read live from request.user — never from a cache or token claim.
+    """
+    user = request.user
+    return Response({
+        "user_id":  user.id,
+        "username": user.username,
+        "email":    user.email,
+    })
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_confirm_api(request):
