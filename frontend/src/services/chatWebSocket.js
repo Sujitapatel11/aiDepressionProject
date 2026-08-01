@@ -64,6 +64,9 @@ export class ChatWebSocketClient {
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === 'ping' || data.type === 'pong') {
+          return;
+        }
         if (data.type === 'typing') {
           if (this.callbacks.onTyping) {
             this.callbacks.onTyping(data.sender_id, data.is_typing);
@@ -95,7 +98,7 @@ export class ChatWebSocketClient {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: 'ping' }));
       }
-    }, 30000);
+    }, 20000);
   }
 
   stopHeartbeat() {

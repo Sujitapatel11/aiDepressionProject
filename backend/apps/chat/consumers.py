@@ -1,3 +1,4 @@
+import asyncio
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -27,10 +28,23 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        self.ping_task = asyncio.create_task(self.start_ping_loop())
 
     async def disconnect(self, close_code):
+        if hasattr(self, 'ping_task') and self.ping_task:
+            self.ping_task.cancel()
         if hasattr(self, 'group_name'):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def start_ping_loop(self):
+        try:
+            while True:
+                await asyncio.sleep(20)
+                await self.send(text_data=json.dumps({"type": "ping"}))
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
 
     async def receive(self, text_data):
         try:
@@ -39,6 +53,9 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             return
 
         msg_type = data.get("type", "message")
+
+        if msg_type in ("ping", "pong"):
+            return
 
         if msg_type == "typing":
             await self.channel_layer.group_send(self.group_name, {
