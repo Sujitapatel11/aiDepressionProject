@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 HF_API_KEY = os.environ.get("HF_API_KEY", "")
 HF_TIMEOUT = 8  # seconds
+HF_LLM_TIMEOUT = 15  # seconds for generative LLM
+HF_GEN_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 
 # ── HuggingFace model endpoints ──────────────────────────────────────────────
 HF_EMOTION_MODEL = "j-hartmann/emotion-english-distilroberta-base"
@@ -80,7 +82,7 @@ def _get_vader():
     return _vader
 
 
-# ── HuggingFace API helper ───────────────────────────────────────────────────
+# ── HuggingFace API helpers ──────────────────────────────────────────────────
 def _hf_infer(model: str, text: str) -> list | None:
     """Call HuggingFace Inference API. Returns list of {label, score} or None."""
     if not HF_API_KEY:
@@ -102,6 +104,114 @@ def _hf_infer(model: str, text: str) -> list | None:
     except Exception as e:
         logger.debug("HF API error (%s): %s", model, e)
     return None
+
+
+def _hf_generate_llm_insight(text: str) -> dict | None:
+    """
+    Generate an intelligent, context-aware journal insight using HF Inference API.
+    Returns dict with keys: title, message, mood, emotions, or None on failure/timeout.
+    """
+    if not HF_API_KEY:
+        return None
+
+    model = os.environ.get("HF_MODEL", HF_GEN_MODEL)
+    url = f"https://api-inference.huggingface.co/models/{model}"
+    headers = {
+        "Authorization": f"Bearer {HF_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    system_instructions = (
+        "You are SoulCare, an empathetic, gentle, and supportive AI journal companion. "
+        "Your task is to read the user's private journal entry and generate a thoughtful, validating insight.\n\n"
+        "STRICT SAFETY & BEHAVIORAL RULES:\n"
+        "1. NEVER use medical, psychiatric, or diagnostic terms (e.g., do NOT diagnose depression, bipolar, anxiety disorders, PTSD).\n"
+        "2. NEVER give medical or crisis advice (crisis resources are displayed separately).\n"
+        "3. Tone: Warm, compassionate, reflective, and validating.\n"
+        "4. Return strictly a JSON object with no markdown surrounding text outside the JSON.\n\n"
+        "JSON SCHEMA:\n"
+        "{\n"
+        '  "title": "Short compassionate title (3-6 words)",\n'
+        '  "message": "2-4 sentences of warm, reflective insight noticing feelings or patterns gently.",\n'
+        '  "mood": "positive" | "negative" | "neutral" | "mixed",\n'
+        '  "emotions": ["emotion1", "emotion2"]\n'
+        "}"
+    )
+
+    prompt = f"<|im_start|>system\n{system_instructions}<|im_end|>\n<|im_start|>user\nJournal Entry:\n\"\"\"{text[:1500]}\"\"\"<|im_end|>\n<|im_start|>assistant\n{{\n"
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 250,
+            "temperature": 0.6,
+            "return_full_text": False,
+        }
+    }
+
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=HF_LLM_TIMEOUT)
+        if resp.status_code == 503:
+            logger.info("HF model %s cold loading (503). Retrying in 4s...", model)
+            time.sleep(4)
+            resp = requests.post(url, headers=headers, json=payload, timeout=HF_LLM_TIMEOUT)
+
+        if resp.status_code == 200:
+            data = resp.json()
+            generated_text = ""
+            if isinstance(data, list) and len(data) > 0:
+                generated_text = data[0].get("generated_text", "")
+            elif isinstance(data, dict):
+                generated_text = data.get("generated_text", "") or data.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+            if generated_text and not generated_text.strip().startswith("{"):
+                generated_text = "{\n" + generated_text
+
+            parsed = _parse_json_insight(generated_text)
+            if parsed and parsed.get("title") and parsed.get("message"):
+                return parsed
+
+    except Exception as e:
+        logger.warning("HF LLM insight generation failed (%s): %s", model, e)
+
+    return None
+
+
+def _parse_json_insight(text: str) -> dict | None:
+    """Extract and validate JSON object from LLM response text."""
+    import json
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group(0))
+        if not isinstance(data, dict):
+            return None
+
+        title = str(data.get("title", "")).strip()
+        message = str(data.get("message", "")).strip()
+        mood = str(data.get("mood", "")).strip().lower()
+        emotions = data.get("emotions", [])
+
+        if not title or not message:
+            return None
+
+        if mood not in {"positive", "negative", "neutral", "mixed"}:
+            mood = "neutral"
+
+        if not isinstance(emotions, list):
+            emotions = []
+        emotions = [str(e).strip().lower() for e in emotions if isinstance(e, str)][:4]
+
+        return {
+            "title": title,
+            "message": message,
+            "mood": mood,
+            "emotions": emotions,
+        }
+    except Exception as e:
+        logger.debug("Failed to parse JSON insight from text: %s", e)
+        return None
 
 
 # ── Core analysis functions ──────────────────────────────────────────────────
@@ -207,54 +317,43 @@ def build_insight_message(mood: str, emotions: list, compound: float, mental_cla
 def analyze_journal(content: str) -> dict:
     """
     Full analysis pipeline:
-    1. Try HuggingFace emotion model (requires HF_API_KEY)
+    1. Try HuggingFace generative LLM model (requires HF_API_KEY)
     2. Fall back to VADER + keyword banks
     """
-    emotions = []
-    compound = None
-    mental_class = ""
+    vader = _get_vader()
+    vader_scores = vader.polarity_scores(content)
+    vader_compound = round(vader_scores["compound"], 4)
 
-    # ── Tier 1: HuggingFace ──
+    # ── Tier 1: HuggingFace Generative LLM ──
     if HF_API_KEY:
-        hf_emotions, hf_compound = detect_emotions_hf(content)
-        if hf_emotions or hf_compound is not None:
-            emotions = hf_emotions
-            compound = hf_compound if hf_compound is not None else 0.0
-            logger.debug("HF emotion analysis succeeded: %s", emotions)
+        llm_result = _hf_generate_llm_insight(content)
+        if llm_result:
+            logger.info("HF LLM insight generation succeeded")
+            keywords = extract_keywords(content)
+            return {
+                "mood": llm_result.get("mood", score_to_mood(vader_compound)),
+                "sentiment_score": vader_compound,
+                "emotions": llm_result.get("emotions", []),
+                "keywords": keywords,
+                "title": llm_result.get("title", "Journal Insight"),
+                "message": llm_result.get("message", ""),
+                "mental_class": "",
+            }
 
-        # Also try sentiment model for a cleaner compound score
-        sentiment_results = _hf_infer(HF_SENTIMENT_MODEL, content)
-        if sentiment_results:
-            label = sentiment_results[0].get("label", "").lower()
-            score = sentiment_results[0].get("score", 0.5)
-            if "positive" in label:
-                compound = round(score * 0.9, 4)
-            elif "negative" in label:
-                compound = round(-score * 0.9, 4)
-            else:
-                compound = 0.0
-
-    # ── Tier 2: VADER + keywords (fallback or supplement) ──
-    if compound is None:
-        vader = _get_vader()
-        scores = vader.polarity_scores(content)
-        compound = round(scores["compound"], 4)
-
-    if not emotions:
-        emotions = detect_emotions_keywords(content)
-
-    mood = score_to_mood(compound)
+    # ── Tier 2: VADER + keywords (fallback) ──
+    emotions = detect_emotions_keywords(content)
+    mood = score_to_mood(vader_compound)
     keywords = extract_keywords(content)
-    title, message = build_insight_message(mood, emotions, compound, mental_class)
+    title, message = build_insight_message(mood, emotions, vader_compound, mental_class="")
 
     return {
         "mood": mood,
-        "sentiment_score": compound,
+        "sentiment_score": vader_compound,
         "emotions": emotions,
         "keywords": keywords,
         "title": title,
         "message": message,
-        "mental_class": mental_class,
+        "mental_class": "",
     }
 
 
