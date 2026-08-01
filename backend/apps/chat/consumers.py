@@ -1,5 +1,7 @@
 import asyncio
 import json
+import logging
+import redis.exceptions
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
@@ -8,6 +10,8 @@ from django.utils import timezone
 
 from apps.support.models import SupportConnection
 from .models import Message
+
+logger = logging.getLogger(__name__)
 
 
 class SupportChatConsumer(AsyncWebsocketConsumer):
@@ -26,7 +30,18 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=4003)
             return
 
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        try:
+            await self.channel_layer.group_add(self.group_name, self.channel_name)
+        except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
+            logger.error(f"Redis error during connect group_add: {e}")
+            await self.accept()
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "detail": "temporary connection issue, please retry"
+            }))
+            await self.close(code=4000)
+            return
+
         await self.accept()
         self.ping_task = asyncio.create_task(self.start_ping_loop())
 
@@ -34,7 +49,10 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         if hasattr(self, 'ping_task') and self.ping_task:
             self.ping_task.cancel()
         if hasattr(self, 'group_name'):
-            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+            try:
+                await self.channel_layer.group_discard(self.group_name, self.channel_name)
+            except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
+                logger.error(f"Redis error during disconnect group_discard: {e}")
 
     async def start_ping_loop(self):
         try:
@@ -58,11 +76,18 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             return
 
         if msg_type == "typing":
-            await self.channel_layer.group_send(self.group_name, {
-                "type": "chat.typing",
-                "sender_id": self.user.id,
-                "is_typing": bool(data.get("is_typing", False)),
-            })
+            try:
+                await self.channel_layer.group_send(self.group_name, {
+                    "type": "chat.typing",
+                    "sender_id": self.user.id,
+                    "is_typing": bool(data.get("is_typing", False)),
+                })
+            except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
+                logger.error(f"Redis error during typing group_send: {e}")
+                await self.send(text_data=json.dumps({
+                    "type": "error",
+                    "detail": "temporary connection issue, please retry"
+                }))
             return
 
         content = data.get("message", "").strip()
@@ -73,13 +98,20 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         if not msg:
             return
 
-        await self.channel_layer.group_send(self.group_name, {
-            "type": "chat.message",
-            "message_id": str(msg.message_id),
-            "message": msg.content,
-            "sender_id": self.user.id,
-            "timestamp": msg.created_at.isoformat(),
-        })
+        try:
+            await self.channel_layer.group_send(self.group_name, {
+                "type": "chat.message",
+                "message_id": str(msg.message_id),
+                "message": msg.content,
+                "sender_id": self.user.id,
+                "timestamp": msg.created_at.isoformat(),
+            })
+        except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
+            logger.error(f"Redis error during message group_send: {e}")
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "detail": "temporary connection issue, please retry"
+            }))
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
