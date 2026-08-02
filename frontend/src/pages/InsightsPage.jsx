@@ -242,6 +242,72 @@ export const InsightsPage = () => {
               const pct = Math.round(((i.sentiment_score + 1) / 2) * 100);
               const insightId = i.insight_id || i.id;
 
+              if (i.status === 'too_short') {
+                return (
+                  <div
+                    key={insightId}
+                    className="p-6 rounded-[28px] bg-gradient-to-r from-purple-50/60 to-amber-50/60 border border-purple-100/80 shadow-sm space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                          💡
+                        </span>
+                        <div>
+                          <h4 className="t-h4 font-bold text-gray-900">{i.title || 'A Starting Reflection'}</h4>
+                          <span className="text-xs font-semibold text-amber-700 block">
+                            Reflection Nudge · {fmtDate(i.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDismiss(insightId)}
+                        className="p-1.5 rounded-full hover:bg-white/60 text-gray-400 hover:text-gray-600 transition border-none bg-transparent cursor-pointer"
+                        title="Dismiss note"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="t-body-md text-gray-700 leading-relaxed font-medium pl-1">
+                      {i.message}
+                    </p>
+                  </div>
+                );
+              }
+
+              if (i.status === 'invalid') {
+                return (
+                  <div
+                    key={insightId}
+                    className="p-6 rounded-[28px] bg-gray-50/80 border border-gray-200 shadow-sm space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-10 h-10 rounded-2xl bg-slate-200 text-slate-700 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                          ℹ️
+                        </span>
+                        <div>
+                          <h4 className="t-h4 font-bold text-gray-800">{i.title || 'Entry Content Note'}</h4>
+                          <span className="text-xs font-semibold text-gray-500 block">
+                            System Note · {fmtDate(i.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDismiss(insightId)}
+                        className="p-1.5 rounded-full hover:bg-gray-200/60 text-gray-400 hover:text-gray-600 transition border-none bg-transparent cursor-pointer"
+                        title="Dismiss note"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="t-body-md text-gray-600 leading-relaxed pl-1">
+                      {i.message}
+                    </p>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={insightId}

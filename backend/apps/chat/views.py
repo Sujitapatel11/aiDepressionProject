@@ -24,5 +24,7 @@ def message_history(request, connection_id):
     if user not in (conn.user_one, conn.user_two):
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    messages = Message.objects.filter(connection=conn).select_related('sender').order_by("created_at")[:100]
+    messages = Message.objects.filter(connection=conn).exclude(
+        Q(sender=user, deleted_for_sender=True) | Q(receiver=user, deleted_for_receiver=True)
+    ).select_related('sender').order_by("created_at")[:100]
     return Response(MessageSerializer(messages, many=True).data)

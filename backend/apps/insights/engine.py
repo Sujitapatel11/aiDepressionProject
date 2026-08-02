@@ -214,6 +214,71 @@ def _parse_json_insight(text: str) -> dict | None:
         return None
 
 
+# ── Input Validation & Mood Prefix Extraction ────────────────────────────────
+def _extract_mood_prefix(content: str) -> tuple[str | None, str]:
+    """
+    Parse and strip '[Feeling <Mood>]' tag prefix from journal content.
+    Returns (extracted_mood, free_text).
+    """
+    if not content:
+        return None, ""
+    match = re.match(r"^\s*\[Feeling\s+([^\]]+)\]\s*", content, re.IGNORECASE)
+    if match:
+        extracted_mood = match.group(1).strip().lower()
+        free_text = content[match.end():].strip()
+        return extracted_mood, free_text
+    return None, content.strip()
+
+
+def _validate_journal_content(content: str) -> tuple[str, str, str | None]:
+    """
+    Validates journal text and classifies into one of three states:
+    - 'too_short': empty or fewer than ~12 words of actual text after mood prefix.
+    - 'invalid': content containing code syntax, URLs, commands, stack traces, or symbol ratio > 22%.
+    - 'sufficient': genuine, meaningful journaling text.
+
+    Returns (status, free_text, extracted_mood).
+    """
+    extracted_mood, free_text = _extract_mood_prefix(content)
+
+    if not free_text:
+        return "too_short", free_text, extracted_mood
+
+    words = re.findall(r"\b[\w'-]+\b", free_text)
+    word_count = len(words)
+
+    # Check 1: Too short (< 12 words)
+    if word_count < 12:
+        return "too_short", free_text, extracted_mood
+
+    # Check 2: Invalid content (Code, URLs, Commands, High Symbol Density)
+    # A. URL detection
+    if re.search(r"https?://|ftp://|www\.[a-z0-9-]+\.", free_text, re.IGNORECASE):
+        if word_count < 25 or len(re.findall(r"https?://\S+", free_text)) > 0:
+            return "invalid", free_text, extracted_mood
+
+    # B. Programming code keywords & syntax patterns
+    code_keywords = {
+        "def ", "function ", "import ", "from ", "class ", "const ", "let ", "var ",
+        "return ", "public static ", "void ", "console.log", "print(", "fmt.print",
+        "select ", "insert into", "delete from", "update ", "where ", "group by",
+        "export default", "npm install", "pip install", "git commit", "docker run",
+        "sudo ", "chmod ", "apt-get", "system.out"
+    }
+    lower_text = free_text.lower()
+    code_hits = sum(1 for kw in code_keywords if kw in lower_text)
+    code_syntax = re.findall(r"[{}\[\];=><+\-*/\\|~^`$%]", free_text)
+
+    # Non-alphanumeric ratio (excluding normal whitespace & basic punctuation . , ! ? ' " -)
+    cleaned_normal = re.sub(r"[\w\s.,!?'\"-]", "", free_text)
+    symbol_ratio = len(cleaned_normal) / max(len(free_text), 1)
+
+    if code_hits >= 2 or symbol_ratio > 0.22 or (code_hits >= 1 and len(code_syntax) >= 4):
+        return "invalid", free_text, extracted_mood
+
+    return "sufficient", free_text, extracted_mood
+
+
 # ── Core analysis functions ──────────────────────────────────────────────────
 def extract_keywords(text: str, top_n: int = 6) -> list:
     words = re.findall(r"[a-z']+", text.lower())
@@ -317,19 +382,52 @@ def build_insight_message(mood: str, emotions: list, compound: float, mental_cla
 def analyze_journal(content: str) -> dict:
     """
     Full analysis pipeline:
-    1. Try HuggingFace generative LLM model (requires HF_API_KEY)
-    2. Fall back to VADER + keyword banks
+    1. Validate input text & strip mood tag prefix.
+    2. Handle 'too_short' and 'invalid' states with dedicated friendly messages.
+    3. For 'sufficient' text:
+       a. Try HuggingFace generative LLM model (requires HF_API_KEY)
+       b. Fall back to VADER + keyword banks
     """
+    status_code, free_text, tag_mood = _validate_journal_content(content)
+
     vader = _get_vader()
-    vader_scores = vader.polarity_scores(content)
+    vader_scores = vader.polarity_scores(free_text if free_text else content)
     vader_compound = round(vader_scores["compound"], 4)
 
-    # ── Tier 1: HuggingFace Generative LLM ──
+    # ── State 1: Too Short ──
+    if status_code == "too_short":
+        mood = tag_mood if tag_mood in {"positive", "negative", "neutral", "mixed"} else score_to_mood(vader_compound)
+        return {
+            "mood": mood,
+            "sentiment_score": vader_compound,
+            "emotions": [tag_mood] if tag_mood else [],
+            "keywords": extract_keywords(free_text) if free_text else [],
+            "title": "A Starting Reflection",
+            "message": "Try writing a bit more about what's behind this feeling for a deeper AI insight.",
+            "status": "too_short",
+            "mental_class": "",
+        }
+
+    # ── State 2: Invalid Content (Code, URLs, Commands) ──
+    if status_code == "invalid":
+        return {
+            "mood": "neutral",
+            "sentiment_score": 0.0,
+            "emotions": [],
+            "keywords": [],
+            "title": "Entry Content Note",
+            "message": "This entry appears to contain code, URLs, or system text rather than personal reflections. Share your thoughts or feelings to receive AI companion insights.",
+            "status": "invalid",
+            "mental_class": "",
+        }
+
+    # ── State 3: Sufficient Text (Normal Analysis) ──
+    # Tier 1: HuggingFace Generative LLM
     if HF_API_KEY:
-        llm_result = _hf_generate_llm_insight(content)
+        llm_result = _hf_generate_llm_insight(free_text)
         if llm_result:
             logger.info("HF LLM insight generation succeeded")
-            keywords = extract_keywords(content)
+            keywords = extract_keywords(free_text)
             return {
                 "mood": llm_result.get("mood", score_to_mood(vader_compound)),
                 "sentiment_score": vader_compound,
@@ -337,13 +435,16 @@ def analyze_journal(content: str) -> dict:
                 "keywords": keywords,
                 "title": llm_result.get("title", "Journal Insight"),
                 "message": llm_result.get("message", ""),
+                "status": "sufficient",
                 "mental_class": "",
             }
 
-    # ── Tier 2: VADER + keywords (fallback) ──
-    emotions = detect_emotions_keywords(content)
+    # Tier 2: VADER + keywords (fallback)
+    emotions = detect_emotions_keywords(free_text)
+    if tag_mood and tag_mood not in emotions and tag_mood in EMOTION_BANKS:
+        emotions.append(tag_mood)
     mood = score_to_mood(vader_compound)
-    keywords = extract_keywords(content)
+    keywords = extract_keywords(free_text)
     title, message = build_insight_message(mood, emotions, vader_compound, mental_class="")
 
     return {
@@ -353,6 +454,7 @@ def analyze_journal(content: str) -> dict:
         "keywords": keywords,
         "title": title,
         "message": message,
+        "status": "sufficient",
         "mental_class": "",
     }
 
@@ -374,6 +476,7 @@ def create_insight_from_journal(journal, request_id=None):
             "keywords": [],
             "title": "Journal Insight",
             "message": "Your entry has been recorded. Keep writing — patterns emerge over time.",
+            "status": "sufficient",
             "mental_class": "",
         }
 
@@ -386,6 +489,7 @@ def create_insight_from_journal(journal, request_id=None):
         sentiment_score=result["sentiment_score"],
         emotion_tags=result["emotions"],
         keywords=result["keywords"],
+        status=result.get("status", "sufficient"),
         source_window_start=journal.created_at,
         source_window_end=journal.created_at,
     )

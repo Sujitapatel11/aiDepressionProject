@@ -126,7 +126,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -295,7 +295,11 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+_raw_from = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+if _raw_from and not _raw_from.startswith("SoulCare"):
+    DEFAULT_FROM_EMAIL = f"SoulCare <{_raw_from}>"
+else:
+    DEFAULT_FROM_EMAIL = _raw_from or "SoulCare <noreply@soulcare.app>"
 
 # =========================
 # LOGGING (Staging & Production)

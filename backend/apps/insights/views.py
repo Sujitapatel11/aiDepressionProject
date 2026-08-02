@@ -57,6 +57,7 @@ def generate_for_journal(request, journal_id):
         sentiment_score=result["sentiment_score"],
         emotion_tags=result["emotions"],
         keywords=result["keywords"],
+        status=result.get("status", "sufficient"),
         source_window_start=journal.created_at,
         source_window_end=journal.created_at,
     )

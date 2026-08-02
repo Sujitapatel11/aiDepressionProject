@@ -2,6 +2,7 @@ import os
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordResetForm
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -182,14 +183,20 @@ def password_reset_view(request):
             from django.contrib.auth.forms import PasswordResetForm
             form = PasswordResetForm(data={"email": serializer.validated_data["email"]})
             if form.is_valid():
+                domain = request.get_host() if hasattr(request, 'get_host') else '127.0.0.1:8000'
+                is_secure = request.is_secure() if hasattr(request, 'is_secure') else False
                 form.save(
-                    request=request,
-                    use_https=False,
-                    email_template_name='registration/password_reset_email.html',
-                    domain_override='127.0.0.1:8000',
+                    use_https=is_secure,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    domain_override=domain,
+                    email_template_name='registration/password_reset_email.txt',
+                    html_email_template_name='registration/password_reset_email.html',
+                    subject_template_name='registration/password_reset_subject.txt',
                 )
         except Exception as e:
             import logging
+            logger = logging.getLogger(__name__)
+            logger.exception("Password reset email error: %s", e)
     return Response({"detail": "If that email exists, a reset link has been sent."})
 
 

@@ -11,6 +11,6 @@ class InsightSerializer(serializers.ModelSerializer):
         fields = [
             'insight_id', 'title', 'message', 'mood', 'sentiment_score',
             'keywords', 'emotion_tags', 'created_at', 'journal_id',
-            'is_read', 'is_dismissed',
+            'is_read', 'is_dismissed', 'status',
         ]
         read_only_fields = fields

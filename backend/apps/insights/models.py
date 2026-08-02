@@ -26,6 +26,7 @@ class Insight(models.Model):
     sentiment_score = models.FloatField(default=0.0)   # VADER compound: -1.0 to 1.0
     keywords = models.JSONField(default=list)           # top extracted keywords
     emotion_tags = models.JSONField(default=list)       # e.g. ["anxious", "hopeful"]
+    status = models.CharField(max_length=32, default='sufficient', db_index=True)
 
     source_window_start = models.DateTimeField()
     source_window_end = models.DateTimeField()
