@@ -16,6 +16,7 @@ from .models import UserAuthProfile
 
 def _token_response(user):
     refresh = RefreshToken.for_user(user)
+    # pyrefly: ignore [missing-import]
     from apps.identity.services.identity_service import IdentityService
     avatar_url = IdentityService.resolve_avatar_url(user)
     return {
@@ -179,25 +180,42 @@ def google_auth_view(request):
 def password_reset_view(request):
     serializer = PasswordResetSerializer(data=request.data)
     if serializer.is_valid():
+        email = serializer.validated_data["email"].strip().lower()
         try:
             from django.contrib.auth.forms import PasswordResetForm
-            form = PasswordResetForm(data={"email": serializer.validated_data["email"]})
-            if form.is_valid():
-                domain = request.get_host() if hasattr(request, 'get_host') else '127.0.0.1:8000'
-                is_secure = request.is_secure() if hasattr(request, 'is_secure') else False
-                form.save(
-                    use_https=is_secure,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    domain_override=domain,
-                    email_template_name='registration/password_reset_email.txt',
-                    html_email_template_name='registration/password_reset_email.html',
-                    subject_template_name='registration/password_reset_subject.txt',
-                )
+            from django.contrib.auth import get_user_model
+            import logging
+            logger = logging.getLogger(__name__)
+
+            User = get_user_model()
+            matching_users = list(User.objects.filter(email__iexact=email, is_active=True))
+            if not matching_users:
+                logger.warning("Password reset requested for non-existent or inactive email: %s", email)
+            else:
+                form = PasswordResetForm(data={"email": email})
+                if form.is_valid():
+                    domain = request.get_host() if hasattr(request, 'get_host') else '127.0.0.1:8000'
+                    is_secure = request.is_secure() if hasattr(request, 'is_secure') else False
+                    form.save(
+                        use_https=is_secure,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        domain_override=domain,
+                        email_template_name='registration/password_reset_email.txt',
+                        html_email_template_name='registration/password_reset_email.html',
+                        subject_template_name='registration/password_reset_subject.txt',
+                    )
+                    logger.info("Password reset email sent to %s", email)
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.exception("Password reset email error: %s", e)
+            if settings.DEBUG:
+                return Response(
+                    {"detail": f"SMTP Error: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
     return Response({"detail": "If that email exists, a reset link has been sent."})
+
 
 
 @api_view(['GET'])

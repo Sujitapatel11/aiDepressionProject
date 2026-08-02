@@ -1,3 +1,8 @@
+import os
+import time
+import requests
+import logging
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +11,9 @@ from rest_framework.response import Response
 
 from .models import JournalEntry
 from .serializers import JournalEntrySerializer
+
+logger = logging.getLogger(__name__)
+
 
 
 class JournalPagination(PageNumberPagination):
@@ -81,3 +89,74 @@ def journal_detail(request, journal_id):
     journal.is_deleted = True
     journal.save(update_fields=['is_deleted'])
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def transcribe_audio_view(request):
+    """
+    POST /api/journal/transcribe/
+    Accepts audio file upload and optional language hint ('hi', 'en', 'ne', 'auto').
+    Forwards audio to HuggingFace Whisper API and returns transcribed text.
+    """
+    if 'audio' not in request.FILES:
+        return Response({"detail": "No audio file provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+    audio_file = request.FILES['audio']
+    language = request.data.get('language', 'auto')
+
+    hf_key = os.environ.get("HF_API_KEY", "")
+    whisper_model = os.environ.get("WHISPER_MODEL", "openai/whisper-large-v3-turbo")
+
+    if not hf_key:
+        return Response(
+            {"detail": "HuggingFace API key is not configured on the server. Please type your entry manually."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    try:
+        audio_bytes = audio_file.read()
+        content_type = audio_file.content_type or 'audio/webm'
+
+        url = f"https://api-inference.huggingface.co/models/{whisper_model}"
+        headers = {
+            "Authorization": f"Bearer {hf_key}",
+            "Content-Type": content_type,
+            "x-wait-for-model": "true",
+        }
+
+        resp = requests.post(url, headers=headers, data=audio_bytes, timeout=25)
+
+        if resp.status_code == 503:
+            time.sleep(3)
+            resp = requests.post(url, headers=headers, data=audio_bytes, timeout=25)
+
+        if resp.status_code == 200:
+            data = resp.json()
+            text = ""
+            if isinstance(data, dict):
+                text = data.get("text", "").strip()
+            elif isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+                text = data[0].get("text", "").strip()
+
+            return Response({"text": text, "language": language})
+        else:
+            logger.warning("HF Whisper transcription failed [%d]: %s", resp.status_code, resp.text[:200])
+            return Response(
+                {"detail": "Audio transcription service is currently unavailable. Please type your entry manually."},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+    except requests.exceptions.Timeout:
+        logger.warning("HF Whisper API timed out for audio transcription.")
+        return Response(
+            {"detail": "Transcription request timed out. Please try a shorter recording or type manually."},
+            status=status.HTTP_504_GATEWAY_TIMEOUT
+        )
+    except Exception as e:
+        logger.exception("Error in audio transcription view: %s", e)
+        return Response(
+            {"detail": "Could not process audio recording. Please type your entry manually."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+

@@ -24,6 +24,11 @@ urlpatterns = [
     path('api/feedback/', feedback_view, name='feedback_api'),
 
     # Password reset confirmation (email link)
+    path('password/reset/confirm/<uidb64>/<token>/',
+         auth_views.PasswordResetConfirmView.as_view(
+             success_url='/password-reset-complete/'
+         ),
+         name='password_reset_confirm_canonical'),
     path('password-reset-confirm/<uidb64>/<token>/',
          auth_views.PasswordResetConfirmView.as_view(
              success_url='/password-reset-complete/'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
 
@@ -11,6 +11,16 @@ export const JournalPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [selectedMood, setSelectedMood] = useState('Happy');
+
+  // Voice-to-Text state hooks
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('auto'); // 'auto', 'en', 'hi', 'ne'
+  const [recordSeconds, setRecordSeconds] = useState(0);
+
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const timerRef = useRef(null);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -29,11 +39,108 @@ export const JournalPage = () => {
 
   useEffect(() => {
     fetchEntries();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
   const handleInputChange = (val) => {
     setInputVal(val);
     localStorage.setItem('sc_journal_draft', val);
+  };
+
+  // ── Voice Recording Handlers ────────────────────────────────────────────────
+  const startRecording = async () => {
+    setError('');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const msg = 'Voice recording is not supported in this browser.';
+      if (window.showToast) window.showToast(msg);
+      else setError(msg);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+        await handleAudioUpload(audioBlob);
+      };
+
+      mediaRecorder.start(250);
+      setRecording(true);
+      setRecordSeconds(0);
+
+      timerRef.current = setInterval(() => {
+        setRecordSeconds((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Microphone error:', err);
+      const msg = 'Microphone access denied. Please allow microphone permissions to record.';
+      if (window.showToast) window.showToast(msg);
+      else setError(msg);
+    }
+  };
+
+  const stopRecording = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setRecording(false);
+  };
+
+  const handleAudioUpload = async (blob) => {
+    setTranscribing(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('audio', blob, 'journal_voice.webm');
+    formData.append('language', selectedLang);
+
+    try {
+      const res = await api('POST', '/journal/transcribe/', formData);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data.text) {
+          const appendedText = inputVal.trim() ? `${inputVal.trim()}\n\n${data.text}` : data.text;
+          handleInputChange(appendedText);
+          if (window.showToast) window.showToast('Voice transcribed successfully!');
+        } else {
+          if (window.showToast) window.showToast('No speech detected in recording.');
+        }
+      } else {
+        const errData = await res?.json().catch(() => ({}));
+        const msg = errData?.detail || 'Audio transcription unavailable. You can type your entry manually.';
+        if (window.showToast) window.showToast(msg);
+        else setError(msg);
+      }
+    } catch (e) {
+      const msg = 'Could not transcribe audio. You can type manually.';
+      if (window.showToast) window.showToast(msg);
+      else setError(msg);
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
+  const fmtTimer = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const handleSave = async () => {
@@ -131,6 +238,67 @@ export const JournalPage = () => {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Voice-to-Text Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-purple-50/70 border border-purple-100">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+              <span>🎙️</span> Voice-to-Text (Whisper AI):
+            </span>
+            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-purple-200 shadow-2xs">
+              {[
+                { code: 'auto', label: 'Auto 🌐' },
+                { code: 'en', label: 'English 🇬🇧' },
+                { code: 'hi', label: 'Hindi 🇮🇳' },
+                { code: 'ne', label: 'Nepali 🇳🇵' },
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => setSelectedLang(lang.code)}
+                  className={`px-2.5 py-1 rounded-lg text-xs transition border-none cursor-pointer ${
+                    selectedLang === lang.code
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-gray-600 hover:bg-purple-50 font-medium'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {recording ? (
+              <div className="flex items-center gap-3 bg-red-50 text-red-700 px-3 py-1.5 rounded-xl border border-red-200">
+                <span className="w-3 h-3 rounded-full bg-red-600 animate-ping inline-block"></span>
+                <span className="text-xs font-extrabold font-mono">{fmtTimer(recordSeconds)}</span>
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold border-none cursor-pointer transition shadow-xs flex items-center gap-1"
+                >
+                  <span>⏹️</span> Stop & Transcribe
+                </button>
+              </div>
+            ) : transcribing ? (
+              <div className="flex items-center gap-2 text-purple-700 text-xs font-bold px-3 py-1.5 bg-purple-100/80 rounded-xl">
+                <span className="w-4 h-4 rounded-full border-2 border-purple-600 border-t-transparent animate-spin inline-block"></span>
+                <span>Transcribing audio...</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startRecording}
+                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-sm border-none cursor-pointer flex items-center gap-2"
+                title="Speak your entry in English, Hindi, or Nepali"
+              >
+                <span>🎙️</span>
+                <span>Speak Reflection</span>
+              </button>
+            )}
           </div>
         </div>
 

@@ -59,14 +59,19 @@ export const clearAuthData = () => {
 export async function api(method, path, body = null) {
   try {
     const token = getStoredToken();
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
     const opts = { method, headers };
     if (body) {
-      opts.body = JSON.stringify(body);
+      if (body instanceof FormData) {
+        opts.body = body;
+      } else {
+        headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
     }
 
     const url = getApiUrl(path);
