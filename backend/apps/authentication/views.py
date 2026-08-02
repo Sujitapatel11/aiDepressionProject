@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from config.throttles import PasswordResetRateThrottle
-from .serializers import SignupSerializer, LoginSerializer, GoogleAuthSerializer, PasswordResetSerializer
+from .serializers import SignupSerializer, LoginSerializer, GoogleAuthSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 from .models import UserAuthProfile
 
 
@@ -219,16 +219,20 @@ def me_view(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_confirm_api(request):
-    uidb64 = request.data.get('uid')
-    token = request.data.get('token')
-    new_password = request.data.get('new_password')
-    confirm_password = request.data.get('confirm_password')
+    serializer = PasswordResetConfirmSerializer(data=request.data)
+    if not serializer.is_valid():
+        errors = serializer.errors
+        if 'confirm_password' in errors:
+            detail = errors['confirm_password'][0] if isinstance(errors['confirm_password'], list) else str(errors['confirm_password'])
+        elif 'non_field_errors' in errors:
+            detail = errors['non_field_errors'][0] if isinstance(errors['non_field_errors'], list) else str(errors['non_field_errors'])
+        else:
+            detail = "Missing required fields."
+        return Response({"detail": detail}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not uidb64 or not token or not new_password:
-        return Response({"detail": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
-
-    if new_password != confirm_password:
-        return Response({"detail": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
+    uid_raw = serializer.validated_data['uid'].strip().strip('/')
+    token = serializer.validated_data['token'].strip().strip('/')
+    new_password = serializer.validated_data['new_password']
 
     try:
         from django.utils.http import urlsafe_base64_decode
@@ -237,8 +241,21 @@ def password_reset_confirm_api(request):
         from django.core.exceptions import ValidationError as DjangoValidationError
         from django.contrib.auth.models import User
 
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
+        user = None
+        # 1. Try urlsafe_base64_decode
+        try:
+            uid_decoded = urlsafe_base64_decode(uid_raw).decode('utf-8')
+            user = User.objects.get(pk=uid_decoded)
+        except Exception:
+            # 2. Fallback to raw numeric PK if base64 decoding fails or user not found
+            if uid_raw.isdigit():
+                try:
+                    user = User.objects.get(pk=int(uid_raw))
+                except User.DoesNotExist:
+                    pass
+
+        if not user:
+            return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not default_token_generator.check_token(user, token):
             return Response({"detail": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
@@ -249,8 +266,9 @@ def password_reset_confirm_api(request):
         user.save()
         return Response({"detail": "Password has been reset successfully. You may now sign in."})
 
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)
     except DjangoValidationError as e:
         return Response({"detail": " ".join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)
+
 

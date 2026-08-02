@@ -204,11 +204,38 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
     }
   }
 
+  function handleUidChange(val) {
+    if (val.includes('/confirm/') || val.includes('password-reset-confirm/')) {
+      const parts = val.trim().replace(/\/+$/, '').split('/');
+      if (parts.length >= 2) {
+        setResetToken(parts[parts.length - 1]);
+        setResetUid(parts[parts.length - 2]);
+        return;
+      }
+    }
+    setResetUid(val);
+  }
+
+  function handleTokenChange(val) {
+    if (val.includes('/confirm/') || val.includes('password-reset-confirm/')) {
+      const parts = val.trim().replace(/\/+$/, '').split('/');
+      if (parts.length >= 2) {
+        setResetToken(parts[parts.length - 1]);
+        setResetUid(parts[parts.length - 2]);
+        return;
+      }
+    }
+    setResetToken(val);
+  }
+
   async function handleResetConfirmSubmit(e) {
     e.preventDefault();
     hideModalAlert();
 
-    if (!resetUid.trim() || !resetToken.trim() || !newPassword || !confirmPassword) {
+    const cleanUid   = resetUid.trim().replace(/\/+$/, '');
+    const cleanToken = resetToken.trim().replace(/\/+$/, '');
+
+    if (!cleanUid || !cleanToken || !newPassword || !confirmPassword) {
       showModalAlert('Please complete all reset fields.');
       return;
     }
@@ -223,8 +250,8 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid:              resetUid.trim(),
-          token:            resetToken.trim(),
+          uid:              cleanUid,
+          token:            cleanToken,
           new_password:     newPassword,
           confirm_password: confirmPassword,
         }),
@@ -319,7 +346,7 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
                 placeholder="Paste UID from reset link"
                 required
                 value={resetUid}
-                onChange={(e) => setResetUid(e.target.value)}
+                onChange={(e) => handleUidChange(e.target.value)}
               />
             </div>
 
@@ -334,7 +361,7 @@ function ForgotPasswordModal({ isOpen, onClose, onResetSuccess }) {
                 placeholder="Paste Token from reset link"
                 required
                 value={resetToken}
-                onChange={(e) => setResetToken(e.target.value)}
+                onChange={(e) => handleTokenChange(e.target.value)}
               />
             </div>
 
