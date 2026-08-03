@@ -23,9 +23,9 @@ class PerformanceRegressionTests(TestCase):
 
         self.client.force_authenticate(user=self.user1)
 
-    def test_available_users_query_count_is_constant_4(self):
-        """P0: Verifies available_users bulk fetches profiles in constant 4 SQL queries regardless of user count."""
-        with self.assertNumQueries(4):
+    def test_available_users_query_count_is_constant_3(self):
+        """P0: Verifies available_users bulk fetches profiles in constant 3 SQL queries regardless of user count."""
+        with self.assertNumQueries(3):
             response = self.client.get("/api/support/users/?mode=smart")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 

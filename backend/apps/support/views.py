@@ -112,6 +112,7 @@ def available_users(request):
             "avatar_url": avatar_url,
             "match_score": round(similarity * 100),  # 0–100
             "has_profile": has_profile,
+            "my_profile_ready": has_my_profile,
             "_tier": tier,
             "_last_login": candidate.last_login.timestamp() if candidate.last_login else 0.0,
         })

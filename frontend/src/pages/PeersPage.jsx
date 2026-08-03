@@ -403,6 +403,29 @@ export const PeersPage = () => {
       ) : (
         /* FIND TAB */
         <div className="space-y-5">
+          {/* Viewer Cold-Start Banner (shown when current user has no journal-computed personality profile) */}
+          {availablePeers.length > 0 && availablePeers[0].my_profile_ready === false && (
+            <div className="p-4 px-5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-200/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl shadow-inner flex-shrink-0">
+                  ✍️
+                </div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Unlock Personalized Matching</h4>
+                  <p className="text-xs font-medium text-gray-600 mt-0.5">
+                    Write a few journal entries to unlock personalized compatibility scores — for now, explore supportive companions!
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/journal')}
+                className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-sm flex-shrink-0 flex items-center gap-1.5"
+              >
+                <span>Start Journaling</span> <span>→</span>
+              </button>
+            </div>
+          )}
+
           {/* Sub-Mode Toggle: Best Matches vs Browse All */}
           <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-purple-100 shadow-sm">
             <div className="flex gap-2 flex-1 max-w-md">
@@ -467,6 +490,7 @@ export const PeersPage = () => {
                   const uname = candidate.display_name || candidate.username || (`Companion #${candidate.id}`);
                   const matchScore = candidate.match_score ?? 50;
                   const hasProfile = candidate.has_profile;
+                  const isViewerProfileReady = candidate.my_profile_ready !== false;
 
                   return (
                     <div
@@ -475,13 +499,17 @@ export const PeersPage = () => {
                     >
                       {/* COMPATIBILITY BADGE */}
                       <div className="w-full flex items-center justify-center">
-                        {hasProfile ? (
-                          <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                            <span>⚡</span> {matchScore}% Emotional Compatibility
-                          </span>
-                        ) : (
+                        {!hasProfile ? (
                           <span className="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
                             <span>🌱</span> New Peer Companion
+                          </span>
+                        ) : !isViewerProfileReady ? (
+                          <span className="px-4 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                            <span>🌸</span> Recommended Companion
+                          </span>
+                        ) : (
+                          <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                            <span>⚡</span> {matchScore}% Emotional Compatibility
                           </span>
                         )}
                       </div>
@@ -563,6 +591,7 @@ export const PeersPage = () => {
                   const sentReq = supportData.sent.find((r) => r.to_user && r.to_user.id === u.id);
                   const isSent = !!sentReq;
                   const matchScore = u.match_score ?? 50;
+                  const isViewerProfileReady = u.my_profile_ready !== false;
 
                   return (
                     <div
@@ -574,13 +603,17 @@ export const PeersPage = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className="t-h4 font-bold text-gray-900 truncate">{uname}</h4>
-                            {u.has_profile ? (
-                              <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">
-                                {matchScore}% Match
-                              </span>
-                            ) : (
+                            {!u.has_profile ? (
                               <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
                                 New Peer
+                              </span>
+                            ) : !isViewerProfileReady ? (
+                              <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">
+                                Recommended
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">
+                                {matchScore}% Match
                               </span>
                             )}
                           </div>
