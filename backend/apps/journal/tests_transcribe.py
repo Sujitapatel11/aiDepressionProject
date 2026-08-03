@@ -46,6 +46,30 @@ class TranscribeAudioTestCase(TestCase):
         self.assertEqual(response.data["text"], "आज मौसम बहुत अच्छा है और मैं खुश हूँ।")
         self.assertEqual(response.data["language"], "hi")
 
+    @patch("apps.journal.views.requests.post")
+    @patch("os.environ.get")
+    def test_successful_transcription_auto_language(self, mock_env, mock_post):
+        def env_side_effect(key, default=""):
+            if key == "HF_API_KEY":
+                return "mock_hf_token"
+            return default
+        mock_env.side_effect = env_side_effect
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"text": "Today is a great day and I feel happy."}
+        mock_post.return_value = mock_resp
+
+        audio_file = SimpleUploadedFile("speech.webm", b"dummy audio content", content_type="audio/webm")
+        response = self.client.post(
+            "/api/journal/transcribe/",
+            {"audio": audio_file},
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["text"], "Today is a great day and I feel happy.")
+        self.assertEqual(response.data["language"], "auto")
+
     @patch("os.environ.get")
     def test_missing_hf_api_key_graceful_response(self, mock_env):
         mock_env.return_value = ""

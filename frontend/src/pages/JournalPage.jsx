@@ -15,13 +15,13 @@ export const JournalPage = () => {
   // Voice-to-Text state hooks
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
-  const [selectedLang, setSelectedLang] = useState('auto'); // 'auto', 'en', 'hi', 'ne'
   const [recordSeconds, setRecordSeconds] = useState(0);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const speechRecRef = useRef(null);
+  const fallbackTranscriptRef = useRef('');
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -53,73 +53,13 @@ export const JournalPage = () => {
     localStorage.setItem('sc_journal_draft', val);
   };
 
-  // ── Voice Recording Handlers ────────────────────────────────────────────────
+  // ── Voice Recording Handlers (ChatGPT Pattern: HuggingFace Whisper Primary + Silent Web Speech Fallback) ──
   const startRecording = async () => {
     setError('');
+    fallbackTranscriptRef.current = '';
 
-    // Primary: Native Web Speech API for real-time instant recognition when supported
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      try {
-        const recognition = new SpeechRecognition();
-        speechRecRef.current = recognition;
-        recognition.continuous = true;
-        recognition.interimResults = true;
-
-        const langMap = { en: 'en-US', hi: 'hi-IN', ne: 'ne-NP', auto: 'en-US' };
-        recognition.lang = langMap[selectedLang] || 'en-US';
-
-        let finalTranscript = '';
-
-        recognition.onresult = (event) => {
-          let interim = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript + ' ';
-            } else {
-              interim += event.results[i][0].transcript;
-            }
-          }
-          const textToInsert = (finalTranscript + interim).trim();
-          if (textToInsert) {
-            const baseText = localStorage.getItem('sc_journal_draft_base') || inputVal;
-            const updated = baseText.trim() ? `${baseText.trim()}\n\n${textToInsert}` : textToInsert;
-            handleInputChange(updated);
-          }
-        };
-
-        recognition.onerror = (e) => {
-          console.warn('SpeechRecognition error:', e.error);
-          if (e.error === 'not-allowed') {
-            const msg = 'Microphone access denied. Please allow microphone permissions in browser.';
-            if (window.showToast) window.showToast(msg);
-            else setError(msg);
-          }
-        };
-
-        recognition.onend = () => {
-          setRecording(false);
-          if (timerRef.current) clearInterval(timerRef.current);
-          localStorage.removeItem('sc_journal_draft_base');
-        };
-
-        localStorage.setItem('sc_journal_draft_base', inputVal);
-        recognition.start();
-        setRecording(true);
-        setRecordSeconds(0);
-
-        timerRef.current = setInterval(() => {
-          setRecordSeconds((prev) => prev + 1);
-        }, 1000);
-        return;
-      } catch (err) {
-        console.warn('SpeechRecognition init failed, falling back to MediaRecorder:', err);
-      }
-    }
-
-    // Fallback: MediaRecorder + Backend API (/api/journal/transcribe/)
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      const msg = 'Voice recording is not supported in this browser.';
+      const msg = 'Voice recording is not supported on this browser.';
       if (window.showToast) window.showToast(msg);
       else setError(msg);
       return;
@@ -143,6 +83,33 @@ export const JournalPage = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         await handleAudioUpload(audioBlob, mimeType);
       };
+
+      // Emergency Fallback: Silently collect Web Speech API transcript in parallel if supported
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          speechRecRef.current = recognition;
+          recognition.continuous = true;
+          recognition.interimResults = true;
+
+          recognition.onresult = (event) => {
+            let text = '';
+            for (let i = 0; i < event.results.length; ++i) {
+              text += event.results[i][0].transcript + ' ';
+            }
+            fallbackTranscriptRef.current = text.trim();
+          };
+
+          recognition.onerror = (e) => {
+            console.warn('[VoiceToText] Fallback Web Speech API error:', e.error);
+          };
+
+          recognition.start();
+        } catch (err) {
+          console.warn('[VoiceToText] Could not initialize fallback Web Speech API:', err);
+        }
+      }
 
       mediaRecorder.start(250);
       setRecording(true);
@@ -182,32 +149,46 @@ export const JournalPage = () => {
     const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('wav') ? 'wav' : 'webm';
     const formData = new FormData();
     formData.append('audio', blob, `journal_voice.${ext}`);
-    formData.append('language', selectedLang);
+    // Note: No language parameter passed so HuggingFace Whisper auto-detects language (Hindi/English/Nepali/mixed)
 
+    let transcribedText = '';
+    let success = false;
+
+    // Primary path: HuggingFace Whisper API
     try {
       const res = await api('POST', '/journal/transcribe/', formData);
       if (res && res.ok) {
         const data = await res.json();
-        if (data.text) {
-          const appendedText = inputVal.trim() ? `${inputVal.trim()}\n\n${data.text}` : data.text;
-          handleInputChange(appendedText);
-          if (window.showToast) window.showToast('Voice transcribed successfully!');
-        } else {
-          if (window.showToast) window.showToast('No speech detected in recording.');
+        if (data.text && data.text.trim()) {
+          transcribedText = data.text.trim();
+          success = true;
         }
       } else {
-        const errData = await res?.json().catch(() => ({}));
-        const msg = errData?.detail || 'Audio transcription unavailable. You can type your entry manually.';
-        if (window.showToast) window.showToast(msg);
-        else setError(msg);
+        console.warn(`[VoiceToText] HuggingFace Whisper transcription returned status ${res?.status}`);
       }
     } catch (e) {
-      const msg = 'Could not transcribe audio. You can type manually.';
+      console.warn('[VoiceToText] HuggingFace Whisper API request failed:', e);
+    }
+
+    // Emergency fallback path: Web Speech API background transcript
+    if (!success && fallbackTranscriptRef.current && fallbackTranscriptRef.current.trim()) {
+      console.info('[VoiceToText] HuggingFace Whisper failed. Using Web Speech API fallback.');
+      transcribedText = fallbackTranscriptRef.current.trim();
+      success = true;
+    }
+
+    if (success && transcribedText) {
+      const currentContent = inputVal;
+      const appendedText = currentContent.trim() ? `${currentContent.trim()}\n\n${transcribedText}` : transcribedText;
+      handleInputChange(appendedText);
+      if (window.showToast) window.showToast('Voice transcribed successfully!');
+    } else {
+      const msg = "Couldn't transcribe that, try again or type instead";
       if (window.showToast) window.showToast(msg);
       else setError(msg);
-    } finally {
-      setTranscribing(false);
     }
+
+    setTranscribing(false);
   };
 
   const fmtTimer = (sec) => {
@@ -314,76 +295,52 @@ export const JournalPage = () => {
           </div>
         </div>
 
-        {/* Voice-to-Text Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-purple-50/70 border border-purple-100">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-              <span>🎙️</span> Voice-to-Text (Whisper AI):
-            </span>
-            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-purple-200 shadow-2xs">
-              {[
-                { code: 'auto', label: 'Auto 🌐' },
-                { code: 'en', label: 'English 🇬🇧' },
-                { code: 'hi', label: 'Hindi 🇮🇳' },
-                { code: 'ne', label: 'Nepali 🇳🇵' },
-              ].map((lang) => (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => setSelectedLang(lang.code)}
-                  className={`px-2.5 py-1 rounded-lg text-xs transition border-none cursor-pointer ${
-                    selectedLang === lang.code
-                      ? 'bg-purple-600 text-white font-bold shadow-xs'
-                      : 'text-gray-600 hover:bg-purple-50 font-medium'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {recording ? (
-              <div className="flex items-center gap-3 bg-red-50 text-red-700 px-3 py-1.5 rounded-xl border border-red-200">
-                <span className="w-3 h-3 rounded-full bg-red-600 animate-ping inline-block"></span>
-                <span className="text-xs font-extrabold font-mono">{fmtTimer(recordSeconds)}</span>
-                <button
-                  type="button"
-                  onClick={stopRecording}
-                  className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold border-none cursor-pointer transition shadow-xs flex items-center gap-1"
-                >
-                  <span>⏹️</span> Stop & Transcribe
-                </button>
-              </div>
-            ) : transcribing ? (
-              <div className="flex items-center gap-2 text-purple-700 text-xs font-bold px-3 py-1.5 bg-purple-100/80 rounded-xl">
-                <span className="w-4 h-4 rounded-full border-2 border-purple-600 border-t-transparent animate-spin inline-block"></span>
-                <span>Transcribing audio...</span>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={startRecording}
-                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-sm border-none cursor-pointer flex items-center gap-2"
-                title="Speak your entry in English, Hindi, or Nepali"
-              >
-                <span>🎙️</span>
-                <span>Speak Reflection</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Distraction-Free Textarea Editor */}
+        {/* Distraction-Free Textarea Editor with ChatGPT-style Mic Button */}
         <div className="relative">
           <textarea
             rows={7}
             value={inputVal}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder="What's on your mind today? Express your feelings freely without judgment..."
-            className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-200 text-gray-900 t-body-lg focus:outline-none focus:border-purple-500 focus:bg-white transition resize-none"
+            className="w-full p-5 pr-14 rounded-2xl bg-gray-50 border border-gray-200 text-gray-900 t-body-lg focus:outline-none focus:border-purple-500 focus:bg-white transition resize-none"
           ></textarea>
+
+          {/* ChatGPT-style Voice Mic Icon Button */}
+          <div className="absolute right-4 bottom-8 flex items-center">
+            {recording ? (
+              <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-1.5 rounded-full border border-red-200 shadow-sm animate-pulse">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping inline-block"></span>
+                <span className="text-xs font-extrabold font-mono">{fmtTimer(recordSeconds)}</span>
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="ml-1 p-1 rounded-full bg-red-600 hover:bg-red-700 text-white border-none cursor-pointer transition flex items-center justify-center"
+                  title="Stop recording"
+                >
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                </button>
+              </div>
+            ) : transcribing ? (
+              <div className="flex items-center gap-2 text-purple-700 text-xs font-bold px-3 py-1.5 bg-purple-50 rounded-full border border-purple-200 shadow-xs">
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-purple-600 border-t-transparent animate-spin inline-block"></span>
+                <span className="hidden sm:inline">Transcribing...</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startRecording}
+                className="w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 text-white transition shadow-sm border-none cursor-pointer flex items-center justify-center"
+                title="Voice input (Auto-detects Hindi, English, Nepali)"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              </button>
+            )}
+          </div>
+
           <div className="flex items-center justify-between mt-2 px-1 text-xs text-gray-400 font-medium">
             <span>
               {chars} chars | {words} words

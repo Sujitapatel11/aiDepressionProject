@@ -96,8 +96,8 @@ def journal_detail(request, journal_id):
 def transcribe_audio_view(request):
     """
     POST /api/journal/transcribe/
-    Accepts audio file upload and optional language hint ('hi', 'en', 'ne', 'auto').
-    Forwards audio to HuggingFace Whisper API and returns transcribed text.
+    Accepts audio file upload and forwards it to HuggingFace Whisper API.
+    Whisper automatically detects the spoken language (Hindi, English, Nepali, or mixed).
     """
     if 'audio' not in request.FILES:
         return Response({"detail": "No audio file provided."}, status=status.HTTP_400_BAD_REQUEST)
