@@ -15,9 +15,29 @@ class UserSerializer(serializers.ModelSerializer):
         return IdentityService.resolve_avatar_url(obj)
 
 
+class AnonymousUserSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'display_name', 'avatar_url']
+
+    def get_username(self, obj):
+        return f"Companion #{obj.id:04d}"
+
+    def get_display_name(self, obj):
+        return f"Companion #{obj.id:04d}"
+
+    def get_avatar_url(self, obj):
+        from apps.identity.services.identity_service import IdentityService
+        return IdentityService.resolve_avatar_url(obj)
+
+
 class SupportRequestSerializer(serializers.ModelSerializer):
-    from_user = UserSerializer(read_only=True)
-    to_user = UserSerializer(read_only=True)
+    from_user = AnonymousUserSerializer(read_only=True)
+    to_user = AnonymousUserSerializer(read_only=True)
 
     class Meta:
         model = SupportRequest

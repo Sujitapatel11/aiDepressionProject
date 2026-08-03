@@ -41,18 +41,26 @@ def available_users(request):
     user = request.user
     mode = request.query_params.get("mode", "smart")
 
-    connected_ids = SupportConnection.objects.filter(
-        Q(user_one=user) | Q(user_two=user),
-        status__in=[SupportConnection.STATUS_ACTIVE, SupportConnection.STATUS_BLOCKED],
-    ).values_list('user_one_id', 'user_two_id')
+    connected_q = Q(user_one=user) | Q(user_two=user)
+    active_or_blocked = SupportConnection.objects.filter(
+        connected_q, status__in=[SupportConnection.STATUS_ACTIVE, SupportConnection.STATUS_BLOCKED]
+    )
+    pending_reqs = SupportRequest.objects.filter(
+        Q(from_user=user) | Q(to_user=user), status=SupportRequest.PENDING
+    )
 
-    excluded = {uid for pair in connected_ids for uid in pair}
-    excluded.add(user.id)
+    candidates = User.objects.filter(is_active=True).exclude(
+        Q(id=user.id) |
+        Q(id__in=Subquery(active_or_blocked.values('user_one_id'))) |
+        Q(id__in=Subquery(active_or_blocked.values('user_two_id'))) |
+        Q(id__in=Subquery(pending_reqs.values('from_user_id'))) |
+        Q(id__in=Subquery(pending_reqs.values('to_user_id')))
+    ).select_related('user_identity', 'auth_profile')
 
-    candidates = User.objects.filter(is_active=True).exclude(id__in=excluded)
+    from .serializers import UserSerializer, SupportRequestSerializer, SupportConnectionSerializer, AnonymousUserSerializer
 
     if mode != "smart":
-        return Response(UserSerializer(candidates, many=True).data)
+        return Response(AnonymousUserSerializer(candidates, many=True).data)
 
     # ── Smart matching ──────────────────────────────────────────────────────
     try:
@@ -63,11 +71,11 @@ def available_users(request):
         has_my_profile = False
         my_vec = [0.5, 0.5, 0.5, 0.5, 0.5]
 
-    # Pre-fetch candidate user profiles in a single SQL query to eliminate N+1 loop queries
     candidate_profiles = {
         p.user_id: p for p in UserProfile.objects.filter(user__in=candidates)
     }
 
+    from apps.identity.services.identity_service import IdentityService
     seven_days_ago = timezone.now() - timedelta(days=7)
     results = []
     for candidate in candidates:
@@ -91,9 +99,17 @@ def available_users(request):
         else:
             tier = 3
 
+        avatar_url = None
+        try:
+            avatar_url = IdentityService.resolve_avatar_url(candidate)
+        except Exception:
+            pass
+
         results.append({
             "id": candidate.id,
-            "username": candidate.username,
+            "username": f"Companion #{candidate.id:04d}",
+            "display_name": f"Companion #{candidate.id:04d}",
+            "avatar_url": avatar_url,
             "match_score": round(similarity * 100),  # 0–100
             "has_profile": has_profile,
             "_tier": tier,

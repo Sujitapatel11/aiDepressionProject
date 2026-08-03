@@ -15,6 +15,8 @@ export const PeersPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [findSubMode, setFindSubMode] = useState('matches'); // 'matches' (card UI) vs 'browse' (list UI)
+  const [cardIndex, setCardIndex] = useState(0);
 
   const fetchSupportData = async () => {
     setLoading(true);
@@ -400,71 +402,219 @@ export const PeersPage = () => {
         </div>
       ) : (
         /* FIND TAB */
-        <div className="space-y-4">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for supportive peers..."
-            className="inp mb-3"
-          />
+        <div className="space-y-5">
+          {/* Sub-Mode Toggle: Best Matches vs Browse All */}
+          <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-purple-100 shadow-sm">
+            <div className="flex gap-2 flex-1 max-w-md">
+              <button
+                onClick={() => setFindSubMode('matches')}
+                className={`flex-1 py-2.5 rounded-xl font-bold text-xs border-none cursor-pointer transition flex items-center justify-center gap-1.5 ${
+                  findSubMode === 'matches'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                }`}
+              >
+                <span>⚡</span> <span>Best Matches</span>
+              </button>
+              <button
+                onClick={() => setFindSubMode('browse')}
+                className={`flex-1 py-2.5 rounded-xl font-bold text-xs border-none cursor-pointer transition flex items-center justify-center gap-1.5 ${
+                  findSubMode === 'browse'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                }`}
+              >
+                <span>📋</span> <span>Browse All</span>
+              </button>
+            </div>
+            {findSubMode === 'matches' && availablePeers.length > 0 && (
+              <span className="text-xs font-bold text-purple-600 px-3 hidden sm:inline">
+                {Math.min(cardIndex + 1, availablePeers.length)} of {availablePeers.length}
+              </span>
+            )}
+          </div>
 
-          {availablePeers.length === 0 ? (
-            <div className="p-8 rounded-[28px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-3 shadow-sm my-2">
-              <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1 shadow-inner">
-                🌱
-              </div>
-              <h3 className="t-h3 font-bold text-gray-900">
-                {searchQuery.trim() ? `No peers found matching "${searchQuery.trim()}".` : 'No supportive peers found.'}
-              </h3>
-              <p className="t-body-md text-gray-500 max-w-sm">
-                {searchQuery.trim() ? 'Check for typos or try searching for another username.' : 'Come back later as more people join our community sanctuary.'}
-              </p>
+          {findSubMode === 'matches' ? (
+            /* TINDER-STYLE CARD MATCH VIEW */
+            <div className="max-w-md mx-auto py-2">
+              {availablePeers.length === 0 || cardIndex >= availablePeers.length ? (
+                <div className="p-8 rounded-[32px] bg-white border border-purple-100 shadow-md text-center flex flex-col items-center justify-center space-y-4 animate-fadeIn">
+                  <div className="w-20 h-20 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-4xl shadow-inner">
+                    🎉
+                  </div>
+                  <h3 className="t-h3 font-extrabold text-gray-900">You've reviewed all suggested matches!</h3>
+                  <p className="t-body-md text-gray-500 max-w-xs">
+                    Check back as new peer companions join our sanctuary, or browse the complete directory.
+                  </p>
+                  <div className="flex gap-3 w-full pt-2">
+                    <button
+                      onClick={() => setCardIndex(0)}
+                      className="flex-1 py-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition border-none cursor-pointer"
+                    >
+                      🔄 Restart Cards
+                    </button>
+                    <button
+                      onClick={() => setFindSubMode('browse')}
+                      className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-sm"
+                    >
+                      📋 Browse All
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                (() => {
+                  const candidate = availablePeers[cardIndex];
+                  const uname = candidate.display_name || candidate.username || (`Companion #${candidate.id}`);
+                  const matchScore = candidate.match_score ?? 50;
+                  const hasProfile = candidate.has_profile;
+
+                  return (
+                    <div
+                      key={candidate.id}
+                      className="p-8 rounded-[36px] bg-white border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center space-y-6 animate-fadeIn relative"
+                    >
+                      {/* COMPATIBILITY BADGE */}
+                      <div className="w-full flex items-center justify-center">
+                        {hasProfile ? (
+                          <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                            <span>⚡</span> {matchScore}% Emotional Compatibility
+                          </span>
+                        ) : (
+                          <span className="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                            <span>🌱</span> New Peer Companion
+                          </span>
+                        )}
+                      </div>
+
+                      {/* AVATAR */}
+                      <div className="relative">
+                        {avatar(uname, 'w-24 h-24 text-xl shadow-md')}
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[10px]" title="Active"></div>
+                      </div>
+
+                      {/* USER DETAILS */}
+                      <div className="space-y-1">
+                        <h3 className="t-h3 font-extrabold text-gray-900 text-xl">{uname}</h3>
+                        <p className="text-xs font-semibold text-purple-600">SoulCare 1-on-1 Peer Companion</p>
+                      </div>
+
+                      {/* HIGHLIGHT TAGS */}
+                      <div className="flex flex-wrap justify-center gap-2 max-w-xs">
+                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[11px] font-semibold">
+                          🌸 Kind Listener
+                        </span>
+                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[11px] font-semibold">
+                          🛡️ Anonymous & Safe
+                        </span>
+                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[11px] font-semibold">
+                          💬 Private Support
+                        </span>
+                      </div>
+
+                      {/* ACTION BUTTONS (SKIP vs CONNECT) */}
+                      <div className="flex items-center gap-4 w-full pt-4 border-t border-purple-50">
+                        <button
+                          onClick={() => setCardIndex((prev) => prev + 1)}
+                          className="flex-1 py-3.5 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition border-none cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span>Skip</span> <span>→</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleSendRequest(candidate.id, uname);
+                            setCardIndex((prev) => prev + 1);
+                          }}
+                          className="flex-1 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                        >
+                          <span>＋ Connect</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
             </div>
           ) : (
-            availablePeers.map((u) => {
-              const uname = u.username;
-              const sentReq = supportData.sent.find((r) => r.to_user && r.to_user.id === u.id);
-              const isSent = !!sentReq;
+            /* BROWSE ALL LIST VIEW */
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for supportive peers..."
+                className="inp mb-3"
+              />
 
-              return (
-                <div
-                  key={u.id}
-                  className="p-5 rounded-[28px] bg-white border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md transition-all duration-200 flex items-center justify-between mb-3"
-                >
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    {avatar(uname, 'w-12 h-12 text-base flex-shrink-0')}
-                    <div className="min-w-0 flex-1">
-                      <h4 className="t-h4 font-bold text-gray-900 truncate">{uname}</h4>
-                      <p className="text-xs text-purple-600 font-semibold mt-0.5 flex items-center gap-1">
-                        <span>🌸</span> SoulCare Peer Companion
-                      </p>
-                    </div>
+              {availablePeers.length === 0 ? (
+                <div className="p-8 rounded-[28px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-3 shadow-sm my-2">
+                  <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1 shadow-inner">
+                    🌱
                   </div>
-
-                  {isSent ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Waiting for response
-                      </span>
-                      <button
-                        onClick={() => handleCancelRequest(sentReq.id, uname)}
-                        className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border border-rose-200 cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleSendRequest(u.id, uname)}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-sm flex-shrink-0"
-                    >
-                      ＋ Connect
-                    </button>
-                  )}
+                  <h3 className="t-h3 font-bold text-gray-900">
+                    {searchQuery.trim() ? `No peers found matching "${searchQuery.trim()}".` : 'No supportive peers found.'}
+                  </h3>
+                  <p className="t-body-md text-gray-500 max-w-sm">
+                    {searchQuery.trim() ? 'Check for typos or try searching for another username.' : 'Come back later as more people join our community sanctuary.'}
+                  </p>
                 </div>
-              );
-            })
+              ) : (
+                availablePeers.map((u) => {
+                  const uname = u.display_name || u.username || (`Companion #${u.id}`);
+                  const sentReq = supportData.sent.find((r) => r.to_user && r.to_user.id === u.id);
+                  const isSent = !!sentReq;
+                  const matchScore = u.match_score ?? 50;
+
+                  return (
+                    <div
+                      key={u.id}
+                      className="p-5 rounded-[28px] bg-white border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md transition-all duration-200 flex items-center justify-between mb-3"
+                    >
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        {avatar(uname, 'w-12 h-12 text-base flex-shrink-0')}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="t-h4 font-bold text-gray-900 truncate">{uname}</h4>
+                            {u.has_profile ? (
+                              <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">
+                                {matchScore}% Match
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                                New Peer
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-purple-600 font-semibold mt-0.5 flex items-center gap-1">
+                            <span>🌸</span> SoulCare Peer Companion
+                          </p>
+                        </div>
+                      </div>
+
+                      {isSent ? (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Sent
+                          </span>
+                          <button
+                            onClick={() => handleCancelRequest(sentReq.id, uname)}
+                            className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border border-rose-200 cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSendRequest(u.id, uname)}
+                          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-sm flex-shrink-0"
+                        >
+                          ＋ Connect
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           )}
         </div>
       )}
