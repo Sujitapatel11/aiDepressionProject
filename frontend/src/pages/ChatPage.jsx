@@ -57,7 +57,13 @@ export const ChatPage = () => {
         setIsOnline(online);
       },
       onMessage: (msgData) => {
-        setMessages((prev) => [...prev, msgData]);
+        console.log('[ChatPage] WS message received, updating state:', msgData);
+        setMessages((prev) => {
+          if (msgData.message_id && prev.some((m) => m.message_id === msgData.message_id)) {
+            return prev;
+          }
+          return [...prev, msgData];
+        });
         scrollToBottom();
       },
       onTyping: (senderId, isTyping) => {
@@ -183,7 +189,7 @@ export const ChatPage = () => {
           </div>
         ) : (
           messages.map((m, idx) => {
-            const isSelf = m.sender_id === userId;
+            const isSelf = String(m.sender_id) === String(userId);
             const time = fmtTime(m.created_at || m.timestamp);
 
             return (

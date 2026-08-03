@@ -64,12 +64,18 @@ export class ChatWebSocketClient {
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log('[WebSocket] Raw frame received:', data);
         if (data.type === 'ping' || data.type === 'pong') {
           return;
         }
         if (data.type === 'typing') {
           if (this.callbacks.onTyping) {
             this.callbacks.onTyping(data.sender_id, data.is_typing);
+          }
+        } else if (data.type === 'message' || data.type === 'chat.message') {
+          if (this.callbacks.onMessage) {
+            console.log('[WebSocket] Dispatching message to UI:', data);
+            this.callbacks.onMessage(data);
           }
         } else if (this.callbacks.onMessage) {
           this.callbacks.onMessage(data);

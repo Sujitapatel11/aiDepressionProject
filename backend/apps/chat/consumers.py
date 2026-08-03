@@ -106,8 +106,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 "sender_id": self.user.id,
                 "timestamp": msg.created_at.isoformat(),
             })
-        except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
-            logger.error(f"Redis error during message group_send: {e}")
+        except Exception as e:
+            logger.error(f"Error during message group_send: {e}")
             await self.send(text_data=json.dumps({
                 "type": "error",
                 "detail": "temporary connection issue, please retry"
