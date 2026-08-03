@@ -27,10 +27,11 @@ class SupportRequestSerializer(serializers.ModelSerializer):
 class SupportConnectionSerializer(serializers.ModelSerializer):
     peer = serializers.SerializerMethodField()
     alias = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
 
     class Meta:
         model = SupportConnection
-        fields = ['connection_id', 'peer', 'alias', 'status', 'created_at']
+        fields = ['connection_id', 'peer', 'alias', 'status', 'created_at', 'last_message']
 
     def get_peer(self, obj):
         user = self.context['request'].user
@@ -39,3 +40,22 @@ class SupportConnectionSerializer(serializers.ModelSerializer):
     def get_alias(self, obj):
         user = self.context['request'].user
         return obj.get_alias_for(user)
+
+    def get_last_message(self, obj):
+        content = getattr(obj, 'last_message_content', None)
+        if content is not None:
+            created_at = getattr(obj, 'last_message_created_at', None)
+            sender_id = getattr(obj, 'last_message_sender_id', None)
+            return {
+                'content': content,
+                'sender_id': sender_id,
+                'created_at': created_at.isoformat() if created_at else None,
+            }
+        msg = obj.messages.order_by('-created_at').first()
+        if not msg:
+            return None
+        return {
+            'content': msg.content,
+            'sender_id': msg.sender_id,
+            'created_at': msg.created_at.isoformat(),
+        }

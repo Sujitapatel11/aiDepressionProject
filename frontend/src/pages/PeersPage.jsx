@@ -241,9 +241,16 @@ export const PeersPage = () => {
                         <h4 className="t-h4 font-bold text-gray-900 truncate group-hover:text-purple-700 transition">{uname}</h4>
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" title="Connected"></span>
                       </div>
-                      <p className="text-xs text-purple-600 font-semibold mt-0.5 flex items-center gap-1">
-                        <span>🌸</span> 1-on-1 Support Circle Member
-                      </p>
+                      {c.last_message && c.last_message.content ? (
+                        <p className="text-xs text-gray-500 font-medium mt-0.5 truncate max-w-xs flex items-center gap-1">
+                          <span className="text-gray-400">💬</span>
+                          <span className="truncate">{c.last_message.content}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xs text-purple-600 font-semibold mt-0.5 flex items-center gap-1">
+                          <span>🌸</span> 1-on-1 Support Circle Member
+                        </p>
+                      )}
                     </div>
                   </div>
 

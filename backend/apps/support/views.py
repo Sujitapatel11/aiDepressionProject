@@ -1,13 +1,15 @@
 from datetime import timedelta
 from django.contrib.auth.models import User
 from django.db import transaction, IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Max, Subquery, OuterRef
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.chat.models import Message
 from .models import SupportRequest, SupportConnection, UserProfile
 from .serializers import UserSerializer, SupportRequestSerializer, SupportConnectionSerializer
 
@@ -214,10 +216,18 @@ def cancel_request(request, request_id):
 @permission_classes([IsAuthenticated])
 def active_connections(request):
     user = request.user
+    latest_msg = Message.objects.filter(connection=OuterRef('pk')).order_by('-created_at')
+
     conns = SupportConnection.objects.filter(
         Q(user_one=user) | Q(user_two=user),
         status=SupportConnection.STATUS_ACTIVE,
-    ).select_related('user_one', 'user_two')
+    ).annotate(
+        latest_activity=Coalesce(Max('messages__created_at'), 'created_at'),
+        last_message_content=Subquery(latest_msg.values('content')[:1]),
+        last_message_created_at=Subquery(latest_msg.values('created_at')[:1]),
+        last_message_sender_id=Subquery(latest_msg.values('sender_id')[:1]),
+    ).order_by('-latest_activity', '-created_at').select_related('user_one', 'user_two')
+
     return Response(SupportConnectionSerializer(conns, many=True, context={'request': request}).data)
 
 
