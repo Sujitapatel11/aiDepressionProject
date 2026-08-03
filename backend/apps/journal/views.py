@@ -118,14 +118,19 @@ def transcribe_audio_view(request):
         audio_bytes = audio_file.read()
         content_type = audio_file.content_type or 'audio/webm'
 
-        url = f"https://api-inference.huggingface.co/models/{whisper_model}"
+        url = f"https://router.huggingface.co/hf-inference/models/{whisper_model}"
         headers = {
             "Authorization": f"Bearer {hf_key}",
             "Content-Type": content_type,
             "x-wait-for-model": "true",
         }
 
-        resp = requests.post(url, headers=headers, data=audio_bytes, timeout=25)
+        try:
+            resp = requests.post(url, headers=headers, data=audio_bytes, timeout=25)
+        except requests.exceptions.RequestException:
+            # Fallback to legacy endpoint if router fails DNS
+            legacy_url = f"https://api-inference.huggingface.co/models/{whisper_model}"
+            resp = requests.post(legacy_url, headers=headers, data=audio_bytes, timeout=25)
 
         if resp.status_code == 503:
             time.sleep(3)
@@ -140,6 +145,12 @@ def transcribe_audio_view(request):
                 text = data[0].get("text", "").strip()
 
             return Response({"text": text, "language": language})
+        elif resp.status_code == 403:
+            logger.warning("HF Whisper API 403: %s", resp.text[:200])
+            return Response(
+                {"detail": "HuggingFace API key lacks 'Inference Provider' permissions. Enable this in HuggingFace Token Settings or type manually."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         else:
             logger.warning("HF Whisper transcription failed [%d]: %s", resp.status_code, resp.text[:200])
             return Response(

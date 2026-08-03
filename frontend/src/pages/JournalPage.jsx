@@ -21,6 +21,7 @@ export const JournalPage = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
+  const speechRecRef = useRef(null);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -41,6 +42,9 @@ export const JournalPage = () => {
     fetchEntries();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (speechRecRef.current) {
+        try { speechRecRef.current.abort(); } catch (e) {}
+      }
     };
   }, []);
 
@@ -52,6 +56,68 @@ export const JournalPage = () => {
   // ── Voice Recording Handlers ────────────────────────────────────────────────
   const startRecording = async () => {
     setError('');
+
+    // Primary: Native Web Speech API for real-time instant recognition when supported
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        speechRecRef.current = recognition;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        const langMap = { en: 'en-US', hi: 'hi-IN', ne: 'ne-NP', auto: 'en-US' };
+        recognition.lang = langMap[selectedLang] || 'en-US';
+
+        let finalTranscript = '';
+
+        recognition.onresult = (event) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript + ' ';
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          const textToInsert = (finalTranscript + interim).trim();
+          if (textToInsert) {
+            const baseText = localStorage.getItem('sc_journal_draft_base') || inputVal;
+            const updated = baseText.trim() ? `${baseText.trim()}\n\n${textToInsert}` : textToInsert;
+            handleInputChange(updated);
+          }
+        };
+
+        recognition.onerror = (e) => {
+          console.warn('SpeechRecognition error:', e.error);
+          if (e.error === 'not-allowed') {
+            const msg = 'Microphone access denied. Please allow microphone permissions in browser.';
+            if (window.showToast) window.showToast(msg);
+            else setError(msg);
+          }
+        };
+
+        recognition.onend = () => {
+          setRecording(false);
+          if (timerRef.current) clearInterval(timerRef.current);
+          localStorage.removeItem('sc_journal_draft_base');
+        };
+
+        localStorage.setItem('sc_journal_draft_base', inputVal);
+        recognition.start();
+        setRecording(true);
+        setRecordSeconds(0);
+
+        timerRef.current = setInterval(() => {
+          setRecordSeconds((prev) => prev + 1);
+        }, 1000);
+        return;
+      } catch (err) {
+        console.warn('SpeechRecognition init failed, falling back to MediaRecorder:', err);
+      }
+    }
+
+    // Fallback: MediaRecorder + Backend API (/api/journal/transcribe/)
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const msg = 'Voice recording is not supported in this browser.';
       if (window.showToast) window.showToast(msg);
@@ -73,8 +139,9 @@ export const JournalPage = () => {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
-        await handleAudioUpload(audioBlob);
+        const mimeType = mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        await handleAudioUpload(audioBlob, mimeType);
       };
 
       mediaRecorder.start(250);
@@ -97,18 +164,24 @@ export const JournalPage = () => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (speechRecRef.current) {
+      try {
+        speechRecRef.current.stop();
+      } catch (e) {}
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     setRecording(false);
   };
 
-  const handleAudioUpload = async (blob) => {
+  const handleAudioUpload = async (blob, mimeType = 'audio/webm') => {
     setTranscribing(true);
     setError('');
 
+    const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('wav') ? 'wav' : 'webm';
     const formData = new FormData();
-    formData.append('audio', blob, 'journal_voice.webm');
+    formData.append('audio', blob, `journal_voice.${ext}`);
     formData.append('language', selectedLang);
 
     try {
