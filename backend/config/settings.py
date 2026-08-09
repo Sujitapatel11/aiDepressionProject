@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'apps.chat',
     'apps.telemetry',
     'apps.sleep',
+    'apps.community',
 
     # Web frontend
     'web',
@@ -217,6 +218,7 @@ REST_FRAMEWORK = {
         'user': '100/minute',
         'ai_generation': '20/minute',
         'password_reset': '5/hour',
+        'community_post': '10/day',
     },
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',

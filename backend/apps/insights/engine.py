@@ -595,3 +595,35 @@ def _hf_personality_scores(text: str) -> dict | None:
                 out[trait] = round(item.get("score", 0.5), 3)
                 break
     return out if len(out) == 5 else None
+
+
+# ── Crisis Keyword Detection & Supportive Helpline Resources ─────────────────
+CRISIS_KEYWORDS = [
+    "suicide", "suicidal", "kill myself", "end my life", "want to die",
+    "self-harm", "self harm", "cutting myself", "hurt myself", "hopeless",
+    "no reason to live", "can't go on", "cant go on", "overdose", "end it all",
+    "die today", "ending it", "take my life"
+]
+
+CRISIS_HELPLINE_NOTE = (
+    "💜 You are not alone. If you or someone you know is going through a difficult time or experiencing thoughts of self-harm, "
+    "please reach out for immediate, free, and confidential support:\n"
+    "• India: Tele-MANAS (14416 / 1800-891-4416 — 24/7), Vandrevala Foundation (+91 9999 666 555 — 24/7), iCALL (9152987821 — Mon–Sat 10 AM–8 PM)\n"
+    "• Nepal: National Crisis & Suicide Helpline (1166 — 24/7 toll-free)"
+)
+
+
+def detect_crisis_keywords(text: str) -> tuple[bool, str]:
+    """
+    Scans text against crisis/self-harm keywords.
+    Returns (has_crisis_match, supportive_helpline_note).
+    Reused across AI Insights and Community Feed safety moderation.
+    """
+    if not text:
+        return False, ""
+    lower = text.lower()
+    for kw in CRISIS_KEYWORDS:
+        if re.search(r'\b' + re.escape(kw) + r'\b', lower):
+            return True, CRISIS_HELPLINE_NOTE
+    return False, ""
+

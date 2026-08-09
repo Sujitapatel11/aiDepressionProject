@@ -9,3 +9,9 @@ class AIGenerationRateThrottle(UserRateThrottle):
 class PasswordResetRateThrottle(AnonRateThrottle):
     scope = 'password_reset'
     rate = '5/hour'
+
+
+class CommunityPostRateThrottle(UserRateThrottle):
+    scope = 'community_post'
+    rate = '10/day'
+

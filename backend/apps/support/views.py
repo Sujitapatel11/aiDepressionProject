@@ -28,6 +28,53 @@ def _cosine_similarity(a: list, b: list) -> float:
         return 0.0
 
 
+def _derive_interest_tags(cp):
+    """
+    Derive 2-4 colorful icon interest/habit tags based on Big Five scores & dominant emotion.
+    Reuses journal analysis signals without modifying matching scoring.
+    """
+    if not cp:
+        return ["🌸 Kind Listener", "🛡️ Safe Companion", "💬 Peer Support"]
+
+    tags = []
+    # Openness (Intellectual & Creative curiosity)
+    if cp.openness >= 0.6:
+        tags.append("🎨 Creative")
+        tags.append("📚 Reader")
+    elif cp.openness <= 0.4:
+        tags.append("🌱 Grounded")
+
+    # Conscientiousness (Organization & Habits)
+    if cp.conscientiousness >= 0.6:
+        tags.append("🎯 Focused")
+        tags.append("🌅 Early Riser")
+    elif cp.conscientiousness <= 0.4:
+        tags.append("🌊 Easygoing")
+
+    # Extraversion (Social & Energy)
+    if cp.extraversion >= 0.6:
+        tags.append("🏃 Active")
+        tags.append("⚡ Energetic")
+    elif cp.extraversion <= 0.4:
+        tags.append("🌙 Night Owl")
+
+    # Agreeableness (Empathy & Support)
+    if cp.agreeableness >= 0.55:
+        tags.append("🌸 Kind Listener")
+        tags.append("💖 Empathetic")
+
+    # Neuroticism / Dominant Emotion
+    if cp.neuroticism <= 0.45 or cp.dominant_emotion in ["calm", "hopeful"]:
+        tags.append("🧘 Mindful")
+
+    if not tags:
+        tags = ["🌸 Kind Listener", "🛡️ Safe Companion", "💬 Peer Support"]
+
+    # Deduplicate and return top 3-4 tags
+    unique_tags = list(dict.fromkeys(tags))
+    return unique_tags[:4]
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def available_users(request):
@@ -105,6 +152,8 @@ def available_users(request):
         except Exception:
             pass
 
+        interest_tags = _derive_interest_tags(cp)
+
         results.append({
             "id": candidate.id,
             "username": f"Companion #{candidate.id:04d}",
@@ -113,6 +162,7 @@ def available_users(request):
             "match_score": round(similarity * 100),  # 0–100
             "has_profile": has_profile,
             "my_profile_ready": has_my_profile,
+            "interest_tags": interest_tags,
             "_tier": tier,
             "_last_login": candidate.last_login.timestamp() if candidate.last_login else 0.0,
         })

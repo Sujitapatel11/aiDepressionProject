@@ -17,6 +17,7 @@ export const PeersPage = () => {
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [findSubMode, setFindSubMode] = useState('matches'); // 'matches' (card UI) vs 'browse' (list UI)
   const [cardIndex, setCardIndex] = useState(0);
+  const [celebratingId, setCelebratingId] = useState(null);
 
   const fetchSupportData = async () => {
     setLoading(true);
@@ -497,19 +498,56 @@ export const PeersPage = () => {
                       key={candidate.id}
                       className="p-8 rounded-[36px] bg-white border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center space-y-6 animate-fadeIn relative"
                     >
-                      {/* COMPATIBILITY BADGE */}
-                      <div className="w-full flex items-center justify-center">
+                      {/* COMPATIBILITY PROGRESS-RING GAUGE */}
+                      <div className="w-full flex flex-col items-center justify-center space-y-2">
+                        <div className="relative w-20 h-20 flex items-center justify-center">
+                          <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 72 72">
+                            <defs>
+                              <linearGradient id={`grad-${candidate.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#8B5CF6" />
+                                <stop offset="100%" stopColor="#EC4899" />
+                              </linearGradient>
+                            </defs>
+                            {/* Track */}
+                            <circle
+                              cx="36"
+                              cy="36"
+                              r="30"
+                              stroke="#F3E8FF"
+                              strokeWidth="6"
+                              fill="transparent"
+                            />
+                            {/* Progress Ring */}
+                            <circle
+                              cx="36"
+                              cy="36"
+                              r="30"
+                              stroke={`url(#grad-${candidate.id})`}
+                              strokeWidth="6"
+                              strokeLinecap="round"
+                              fill="transparent"
+                              strokeDasharray={188.5}
+                              strokeDashoffset={188.5 - (188.5 * matchScore) / 100}
+                              className="transition-all duration-1000 ease-out"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-sm font-black text-purple-900 tracking-tight">{matchScore}%</span>
+                            <span className="text-[9px] font-extrabold uppercase text-purple-600 tracking-wider">Match</span>
+                          </div>
+                        </div>
+
                         {!hasProfile ? (
-                          <span className="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                          <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
                             <span>🌱</span> New Peer Companion
                           </span>
                         ) : !isViewerProfileReady ? (
-                          <span className="px-4 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
                             <span>🌸</span> Recommended Companion
                           </span>
                         ) : (
-                          <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                            <span>⚡</span> {matchScore}% Emotional Compatibility
+                          <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[10px] font-black uppercase tracking-wider border border-purple-200/60 shadow-xs flex items-center gap-1">
+                            <span>⚡</span> High Compatibility
                           </span>
                         )}
                       </div>
@@ -518,6 +556,11 @@ export const PeersPage = () => {
                       <div className="relative">
                         {avatar(uname, 'w-24 h-24 text-xl shadow-md')}
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[10px]" title="Active"></div>
+                        {celebratingId === candidate.id && (
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-1 animate-bounce text-xl pointer-events-none z-10">
+                            <span>✨</span><span>💖</span><span>🎉</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* USER DETAILS */}
@@ -526,17 +569,26 @@ export const PeersPage = () => {
                         <p className="text-xs font-semibold text-purple-600">SoulCare 1-on-1 Peer Companion</p>
                       </div>
 
-                      {/* HIGHLIGHT TAGS */}
+                      {/* DUOLINGO-STYLE COLORFUL INTEREST/HABIT PILLS */}
                       <div className="flex flex-wrap justify-center gap-2 max-w-xs">
-                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[11px] font-semibold">
-                          🌸 Kind Listener
-                        </span>
-                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[11px] font-semibold">
-                          🛡️ Anonymous & Safe
-                        </span>
-                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-[11px] font-semibold">
-                          💬 Private Support
-                        </span>
+                        {(candidate.interest_tags || ["🌸 Kind Listener", "🛡️ Anonymous & Safe", "💬 Private Support"]).map((tag, tIdx) => {
+                          const pillStyles = [
+                            "bg-purple-100 text-purple-800 border-purple-200",
+                            "bg-pink-100 text-pink-800 border-pink-200",
+                            "bg-amber-100 text-amber-800 border-amber-200",
+                            "bg-sky-100 text-sky-800 border-sky-200",
+                            "bg-emerald-100 text-emerald-800 border-emerald-200",
+                          ];
+                          const style = pillStyles[tIdx % pillStyles.length];
+                          return (
+                            <span
+                              key={tIdx}
+                              className={`px-3 py-1 rounded-full text-xs font-extrabold border shadow-xs transition hover:scale-105 flex items-center gap-1 cursor-default ${style}`}
+                            >
+                              {tag}
+                            </span>
+                          );
+                        })}
                       </div>
 
                       {/* ACTION BUTTONS (SKIP vs CONNECT) */}
@@ -549,12 +601,28 @@ export const PeersPage = () => {
                         </button>
                         <button
                           onClick={() => {
+                            setCelebratingId(candidate.id);
                             handleSendRequest(candidate.id, uname);
-                            setCardIndex((prev) => prev + 1);
+                            setTimeout(() => {
+                              setCardIndex((prev) => prev + 1);
+                              setCelebratingId(null);
+                            }, 500);
                           }}
-                          className="flex-1 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                          className={`flex-1 py-3.5 rounded-2xl font-bold text-xs transition border-none cursor-pointer shadow-md flex items-center justify-center gap-1.5 ${
+                            celebratingId === candidate.id
+                              ? 'bg-emerald-500 text-white scale-95'
+                              : 'bg-purple-600 hover:bg-purple-700 text-white'
+                          }`}
                         >
-                          <span>＋ Connect</span>
+                          {celebratingId === candidate.id ? (
+                            <>
+                              <span>✨ Sent!</span> <span>💖</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>＋ Connect</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
