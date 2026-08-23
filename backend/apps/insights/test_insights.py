@@ -138,3 +138,20 @@ class InsightsEngineTestCase(TestCase):
         self.assertEqual(insight.status, "sufficient")
         self.assertTrue(len(insight.title) > 0)
         self.assertTrue(len(insight.message) > 0)
+
+    @patch("apps.insights.engine.HF_API_KEY", "")
+    def test_journal_analysis_without_mood_prefix(self):
+        """Verify journal analysis works flawlessly for entries WITHOUT '[Feeling X]' prefix."""
+        plain_text = "I went for a peaceful walk in the garden today. It really helped me clear my thoughts after a long busy week."
+        status, free_text, extracted_mood = _validate_journal_content(plain_text)
+        self.assertEqual(status, "sufficient")
+        self.assertEqual(free_text, plain_text)
+        self.assertIsNone(extracted_mood)
+
+        result = analyze_journal(plain_text)
+        self.assertEqual(result["status"], "sufficient")
+        self.assertIn("mood", result)
+        self.assertIn("title", result)
+        self.assertIn("message", result)
+        self.assertGreater(len(result["message"]), 0)
+
