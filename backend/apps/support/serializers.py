@@ -48,10 +48,16 @@ class SupportConnectionSerializer(serializers.ModelSerializer):
     peer = serializers.SerializerMethodField()
     alias = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
+    level_info = serializers.SerializerMethodField()
+    interest_tags = serializers.SerializerMethodField()
+    compatibility_summary = serializers.SerializerMethodField()
 
     class Meta:
         model = SupportConnection
-        fields = ['connection_id', 'peer', 'alias', 'status', 'created_at', 'last_message']
+        fields = [
+            'connection_id', 'peer', 'alias', 'status', 'created_at',
+            'last_message', 'level_info', 'interest_tags', 'compatibility_summary'
+        ]
 
     def get_peer(self, obj):
         user = self.context['request'].user
@@ -60,6 +66,24 @@ class SupportConnectionSerializer(serializers.ModelSerializer):
     def get_alias(self, obj):
         user = self.context['request'].user
         return obj.get_alias_for(user)
+
+    def get_level_info(self, obj):
+        return obj.calculate_activity_score()
+
+    def get_interest_tags(self, obj):
+        from .models import UserProfile
+        from .views import _derive_interest_tags
+        user = self.context['request'].user
+        peer = obj.get_peer(user)
+        try:
+            cp = UserProfile.objects.get(user=peer)
+            return _derive_interest_tags(cp)
+        except UserProfile.DoesNotExist:
+            return ["🌸 Kind Listener", "🛡️ Safe Companion", "💬 Peer Support"]
+
+    def get_compatibility_summary(self, obj):
+        user = self.context['request'].user
+        return obj.get_compatibility_summary(user)
 
     def get_last_message(self, obj):
         content = getattr(obj, 'last_message_content', None)
@@ -79,3 +103,4 @@ class SupportConnectionSerializer(serializers.ModelSerializer):
             'sender_id': msg.sender_id,
             'created_at': msg.created_at.isoformat(),
         }
+

@@ -363,10 +363,202 @@ def my_personality(request):
             "dominant_emotion":  profile.dominant_emotion,
             "updated_at":        profile.updated_at,
             "has_data": any(v != 0.5 for v in profile.personality_vector()),
+            "has_activity_consent": profile.has_activity_consent,
         })
     except UserProfile.DoesNotExist:
         return Response({
             "openness": 0.5, "conscientiousness": 0.5, "extraversion": 0.5,
             "agreeableness": 0.5, "neuroticism": 0.5, "dominant_emotion": "neutral",
             "updated_at": None, "has_data": False,
+            "has_activity_consent": False,
         })
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def activity_consent(request):
+    """
+    GET: Retrieve user's explicit consent state for AI personalized activities.
+    POST: Update consent state ({"consent": true/false}).
+    """
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        consent = request.data.get("consent", True)
+        profile.has_activity_consent = bool(consent)
+        profile.activity_consent_at = timezone.now() if consent else None
+        profile.save()
+
+    return Response({
+        "has_consent": profile.has_activity_consent,
+        "consented_at": profile.activity_consent_at,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def connection_activity_status(request, connection_id):
+    """
+    Fetch activity status, active quiz, user completion, and comparison results for a connection.
+    Enforces active mutual connection check.
+    """
+    try:
+        conn = SupportConnection.objects.get(
+            connection_id=connection_id,
+            status=SupportConnection.STATUS_ACTIVE,
+        )
+    except SupportConnection.DoesNotExist:
+        return Response({"detail": "Active connection not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user not in (conn.user_one, conn.user_two):
+        return Response({"detail": "Not authorized."}, status=status.HTTP_403_FORBIDDEN)
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    level_info = conn.calculate_activity_score()
+    unlocked = level_info["level"] >= 2
+
+    # Fetch latest quiz
+    from .models import ConnectionActivityQuiz
+    quiz = ConnectionActivityQuiz.objects.filter(connection=conn).first()
+
+    quiz_data = None
+    if quiz:
+        user_is_one = request.user.id == conn.user_one_id
+        my_answers = quiz.user_one_answers if user_is_one else quiz.user_two_answers
+        peer_answers = quiz.user_two_answers if user_is_one else quiz.user_one_answers
+
+        quiz_data = {
+            "quiz_id": str(quiz.quiz_id),
+            "status": quiz.status,
+            "questions": quiz.questions,
+            "has_answered": quiz.is_completed_by(request.user),
+            "is_fully_completed": quiz.is_fully_completed(),
+            "my_answers": my_answers,
+            "peer_answers": peer_answers if quiz.is_fully_completed() else {},
+            "created_at": quiz.created_at,
+        }
+
+    return Response({
+        "connection_id": str(conn.connection_id),
+        "level_info": level_info,
+        "unlocked": unlocked,
+        "has_user_consent": profile.has_activity_consent,
+        "quiz": quiz_data,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_connection_activity(request, connection_id):
+    """
+    Generates a new AI positive-only guessing quiz for the connection pair.
+    Requires Level >= 2 and user consent.
+    """
+    try:
+        conn = SupportConnection.objects.get(
+            connection_id=connection_id,
+            status=SupportConnection.STATUS_ACTIVE,
+        )
+    except SupportConnection.DoesNotExist:
+        return Response({"detail": "Active connection not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user not in (conn.user_one, conn.user_two):
+        return Response({"detail": "Not authorized."}, status=status.HTTP_403_FORBIDDEN)
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if not profile.has_activity_consent:
+        return Response(
+            {"detail": "Explicit consent is required to generate personalized connection activities."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    level_info = conn.calculate_activity_score()
+    if level_info["level"] < 2:
+        return Response(
+            {"detail": "Connection must reach Level 2 (Growing Companion) to unlock activities."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    from .services.quiz_generator import generate_activity_questions
+    from .models import ConnectionActivityQuiz
+
+    questions = generate_activity_questions(conn)
+
+    quiz = ConnectionActivityQuiz.objects.create(
+        connection=conn,
+        creator=request.user,
+        questions=questions,
+    )
+
+    return Response({
+        "quiz_id": str(quiz.quiz_id),
+        "status": quiz.status,
+        "questions": quiz.questions,
+        "has_answered": False,
+        "is_fully_completed": False,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_connection_activity(request, connection_id):
+    """
+    Submits user guesses for an active quiz.
+    Strictly validates that options chosen match pre-written positive choices.
+    """
+    try:
+        conn = SupportConnection.objects.get(
+            connection_id=connection_id,
+            status=SupportConnection.STATUS_ACTIVE,
+        )
+    except SupportConnection.DoesNotExist:
+        return Response({"detail": "Active connection not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user not in (conn.user_one, conn.user_two):
+        return Response({"detail": "Not authorized."}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import ConnectionActivityQuiz
+    quiz_id = request.data.get("quiz_id")
+    answers = request.data.get("answers", {})  # dict of {q_id: option_str}
+
+    if not quiz_id or not isinstance(answers, dict):
+        return Response({"detail": "Invalid submission format."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        quiz = ConnectionActivityQuiz.objects.get(quiz_id=quiz_id, connection=conn)
+    except ConnectionActivityQuiz.DoesNotExist:
+        return Response({"detail": "Quiz session not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Validate answers against pre-written options strictly (no free-text, positive-only)
+    valid_q_map = {q["id"]: q["options"] for q in quiz.questions}
+    sanitized_answers = {}
+
+    for q_id, selected_opt in answers.items():
+        if q_id in valid_q_map and selected_opt in valid_q_map[q_id]:
+            sanitized_answers[q_id] = selected_opt
+
+    if len(sanitized_answers) == 0:
+        return Response({"detail": "Please select valid options."}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_is_one = request.user.id == conn.user_one_id
+    if user_is_one:
+        quiz.user_one_answers = sanitized_answers
+        quiz.user_one_completed_at = timezone.now()
+    else:
+        quiz.user_two_answers = sanitized_answers
+        quiz.user_two_completed_at = timezone.now()
+
+    if quiz.is_fully_completed():
+        quiz.status = ConnectionActivityQuiz.STATUS_COMPLETED
+
+    quiz.save()
+
+    return Response({
+        "quiz_id": str(quiz.quiz_id),
+        "status": quiz.status,
+        "has_answered": True,
+        "is_fully_completed": quiz.is_fully_completed(),
+        "my_answers": sanitized_answers,
+        "peer_answers": (quiz.user_two_answers if user_is_one else quiz.user_one_answers) if quiz.is_fully_completed() else {},
+    })
+

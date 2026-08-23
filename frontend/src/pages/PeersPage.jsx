@@ -243,6 +243,9 @@ export const PeersPage = () => {
                       <div className="flex items-center gap-2">
                         <h4 className="t-h4 font-bold text-gray-900 truncate group-hover:text-purple-700 transition">{uname}</h4>
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" title="Connected"></span>
+                        <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold border border-purple-200">
+                          Level {c.level_info?.level || 1}
+                        </span>
                       </div>
                       {c.last_message && c.last_message.content ? (
                         <p className="text-xs text-gray-500 font-medium mt-0.5 truncate max-w-xs flex items-center gap-1">
