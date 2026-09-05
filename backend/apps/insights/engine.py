@@ -608,9 +608,10 @@ CRISIS_KEYWORDS = [
 CRISIS_HELPLINE_NOTE = (
     "💜 You are not alone. If you or someone you know is going through a difficult time or experiencing thoughts of self-harm, "
     "please reach out for immediate, free, and confidential support:\n"
-    "• India: Tele-MANAS (14416 / 1800-891-4416 — 24/7), Vandrevala Foundation (+91 9999 666 555 — 24/7), iCALL (9152987821 — Mon–Sat 10 AM–8 PM)\n"
-    "• Nepal: National Crisis & Suicide Helpline (1166 — 24/7 toll-free)"
+    "• India: Kiran Mental Health Helpline 1800-599-0019 (24/7), iCall 9152987821, Vandrevala Foundation 1860-2662-345\n"
+    "• Nepal: TPO Nepal Suicide Crisis Line 1166 (24/7 toll-free)"
 )
+
 
 
 def detect_crisis_keywords(text: str) -> tuple[bool, str]:

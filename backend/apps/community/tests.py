@@ -36,7 +36,7 @@ class CommunitySafetyTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(response.data["has_crisis_resources"])
-        self.assertIn("Tele-MANAS", response.data["crisis_resource_note"])
+        self.assertIn("Kiran", response.data["crisis_resource_note"])
         self.assertIn("1166", response.data["crisis_resource_note"])
         self.assertIn("Vandrevala", response.data["crisis_resource_note"])
 
@@ -70,7 +70,8 @@ class CommunitySafetyTests(TestCase):
 
         # Verify hidden post is excluded from public feed list
         feed_res = self.client.get("/api/community/posts/")
-        post_ids = [p["id"] for p in feed_res.data]
+        results = feed_res.data.get("results", feed_res.data)
+        post_ids = [p["id"] for p in results]
         self.assertNotIn(str(post.id), post_ids)
 
     def test_toggle_supportive_reactions(self):

@@ -11,17 +11,32 @@ from .models import CommunityPost, PostReport, PostReaction, generate_anonymous_
 from .serializers import CommunityPostSerializer, PostReportSerializer
 
 
+from rest_framework.pagination import PageNumberPagination
+
+
+class CommunityPostPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_posts(request):
     """
-    List active, non-hidden public community posts.
+    List active, non-hidden public community posts (paginated).
     """
     posts = (
         CommunityPost.objects.filter(is_hidden=False)
         .prefetch_related("reactions", "reports")
-        .order_by("-created_at")[:100]
+        .order_by("-created_at")
     )
+    paginator = CommunityPostPagination()
+    page = paginator.paginate_queryset(posts, request)
+    if page is not None:
+        serializer = CommunityPostSerializer(page, many=True, context={"request": request})
+        return paginator.get_paginated_response(serializer.data)
+
     serializer = CommunityPostSerializer(posts, many=True, context={"request": request})
     return Response(serializer.data)
 
@@ -67,7 +82,7 @@ def report_post(request, post_id):
     post = get_object_or_404(CommunityPost, id=post_id)
 
     serializer = PostReportSerializer(data=request.data)
-    if not serializer.is_validate() if hasattr(serializer, "is_validate") else not serializer.is_valid():
+    if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     reason = serializer.validated_data.get("reason", "other")
