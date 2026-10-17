@@ -1,0 +1,11 @@
+{
+  "name": "soulcare-workspace",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build"
+  },
+  "dependencies": {
+    "@neon/config": "^1.9.2",
+    "@neon/env": "^1.6.3"
+  }
+}

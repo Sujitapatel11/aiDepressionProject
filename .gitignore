@@ -16,3 +16,6 @@ backend/.env
 .DS_Store
 *.sqlite3
 scratch/
+.neon
+node_modules/
+.env.local

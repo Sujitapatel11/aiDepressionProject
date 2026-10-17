@@ -2,9 +2,17 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables (.env.local, .env from backend and project root)
+for env_path in [
+    BASE_DIR.parent / ".env.local",
+    BASE_DIR / ".env.local",
+    BASE_DIR / ".env",
+    BASE_DIR.parent / ".env",
+]:
+    if env_path.exists():
+        load_dotenv(env_path)
 
 # =========================
 # SECURITY
@@ -152,10 +160,13 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
     import dj_database_url
+    # When connecting to a pooled PgBouncer endpoint (e.g. Neon -pooler),
+    # set conn_max_age to 0 to avoid stale serverless transaction pool connections.
+    is_pooled = "pooler" in DATABASE_URL
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=600,
+            conn_max_age=0 if is_pooled else 600,
             conn_health_checks=True,
         )
     }
