@@ -2,11 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 
-from config.health_view import health_check
+from config.health_view import health_check, db_health_check
 from apps.telemetry.views import feedback_view, beta_dashboard_stats
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/health/db/', db_health_check, name='db_health_check'),
     path('api/health/', health_check, name='health_check'),
     path('health/', health_check, name='health_check_alias'),
 

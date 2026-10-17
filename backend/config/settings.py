@@ -348,7 +348,7 @@ LOGGING = {
             'propagate': True,
         },
         'django.request': {
-            'handlers': ['file_request', 'file_error'],
+            'handlers': ['console', 'file_request', 'file_error'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -356,6 +356,11 @@ LOGGING = {
             'handlers': ['console', 'file_error', 'file_request'],
             'level': 'INFO',
             'propagate': False,
+        },
+        'config': {
+            'handlers': ['console', 'file_error'],
+            'level': 'INFO',
+            'propagate': True,
         },
     },
 }

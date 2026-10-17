@@ -1,10 +1,69 @@
 import time
 import os
+import re
 from django.http import JsonResponse
 from django.db import connection
 from django.conf import settings
+from django.contrib.auth.models import User
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 
 _START_TIME = time.time()
+
+
+def _sanitize_error_message(message: str) -> str:
+    """
+    Remove passwords, tokens, URLs, and sensitive credentials from error messages.
+    """
+    # Strip credentials in database/HTTP URLs (e.g. postgresql://user:password@host...)
+    msg = re.sub(r'([a-zA-Z0-9+.-]+://[^:]+:)([^@]+)(@)', r'\1*****\3', message)
+    # Strip inline key/value assignments for sensitive credentials (e.g. password=..., secret: ...)
+    msg = re.sub(r'((?:password|secret|token|api_key)\s*[:=]\s*)([\'"][^\'"]*[\'"]|[^\s,;]+)', r'\1*****', msg, flags=re.IGNORECASE)
+    return msg
+
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@throttle_classes([])
+def db_health_check(request):
+    """
+    Temporary database diagnostic endpoint for verifying connection & migrations.
+    Runs SELECT 1 and User.objects.count().
+    Never leaks passwords, tokens, or credentials.
+    """
+    try:
+        # Step 1: Run trivial query to verify TCP connectivity and database responsiveness
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1;")
+            cursor.fetchone()
+
+        # Step 2: Query User table to verify migrations and schema presence
+        user_count = User.objects.count()
+
+        db_engine = settings.DATABASES["default"].get("ENGINE", "").split(".")[-1]
+        raw_host = settings.DATABASES["default"].get("HOST", "")
+
+        return Response({
+            "status": "healthy",
+            "select_1": "ok",
+            "user_count": user_count,
+            "database": {
+                "engine": db_engine,
+                "host": raw_host,
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as exc:
+        sanitized_msg = _sanitize_error_message(str(exc))
+        return Response({
+            "status": "error",
+            "error_class": exc.__class__.__name__,
+            "error_message": sanitized_msg,
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 def health_check(request):
     """
@@ -54,3 +113,4 @@ def health_check(request):
     }
     status_code = 200 if data["status"] == "healthy" else 503
     return JsonResponse(data, status=status_code)
+
