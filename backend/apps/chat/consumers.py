@@ -19,6 +19,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         user = self.scope.get("user")
         if not user or isinstance(user, AnonymousUser):
+            logger.warning("SupportChatConsumer.connect rejected: user is anonymous or missing")
             await self.close(code=4003)
             return
 
@@ -27,18 +28,27 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         self.group_name = f"chat_{self.connection_id}"
 
         if not await self.user_has_access():
+            logger.warning(
+                "SupportChatConsumer.connect rejected: user %s has no access to connection %s",
+                self.user.id,
+                self.connection_id,
+            )
             await self.close(code=4003)
             return
 
         try:
             await self.channel_layer.group_add(self.group_name, self.channel_name)
         except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
-            logger.error(f"Redis error during connect group_add: {e}")
+            logger.exception("Redis connection/timeout error during connect group_add: %s", e)
             await self.accept()
             await self.send(text_data=json.dumps({
                 "type": "error",
                 "detail": "temporary connection issue, please retry"
             }))
+            await self.close(code=4000)
+            return
+        except Exception as e:
+            logger.exception("Unexpected error during connect group_add: %s", e)
             await self.close(code=4000)
             return
 
@@ -52,7 +62,9 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             try:
                 await self.channel_layer.group_discard(self.group_name, self.channel_name)
             except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
-                logger.error(f"Redis error during disconnect group_discard: {e}")
+                logger.exception("Redis error during disconnect group_discard: %s", e)
+            except Exception as e:
+                logger.exception("Unexpected error during disconnect group_discard: %s", e)
 
     async def start_ping_loop(self):
         try:
@@ -61,13 +73,14 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 await self.send(text_data=json.dumps({"type": "ping"}))
         except asyncio.CancelledError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception("Unexpected exception in start_ping_loop: %s", e)
 
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
         except json.JSONDecodeError:
+            logger.warning("Invalid JSON received in SupportChatConsumer.receive: %s", text_data[:100])
             return
 
         msg_type = data.get("type", "message")
@@ -83,7 +96,13 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                     "is_typing": bool(data.get("is_typing", False)),
                 })
             except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
-                logger.error(f"Redis error during typing group_send: {e}")
+                logger.exception("Redis error during typing group_send: %s", e)
+                await self.send(text_data=json.dumps({
+                    "type": "error",
+                    "detail": "temporary connection issue, please retry"
+                }))
+            except Exception as e:
+                logger.exception("Unexpected error during typing group_send: %s", e)
                 await self.send(text_data=json.dumps({
                     "type": "error",
                     "detail": "temporary connection issue, please retry"
@@ -94,8 +113,22 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
         if not content:
             return
 
-        msg = await self.save_message(content)
+        try:
+            msg = await self.save_message(content)
+        except Exception as e:
+            logger.exception("Exception in save_message during receive: %s", e)
+            msg = None
+
         if not msg:
+            logger.warning(
+                "Message could not be saved for connection %s by user %s (inactive connection or DB error)",
+                self.connection_id,
+                self.user.id,
+            )
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "detail": "Failed to send message: connection inactive or database error"
+            }))
             return
 
         try:
@@ -107,7 +140,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 "timestamp": msg.created_at.isoformat(),
             })
         except Exception as e:
-            logger.error(f"Error during message group_send: {e}")
+            logger.exception("Error during message group_send: %s", e)
             await self.send(text_data=json.dumps({
                 "type": "error",
                 "detail": "temporary connection issue, please retry"
@@ -139,6 +172,9 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             return self.user.id in (conn.user_one_id, conn.user_two_id)
         except SupportConnection.DoesNotExist:
             return False
+        except Exception as e:
+            logger.exception("Unexpected error in user_has_access: %s", e)
+            return False
 
     @database_sync_to_async
     def save_message(self, content):
@@ -155,4 +191,11 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 content=content,
             )
         except SupportConnection.DoesNotExist:
+            logger.warning(
+                "save_message: SupportConnection %s does not exist or is not active",
+                self.connection_id,
+            )
+            return None
+        except Exception as e:
+            logger.exception("Unexpected error in save_message: %s", e)
             return None

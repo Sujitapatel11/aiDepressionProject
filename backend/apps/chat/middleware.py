@@ -2,6 +2,7 @@
 JWT authentication middleware for Django Channels WebSockets.
 Reads token from query string: ws://host/ws/chat/{id}/?token=<jwt>
 """
+import logging
 from urllib.parse import parse_qs
 from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
@@ -9,6 +10,7 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import get_user_model
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
@@ -17,7 +19,8 @@ def get_user_from_token(token_str):
     try:
         token = AccessToken(token_str)
         return User.objects.get(id=token['user_id'])
-    except Exception:
+    except Exception as exc:
+        logger.warning("WebSocket auth failed in get_user_from_token [%s]: %s", exc.__class__.__name__, exc)
         return AnonymousUser()
 
 

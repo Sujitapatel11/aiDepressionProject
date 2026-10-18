@@ -50,16 +50,11 @@ def db_health_check(request):
             "status": "healthy",
             "select_1": "ok",
             "user_count": user_count,
-            "database": {
-                "engine": db_engine,
-                "host": raw_host,
-            }
         }, status=status.HTTP_200_OK)
 
     except Exception as exc:
         sanitized_msg = _sanitize_error_message(str(exc))
         return Response({
-            "status": "error",
             "error_class": exc.__class__.__name__,
             "error_message": sanitized_msg,
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
