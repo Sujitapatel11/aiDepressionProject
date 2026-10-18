@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const getApiUrl = (path) => {
-  const envBase = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
+  const envBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL || '/api').trim();
   let base = envBase.replace(/\/+$/, '');
 
   if (!base || base === '/') {
@@ -26,21 +26,49 @@ export const getApiUrl = (path) => {
 };
 
 // ── Token readers (sc_* keys only — canonical keys from original app.js) ──────
-export const getStoredToken    = () => localStorage.getItem('sc_token')    || '';
-export const getStoredUserId   = () => Number(localStorage.getItem('sc_uid'))      || 0;
-export const getStoredUsername = () => localStorage.getItem('sc_username') || '';
+export const getStoredToken        = () => localStorage.getItem('sc_token')   || localStorage.getItem('soulcare_token')   || '';
+export const getStoredRefreshToken = () => localStorage.getItem('sc_refresh') || localStorage.getItem('soulcare_refresh') || '';
+export const getStoredUserId       = () => Number(localStorage.getItem('sc_uid'))     || Number(localStorage.getItem('soulcare_user_id')) || 0;
+export const getStoredUsername     = () => localStorage.getItem('sc_username') || localStorage.getItem('soulcare_username') || '';
+
+// ── Token writers (saves both sc_* and soulcare_* canonical keys) ─────────────
+export const setTokens = (access, refresh) => {
+  if (access) {
+    localStorage.setItem('sc_token', access);
+    localStorage.setItem('soulcare_token', access);
+  }
+  if (refresh) {
+    localStorage.setItem('sc_refresh', refresh);
+    localStorage.setItem('soulcare_refresh', refresh);
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {}
+  }
+};
 
 // ── Auth data writers (writes both sc_* and soulcare_* — matches original) ────
 export const setAuthData = (data) => {
-  localStorage.setItem('sc_token',    data.token);
-  localStorage.setItem('sc_refresh',  data.refresh || '');
-  localStorage.setItem('sc_uid',      String(data.user_id));
-  localStorage.setItem('sc_username', data.username);
+  const tokenVal = data.token || data.access || '';
+  const refreshVal = data.refresh || '';
 
-  localStorage.setItem('soulcare_token',    data.token);
-  localStorage.setItem('soulcare_refresh',  data.refresh || '');
-  localStorage.setItem('soulcare_user_id',  String(data.user_id));
-  localStorage.setItem('soulcare_username', data.username);
+  if (tokenVal) {
+    localStorage.setItem('sc_token', tokenVal);
+    localStorage.setItem('soulcare_token', tokenVal);
+  }
+  if (refreshVal) {
+    localStorage.setItem('sc_refresh', refreshVal);
+    localStorage.setItem('soulcare_refresh', refreshVal);
+  }
+  if (data.user_id !== undefined) {
+    localStorage.setItem('sc_uid', String(data.user_id));
+    localStorage.setItem('soulcare_user_id', String(data.user_id));
+  }
+  if (data.username !== undefined) {
+    localStorage.setItem('sc_username', data.username);
+    localStorage.setItem('soulcare_username', data.username);
+  }
 };
 
 // ── Auth data clearers (clears both key sets — matches original logout()) ──────
@@ -55,8 +83,58 @@ export const clearAuthData = () => {
   localStorage.removeItem('soulcare_username');
 };
 
-// ── Core fetch wrapper (mirrors api() in app.js exactly) ─────────────────────
-export async function api(method, path, body = null) {
+// ── Single-Flight Token Refresh ───────────────────────────────────────────────
+// If multiple concurrent requests hit 401, only ONE refresh request is executed.
+// All others await the same promise to prevent refresh token reuse rejection.
+let refreshPromise = null;
+
+export async function refreshAccessToken() {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) {
+    return null;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const url = getApiUrl('/auth/token/refresh/');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (!res.ok) {
+        return null;
+      }
+
+      const data = await res.json();
+      const newAccess = data.access || data.token || '';
+      const newRefresh = data.refresh || refreshToken;
+
+      if (!newAccess) {
+        return null;
+      }
+
+      // Requirement 2: Always save BOTH the new access token and the new rotated refresh token
+      setTokens(newAccess, newRefresh);
+      return newAccess;
+    } catch (err) {
+      console.error('Single-flight token refresh failed:', err);
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+// ── Core fetch wrapper (with single-retry on 401) ────────────────────────────
+export async function api(method, path, body = null, isRetry = false) {
   try {
     const token = getStoredToken();
     const headers = {};
@@ -66,7 +144,7 @@ export async function api(method, path, body = null) {
 
     const opts = { method, headers };
     if (body) {
-      if (body instanceof FormData) {
+      if (typeof FormData !== 'undefined' && body instanceof FormData) {
         opts.body = body;
       } else {
         headers['Content-Type'] = 'application/json';
@@ -77,13 +155,35 @@ export async function api(method, path, body = null) {
     const url = getApiUrl(path);
     const res = await fetch(url, opts);
 
-    // 401 → logout + redirect
+    // 401 handling: refresh once and retry original request once
     if (res.status === 401) {
-      clearAuthData();
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      const cleanPath = String(path || '');
+      const isAuthEndpoint =
+        cleanPath.includes('/auth/token/refresh') ||
+        cleanPath.includes('/auth/login') ||
+        cleanPath.includes('/auth/signup');
+
+      // Requirement 3: No infinite loops; fail immediately if retry or auth endpoint
+      if (isRetry || isAuthEndpoint) {
+        clearAuthData();
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return null;
       }
-      return null;
+
+      // Execute single-flight refresh
+      const newAccess = await refreshAccessToken();
+      if (!newAccess) {
+        clearAuthData();
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return null;
+      }
+
+      // Retry original request once with isRetry = true
+      return api(method, path, body, true);
     }
 
     return res;
