@@ -38,19 +38,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
 
         try:
             await self.channel_layer.group_add(self.group_name, self.channel_name)
-        except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
-            logger.exception("Redis connection/timeout error during connect group_add: %s", e)
-            await self.accept()
-            await self.send(text_data=json.dumps({
-                "type": "error",
-                "detail": "temporary connection issue, please retry"
-            }))
-            await self.close(code=4000)
-            return
         except Exception as e:
-            logger.exception("Unexpected error during connect group_add: %s", e)
-            await self.close(code=4000)
-            return
+            logger.warning("Channel layer error during connect group_add: %s. Continuing with active socket...", e)
 
         await self.accept()
         self.ping_task = asyncio.create_task(self.start_ping_loop())
@@ -95,18 +84,8 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                     "sender_id": self.user.id,
                     "is_typing": bool(data.get("is_typing", False)),
                 })
-            except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError) as e:
-                logger.exception("Redis error during typing group_send: %s", e)
-                await self.send(text_data=json.dumps({
-                    "type": "error",
-                    "detail": "temporary connection issue, please retry"
-                }))
             except Exception as e:
-                logger.exception("Unexpected error during typing group_send: %s", e)
-                await self.send(text_data=json.dumps({
-                    "type": "error",
-                    "detail": "temporary connection issue, please retry"
-                }))
+                logger.warning("Error during typing group_send: %s", e)
             return
 
         content = data.get("message", "").strip()
@@ -140,11 +119,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 "timestamp": msg.created_at.isoformat(),
             })
         except Exception as e:
-            logger.exception("Error during message group_send: %s", e)
-            await self.send(text_data=json.dumps({
-                "type": "error",
-                "detail": "temporary connection issue, please retry"
-            }))
+            logger.warning("Error during message group_send: %s", e)
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({

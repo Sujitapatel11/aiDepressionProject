@@ -270,26 +270,37 @@ SOCIALACCOUNT_PROVIDERS = {
 # =========================
 ASGI_APPLICATION = "config.asgi.application"
 
-REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379")
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [
-                {
-                    "address": REDIS_URL,
-                    "socket_connect_timeout": 5,
-                    "socket_timeout": 5,
-                    "retry_on_timeout": True,
-                    "health_check_interval": 30,
-                }
-            ],
-            "capacity": 1500,
-            "expiry": 10,
+if REDIS_URL and not REDIS_URL.startswith("redis://127.0.0.1") and not REDIS_URL.startswith("redis://localhost"):
+    is_tls = REDIS_URL.startswith("rediss://")
+    host_config = {
+        "address": REDIS_URL,
+        "socket_connect_timeout": 5,
+        "socket_timeout": 5,
+        "retry_on_timeout": True,
+        "health_check_interval": 30,
+    }
+    if is_tls:
+        import ssl
+        host_config["ssl_cert_reqs"] = ssl.CERT_NONE
+
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "apps.chat.channel_layer.ResilientChannelLayer",
+            "CONFIG": {
+                "hosts": [host_config],
+                "capacity": 1500,
+                "expiry": 10,
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 
 # =========================
 # MISC
