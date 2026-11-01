@@ -1,13 +1,20 @@
 from unittest.mock import patch
-from django.test import TestCase
+from django.core.cache import cache
+from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework import status
 from apps.authentication.models import UserAuthProfile
 
+GOOGLE_CLIENT_ID = "test-client-id.apps.googleusercontent.com"
 
+
+@override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
 class GoogleOAuthFlowTests(TestCase):
     def setUp(self):
+        # The anonymous throttle (10/min) is shared across the whole test run;
+        # reset it so these tests measure behaviour, not the rate limiter.
+        cache.clear()
         self.client = APIClient()
         self.google_email = "user.soulcare@gmail.com"
         self.google_sub = "google_sub_123456789"
@@ -21,7 +28,8 @@ class GoogleOAuthFlowTests(TestCase):
             "name": name or self.google_name,
             "picture": picture or self.google_picture,
             "email_verified": email_verified,
-            "aud": "mock_client_id",
+            "aud": GOOGLE_CLIENT_ID,
+            "iss": "https://accounts.google.com",
         }
 
     @patch("google.oauth2.id_token.verify_oauth2_token")
@@ -128,3 +136,94 @@ class GoogleOAuthFlowTests(TestCase):
         self.assertNotEqual(res1.data["user_id"], res2.data["user_id"])
         self.assertEqual(User.objects.filter(email__iexact="user1@gmail.com").count(), 1)
         self.assertEqual(User.objects.filter(email__iexact="user2@gmail.com").count(), 1)
+
+
+class GoogleOAuthHardeningTests(TestCase):
+    """The endpoint must fail closed — these are the paths the old fallback skipped."""
+
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+
+    @override_settings(GOOGLE_CLIENT_ID="")
+    def test_unconfigured_server_refuses_sign_in(self):
+        """No client id configured => 503, never an unverified accept."""
+        res = self.client.post("/api/auth/google/", {"id_token": "anything"})
+        self.assertEqual(res.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(User.objects.count(), 0)
+
+    @override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    @patch("google.oauth2.id_token.verify_oauth2_token", side_effect=ValueError("wrong audience"))
+    def test_invalid_token_is_401(self, _mock):
+        """Signature/audience/expiry failures must not create a user."""
+        res = self.client.post("/api/auth/google/", {"id_token": "forged"})
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(User.objects.count(), 0)
+        # The internal reason must not leak to the client.
+        self.assertNotIn("audience", str(res.data).lower())
+
+    @override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_audience_is_always_checked(self, mock_verify):
+        """verify_oauth2_token must receive the configured client id as audience."""
+        mock_verify.return_value = {
+            "email": "a@example.com", "sub": "s1", "email_verified": True,
+            "iss": "https://accounts.google.com", "aud": GOOGLE_CLIENT_ID,
+        }
+        self.client.post("/api/auth/google/", {"id_token": "tok"})
+        self.assertEqual(mock_verify.call_args.kwargs.get("audience"), GOOGLE_CLIENT_ID)
+
+    @override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_unexpected_issuer_is_rejected(self, mock_verify):
+        mock_verify.return_value = {
+            "email": "a@example.com", "sub": "s1", "email_verified": True,
+            "iss": "https://evil.example.com", "aud": GOOGLE_CLIENT_ID,
+        }
+        res = self.client.post("/api/auth/google/", {"id_token": "tok"})
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(User.objects.count(), 0)
+
+    @override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_unverified_email_is_rejected(self, mock_verify):
+        mock_verify.return_value = {
+            "email": "a@example.com", "sub": "s1", "email_verified": False,
+            "iss": "https://accounts.google.com", "aud": GOOGLE_CLIENT_ID,
+        }
+        res = self.client.post("/api/auth/google/", {"id_token": "tok"})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(User.objects.count(), 0)
+
+    @override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_email_linked_to_another_google_account_is_rejected(self, mock_verify):
+        """Pre-account-hijacking guard: never rebind an existing google_id."""
+        user = User.objects.create_user(username="victim", email="victim@example.com")
+        UserAuthProfile.objects.create(user=user, google_id="original-sub", auth_provider="google")
+
+        mock_verify.return_value = {
+            "email": "victim@example.com", "sub": "attacker-sub", "email_verified": True,
+            "iss": "https://accounts.google.com", "aud": GOOGLE_CLIENT_ID,
+        }
+        res = self.client.post("/api/auth/google/", {"id_token": "tok"})
+
+        self.assertEqual(res.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(
+            UserAuthProfile.objects.get(user=user).google_id, "original-sub"
+        )
+
+    @override_settings(GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    @patch("google.oauth2.id_token.verify_oauth2_token")
+    def test_deactivated_account_cannot_sign_in(self, mock_verify):
+        User.objects.create_user(
+            username="banned", email="banned@example.com", is_active=False
+        )
+        mock_verify.return_value = {
+            "email": "banned@example.com", "sub": "s1", "email_verified": True,
+            "iss": "https://accounts.google.com", "aud": GOOGLE_CLIENT_ID,
+        }
+        res = self.client.post("/api/auth/google/", {"id_token": "tok"})
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertNotIn("token", res.data)
