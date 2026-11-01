@@ -258,6 +258,11 @@ if frontend_url and frontend_url not in CORS_ALLOWED_ORIGINS:
 # =========================
 # GOOGLE OAUTH
 # =========================
+# Must be set to the Web client ID from Google Cloud Console for Sign-In to work.
+# When empty, /api/auth/google/ fails closed (503) instead of accepting tokens it
+# cannot verify the audience of.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],

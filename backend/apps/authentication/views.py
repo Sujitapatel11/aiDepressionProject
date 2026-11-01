@@ -1,8 +1,12 @@
-import os
+import logging
+import re
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordResetForm
 from django.conf import settings
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,6 +16,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from config.throttles import PasswordResetRateThrottle
 from .serializers import SignupSerializer, LoginSerializer, GoogleAuthSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 from .models import UserAuthProfile
+
+logger = logging.getLogger(__name__)
+
+# Both spellings are emitted by Google depending on the endpoint.
+GOOGLE_ISSUERS = {"accounts.google.com", "https://accounts.google.com"}
 
 
 def _token_response(user):
@@ -82,96 +91,138 @@ from django.db import transaction
 @permission_classes([AllowAny])
 @transaction.atomic
 def google_auth_view(request):
+    """
+    POST /api/auth/google/  {"id_token": "<Google ID token>"}
+
+    Exchanges a Google Identity Services credential for a SoulCare JWT pair.
+
+    Verification is delegated to google-auth (`verify_oauth2_token`), which checks
+    the signature against Google's public keys, `exp`, `iat`, `iss` and — crucially
+    — `aud`. The audience check is mandatory: without it any Google project could
+    mint a token for any user of this app.
+
+    There is no fallback path. An earlier version fell back to Google's tokeninfo
+    endpoint and skipped the audience check entirely when GOOGLE_CLIENT_ID was
+    unset, which made the endpoint accept tokens minted for other applications.
+    """
+    client_id = getattr(settings, "GOOGLE_CLIENT_ID", "") or ""
+    if not client_id:
+        logger.error("GOOGLE_CLIENT_ID is not configured; refusing Google sign-in.")
+        return Response(
+            {"detail": "Google Sign-In is not configured on this server."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
     serializer = GoogleAuthSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    id_token_str = serializer.validated_data['id_token']
-    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
-    id_info = None
+    id_token_str = serializer.validated_data["id_token"]
 
-    # Method 1: Try official google-auth library
     try:
-        from google.oauth2 import id_token as google_id_token
-        from google.auth.transport import requests as google_requests
         id_info = google_id_token.verify_oauth2_token(
             id_token_str,
             google_requests.Request(),
-            audience=client_id if client_id else None,
+            audience=client_id,
         )
-    except Exception:
-        # Method 2: Fallback to Google TokenInfo API Endpoint over HTTPS
-        try:
-            import urllib.request
-            import json
-            url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token_str}"
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status == 200:
-                    id_info = json.loads(resp.read().decode('utf-8'))
-                    if client_id and id_info.get("aud") != client_id:
-                        return Response({"detail": "Google token audience mismatch."}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as err:
-            return Response({"detail": f"Failed to verify Google token: {str(err)}"}, status=status.HTTP_400_BAD_REQUEST)
+    except ValueError as exc:
+        # Invalid signature, expired, wrong audience, wrong issuer, malformed.
+        # Deliberately vague to the client; the reason is logged.
+        logger.warning("Google token rejected: %s", exc)
+        return Response(
+            {"detail": "Invalid Google sign-in token. Please try again."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
-    if not id_info:
-        return Response({"detail": "Invalid Google token."}, status=status.HTTP_400_BAD_REQUEST)
+    if id_info.get("iss") not in GOOGLE_ISSUERS:
+        logger.warning("Google token had unexpected issuer: %s", id_info.get("iss"))
+        return Response(
+            {"detail": "Invalid Google sign-in token. Please try again."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
-    email = id_info.get("email", "").strip().lower()
+    email = (id_info.get("email") or "").strip().lower()
     if not email:
-        return Response({"detail": "Missing email claim in Google token."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "This Google account has no email address."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    if id_info.get("email_verified") is False or id_info.get("email_verified") == "false":
-        return Response({"detail": "Google email address is unverified."}, status=status.HTTP_400_BAD_REQUEST)
+    # Google returns a bool for this in the verified payload; the string form only
+    # appears on the legacy tokeninfo endpoint we no longer use.
+    if id_info.get("email_verified") is not True:
+        return Response(
+            {"detail": "Your Google email address is not verified."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     google_id = id_info.get("sub")
-    name = id_info.get("name") or email.split("@")[0]
-    picture = id_info.get("picture", "")
-
-    # 1. Lookup by linked google_id in UserAuthProfile
-    user = None
-    if google_id:
-        auth_profile = UserAuthProfile.objects.filter(google_id=google_id).select_related('user').first()
-        if auth_profile:
-            user = auth_profile.user
-
-    # 2. If not found by google_id, lookup by normalized email
-    if not user:
-        user = User.objects.filter(email__iexact=email).first()
-
-    # 3. If user still does not exist, create new account under atomic transaction
-    if not user:
-        import re
-        base_username = email.split("@")[0].lower()
-        base_username = re.sub(r'[^a-zA-Z0-9_]', '', base_username) or "user"
-        username = base_username
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}{counter}"
-            counter += 1
-
-        name_parts = name.split() if name else []
-        first_name = name_parts[0] if name_parts else ""
-        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            first_name=first_name[:30],
-            last_name=last_name[:150],
+    if not google_id:
+        return Response(
+            {"detail": "Invalid Google sign-in token. Please try again."},
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    # 4. Attach or update UserAuthProfile cleanly
+    name = id_info.get("name") or email.split("@")[0]
+    picture = id_info.get("picture") or ""
+
+    # 1. Preferred lookup: the stable Google subject id.
+    user = None
+    linked = UserAuthProfile.objects.select_related("user").filter(google_id=google_id).first()
+    if linked:
+        user = linked.user
+
+    # 2. Fall back to the verified email address.
+    if user is None:
+        user = User.objects.filter(email__iexact=email).first()
+        if user is not None:
+            existing = UserAuthProfile.objects.filter(user=user).first()
+            if existing and existing.google_id and existing.google_id != google_id:
+                # This account is already bound to a different Google identity.
+                # Linking now would hand the account to whoever controls this one.
+                logger.warning(
+                    "Google sign-in conflict: email %s is linked to a different google_id", email
+                )
+                return Response(
+                    {"detail": "This email is already linked to a different Google account."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+    # 3. Otherwise create the account.
+    if user is None:
+        user = User.objects.create_user(
+            username=_unique_username_from_email(email),
+            email=email,
+            first_name=name.split(" ")[0][:30],
+            last_name=" ".join(name.split(" ")[1:])[:150],
+        )
+
+    if not user.is_active:
+        return Response(
+            {"detail": "This account has been deactivated."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     auth_profile, _ = UserAuthProfile.objects.get_or_create(user=user)
-    if google_id and auth_profile.google_id != google_id:
-        auth_profile.google_id = google_id
-    if auth_profile.auth_provider != 'google':
-        auth_profile.auth_provider = 'google'
-    if picture and auth_profile.avatar_url != picture:
+    auth_profile.google_id = google_id
+    auth_profile.auth_provider = "google"
+    if picture:
         auth_profile.avatar_url = picture
     auth_profile.save()
 
     return Response(_token_response(user))
+
+
+def _unique_username_from_email(email: str) -> str:
+    """Derive a stable, collision-free username from an email local-part."""
+    base = re.sub(r"[^a-zA-Z0-9_]", "", email.split("@")[0].lower()) or "user"
+    base = base[:140]
+    username = base
+    suffix = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base}{suffix}"
+        suffix += 1
+    return username
 
 
 @api_view(['POST'])
