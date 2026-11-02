@@ -6,7 +6,7 @@ const REALMS = [
   { id: 'journal-forest', name: 'Journal Forest', subtitle: 'A quiet place to reflect', icon: '🌳', tone: 'pink', path: '/journal', status: 'Ready to explore', description: 'Follow a thought, capture a moment, and let your reflections grow.' },
   { id: 'connect-island', name: 'Connect Island', subtitle: 'Find your people', icon: '♡', tone: 'rose', path: '/peers', status: 'Meet people', description: 'Build meaningful connections at your own pace.' },
   { id: 'play-zone', name: 'Community', subtitle: 'Shared stories & moments', icon: '✧', tone: 'amber', path: '/community', status: 'Community space', description: 'Visit the community to read and share anonymous reflections.' },
-  { id: 'creator-studio', name: 'Creator Studio', subtitle: 'Your creative corner', icon: '✿', tone: 'lavender', path: null, status: 'Coming next', description: 'A dedicated creator space is planned for a future update.' },
+  { id: 'creator-studio', name: 'Creator Studio', subtitle: 'Your creative corner', icon: '✿', tone: 'lavender', path: '/creator-studio', status: 'Creative space', description: 'Shape ideas into private drafts in your creative workshop.' },
   { id: 'explore-island', name: 'Explore Island', subtitle: 'A new realm awaits', icon: '♙', tone: 'slate', path: null, status: 'Locked', description: 'This realm is not available yet.' },
 ];
 
