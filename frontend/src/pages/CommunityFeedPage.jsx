@@ -135,32 +135,52 @@ export const CommunityFeedPage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4 lg:py-8 lg:px-6 space-y-6 animate-fadeIn">
+    <div className="max-w-5xl mx-auto py-5 px-4 lg:py-8 lg:px-6 space-y-6 animate-fadeIn">
       {/* HEADER */}
       <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider">
-              🕊️ Anonymous Community Feed
+              ✦ Play Zone · Community Island
             </span>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-extrabold uppercase">
               Safeguarded
             </span>
           </div>
           <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">
-            Community Sanctuary
+            The Gathering Grove
           </h1>
           <p className="t-body-md text-gray-500 italic">
-            “Share your story freely and offer gentle support to others — completely anonymous and safe.” 💜
+            A shared space for honest stories, thoughtful reactions, and gentle support. 💜
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition border-none cursor-pointer shadow-md flex items-center gap-2 flex-shrink-0"
+          className="px-6 py-3.5 rounded-2xl bg-violet-700 hover:bg-violet-800 text-white font-bold text-xs transition border-none cursor-pointer shadow-md flex items-center gap-2 flex-shrink-0"
         >
           <span>✍️ Post Anonymously</span>
         </button>
       </div>
+
+      {/* PLAY ZONE FEATURE STRIP */}
+      <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#30224f] via-[#7656a2] to-[#d9a9d2] p-5 text-white shadow-[0_18px_42px_-24px_rgba(91,49,145,.65)] sm:p-7">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-48 w-48 rounded-full border-[24px] border-white/10" />
+        <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div className="max-w-xl">
+            <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-violet-100">✧ Your community, your voice</p>
+            <h2 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">Stories connect us.</h2>
+            <p className="mt-2 text-sm leading-relaxed text-white/80">Read a reflection, leave a kind reaction, or share something of your own. Every thoughtful interaction helps make this space more human.</p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <div className="rounded-2xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur"><p className="text-xl font-extrabold">{posts.length}</p><p className="text-[10px] font-semibold text-white/75">Feed posts</p></div>
+            <div className="rounded-2xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur"><p className="text-xl font-extrabold">♡</p><p className="text-[10px] font-semibold text-white/75">Kindness first</p></div>
+          </div>
+        </div>
+        <div className="relative mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/20 pt-4">
+          <span className="text-[11px] font-medium text-white/80">🛡️ Community safety tools are available on every post.</span>
+          <button type="button" onClick={() => setShowCreateModal(true)} className="rounded-full bg-white px-4 py-2.5 text-xs font-extrabold text-violet-800 shadow transition hover:bg-violet-50">Share your story →</button>
+        </div>
+      </section>
 
       {/* CREATE POST MODAL / DRAWER */}
       {showCreateModal && (
@@ -330,12 +350,12 @@ export const CommunityFeedPage = () => {
             return (
               <div
                 key={post.id}
-                className="p-6 lg:p-7 rounded-[32px] bg-white border border-purple-100/90 shadow-sm hover:shadow-md transition duration-200 space-y-4 relative"
+                className="p-6 lg:p-7 rounded-[32px] bg-white border border-violet-100 shadow-sm hover:shadow-md transition duration-200 space-y-4 relative rounded-[26px]"
               >
                 {/* POST HEADER */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-800 text-xs font-black border border-purple-200/60 shadow-2xs flex items-center gap-1.5">
+                    <span className="px-3 py-1 rounded-full bg-violet-50 text-violet-800 text-xs font-black border border-violet-200/60 shadow-2xs flex items-center gap-1.5">
                       <span>🕊️</span> {post.author_alias}
                     </span>
                     <span className="text-xs font-semibold text-gray-400">
