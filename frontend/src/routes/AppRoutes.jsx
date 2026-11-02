@@ -9,6 +9,7 @@ import { useAuth }   from '../hooks/useAuth';
 // Lazy-loaded routes for initial load performance optimization
 const JournalPage   = lazy(() => import('../pages/JournalPage'));
 const SoulWorldPage = lazy(() => import('../pages/SoulWorldPage'));
+const CreatorStudioPage = lazy(() => import('../pages/CreatorStudioPage'));
 const InsightsPage  = lazy(() => import('../pages/InsightsPage'));
 const PeersPage     = lazy(() => import('../pages/PeersPage'));
 const ChatPage      = lazy(() => import('../pages/ChatPage'));
@@ -50,6 +51,7 @@ export const AppRoutes = () => {
         >
           <Route path="/"           element={<DashboardPage />} />
           <Route path="/world"      element={<SoulWorldPage />} />
+          <Route path="/creator-studio" element={<CreatorStudioPage />} />
           <Route path="/journal"    element={<JournalPage />} />
           <Route path="/insights"   element={<InsightsPage />} />
           <Route path="/peers"      element={<PeersPage />} />
