@@ -133,10 +133,16 @@ export const DashboardPage = () => {
               <h1 className="text-2xl font-extrabold tracking-tight text-[#211832] sm:text-3xl">{greeting}, {username || 'friend'}</h1>
               <p className="mt-1 text-sm text-[#796d8a]">Take a breath. Your sanctuary is waiting.</p>
             </div>
-            <button type="button" onClick={() => navigate('/profile')}
-              className="rounded-full border border-violet-200 bg-white px-4 py-2 text-xs font-bold text-violet-700 shadow-sm transition hover:bg-violet-50">
-              View profile ↗
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => navigate('/world')}
+                className="rounded-full bg-violet-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-violet-800">
+                Explore Soul World ✨
+              </button>
+              <button type="button" onClick={() => navigate('/profile')}
+                className="rounded-full border border-violet-200 bg-white px-4 py-2 text-xs font-bold text-violet-700 shadow-sm transition hover:bg-violet-50">
+                View profile ↗
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 shadow-sm">
             <span className="text-lg">☾</span>
