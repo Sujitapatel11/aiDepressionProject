@@ -204,10 +204,6 @@ class LiveSessionAudience(models.Model):
         ordering = ['-created_at']
         constraints = [
             models.UniqueConstraint(fields=['session', 'user'], name='live_session_audience_user_uniq'),
-            models.CheckConstraint(
-                condition=~Q(session__creator=models.F('user')),
-                name='live_creator_not_invited_as_audience',
-            ),
         ]
 
     def __str__(self):
