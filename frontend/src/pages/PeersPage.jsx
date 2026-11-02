@@ -155,19 +155,34 @@ export const PeersPage = () => {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-              💬 1-on-1 Peer Sanctuary
+              🌸 Your social sanctuary
             </span>
           </div>
-          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">Peer Support Circle</h1>
-          <p className="t-body-md text-gray-500 italic">“Connect with kind souls who offer safe, non-judgmental support.” 🌸</p>
+          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">Connect Island</h1>
+          <p className="t-body-md text-gray-500 italic">Build meaningful connections with kind souls, one conversation at a time.</p>
         </div>
         <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
           🤝
         </div>
       </div>
 
+      {/* CONNECT ISLAND INTRO */}
+      <section className="relative overflow-hidden rounded-[28px] border border-violet-100 bg-gradient-to-br from-[#2e234b] via-[#70549b] to-[#d9a9d2] p-5 text-white shadow-[0_18px_42px_-24px_rgba(91,49,145,.65)] sm:p-7">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-44 w-44 rounded-full border-[22px] border-white/10" />
+        <div className="relative">
+          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-violet-100">✦ Connect Island · Your circle</p>
+          <h2 className="mt-2 text-2xl font-extrabold sm:text-3xl">Find your people, at your pace.</h2>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80">Meet kind souls, build genuine connections, and keep conversations in your own private circle.</p>
+          <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-bold">
+            <span className="rounded-full border border-white/20 bg-white/15 px-3 py-2">🤝 {supportData.connections.length} connections</span>
+            <span className="rounded-full border border-white/20 bg-white/15 px-3 py-2">📨 {reqCount} pending requests</span>
+            <span className="rounded-full border border-white/20 bg-white/15 px-3 py-2">🔒 Private peer space</span>
+          </div>
+        </div>
+      </section>
+
       {/* TAB BAR */}
-      <div className="tab-bar bg-[#F3F0F9] p-1.5 rounded-2xl flex gap-2">
+      <div className="tab-bar bg-white border border-violet-100 p-1.5 rounded-2xl flex gap-2 shadow-sm">
         <button
           onClick={() => setActiveTab('connections')}
           className={`flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm border-none cursor-pointer transition ${
