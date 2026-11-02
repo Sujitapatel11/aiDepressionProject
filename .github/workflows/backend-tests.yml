@@ -1,0 +1,24 @@
+name: Backend tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, fix/telemetry-access-controls-main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+        working-directory: backend
+      - run: pip install -r requirements.txt
+        working-directory: backend
+      - run: python manage.py check
+        working-directory: backend
+      - run: python manage.py test apps.telemetry --verbosity 2
+        working-directory: backend
