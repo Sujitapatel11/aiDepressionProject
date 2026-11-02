@@ -95,7 +95,8 @@ class TelemetrySubsystemTests(TestCase):
 
     def test_beta_dashboard_rejects_anonymous_user(self):
         response = self.client.get("/api/dashboard/beta/")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # DRF returns 401 when the configured authentication class provides a challenge.
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_feedback_list_rejects_non_staff_user(self):
         self.client.force_authenticate(user=self.user)
