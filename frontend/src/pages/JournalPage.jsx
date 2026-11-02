@@ -251,11 +251,11 @@ export const JournalPage = () => {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider">
-              📖 Digital Sanctuary
+              🌿 Sanctuary · Ancient Grove
             </span>
           </div>
-          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">Your Journal</h1>
-          <p className="t-body-md text-gray-500 italic">“Every thought deserves a safe place to land.” 💜</p>
+          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">Journal Forest</h1>
+          <p className="t-body-md text-gray-500 italic">Unburden your thoughts beneath the glowing canopy. This space is yours — write freely, without judgment.</p>
         </div>
         <div className="hidden sm:flex items-center gap-3">
           <span className="px-4 py-2 rounded-2xl bg-purple-50 text-purple-700 font-bold text-xs flex items-center gap-1.5">
@@ -263,6 +263,36 @@ export const JournalPage = () => {
           </span>
         </div>
       </div>
+
+      {/* JOURNAL FOREST ATMOSPHERE */}
+      <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#30224f] via-[#7354a1] to-[#d9a9d2] p-5 text-white shadow-[0_18px_42px_-24px_rgba(91,49,145,.7)] sm:p-7">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-48 w-48 rounded-full border-[24px] border-white/10" />
+        <div className="relative max-w-xl">
+          <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-violet-100">✦ Lantern writing desk</p>
+          <h2 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">Give your thoughts a place to grow.</h2>
+          <p className="mt-2 text-sm leading-relaxed text-white/80">A few honest lines are enough. You don't need perfect words to begin.</p>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-2 text-xs font-bold backdrop-blur">🏮 Quiet room · Your personal grove</div>
+        </div>
+      </section>
+      <section className="rounded-[24px] border border-violet-100 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div><h2 className="text-sm font-extrabold text-[#34264b]">How does your spirit feel today?</h2><p className="mt-1 text-[11px] text-[#91859e]">Tap a mood to add it to your draft.</p></div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-violet-600">Optional</span>
+        </div>
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {[
+            { label: 'Peaceful', emoji: '🌸' },
+            { label: 'Inspired', emoji: '✨' },
+            { label: 'Calm', emoji: '🍃' },
+            { label: 'Tender', emoji: '🌧️' },
+            { label: 'Dreamy', emoji: '💫' },
+          ].map((mood) => (
+            <button key={mood.label} type="button" onClick={() => handleInputChange(inputVal ? inputVal + ' #' + mood.label : '#' + mood.label)} className="flex flex-col items-center gap-1 rounded-xl border border-violet-100 bg-[#fbf9fd] px-1 py-3 text-center transition hover:border-violet-300 hover:bg-pink-50">
+              <span className="text-xl">{mood.emoji}</span><span className="text-[10px] font-bold text-[#514465]">{mood.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* MAIN WRITING SANCTUARY CARD */}
       <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-purple-100 shadow-md space-y-5">
@@ -351,11 +381,11 @@ export const JournalPage = () => {
         </div>
       </div>
 
-      {/* PAST REFLECTIONS TIMELINE */}
+      {/* YOUR STORY OVER TIME */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="t-h3 text-gray-900 font-bold flex items-center gap-2">
-            <span>📚</span> Past Reflections
+            <span>📚</span> Past reflections
           </h3>
           <span className="text-xs font-bold text-gray-400">Encrypted Journal Logs</span>
         </div>
