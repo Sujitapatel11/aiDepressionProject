@@ -1,30 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
 
 const PROMPTS = [
   "What's one small thing that went well today?",
-  "Describe a moment this week when you felt at peace.",
-  "What emotion are you carrying right now?",
+  'Describe a moment this week when you felt at peace.',
+  'What emotion are you carrying right now?',
   "Write about something you're looking forward to.",
-  "What would you tell a friend who felt the way you do today?",
-  "What drained your energy today, and what restored it?",
-  "Describe your ideal version of tomorrow.",
+  'What would you tell a friend who felt the way you do today?',
+  'What drained your energy today, and what restored it?',
+  'Describe your ideal version of tomorrow.',
   "What's something you've been avoiding thinking about?",
-  "Write three things you're grateful for right now.",
-  "What does your body need most today?",
-  "What made you smile recently, even briefly?",
-  "What boundary do you need to set or honour today?",
-  "Write about a person who makes you feel safe.",
-  "If today had a colour, what would it be and why?",
-  "What's a belief you hold that you've never questioned?"
+  'Write three things you are grateful for right now.',
+  'What does your body need most today?',
+  'What made you smile recently, even briefly?',
+  'What boundary do you need to set or honour today?',
+  'Write about a person who makes you feel safe.',
+  'If today had a colour, what would it be and why?',
+  "What's a belief you hold that you've never questioned?",
 ];
+
+const shortcuts = [
+  { label: 'Journal', detail: "Today's entry", icon: '✍️', tone: 'from-violet-200 to-fuchsia-200', path: '/journal', tag: 'Write' },
+  { label: 'Connect', detail: 'Find your people', icon: '♡', tone: 'from-pink-200 to-rose-200', path: '/peers', tag: 'People' },
+  { label: 'Community', detail: 'Shared moments', icon: '🎮', tone: 'from-violet-500 to-purple-700', path: '/community', tag: 'Explore' },
+  { label: 'Insights', detail: 'Your reflections', icon: '◉', tone: 'from-fuchsia-200 to-purple-200', path: '/insights', tag: 'Discover' },
+];
+
+function RoomIllustration() {
+  return (
+    <div className="absolute inset-0 overflow-hidden" aria-label="Illustration of a cozy floating sanctuary room" role="img"
+      style={{ background: 'radial-gradient(ellipse at 50% 75%, #f9c9e8 0%, #a98ce8 35%, #55417f 72%, #211b45 100%)' }}>
+      <div className="absolute -top-16 left-8 h-48 w-48 rounded-full bg-fuchsia-200/30 blur-3xl" />
+      <div className="absolute top-10 right-8 h-40 w-40 rounded-full bg-indigo-200/30 blur-3xl" />
+      {Array.from({ length: 22 }, (_, i) => (
+        <span key={i} className="absolute rounded-full bg-white/80" style={{
+          width: i % 4 === 0 ? 4 : 2, height: i % 4 === 0 ? 4 : 2,
+          left: ((i * 37) % 96) + '%', top: ((i * 19) % 68) + '%',
+          opacity: 0.35 + (i % 5) * 0.12,
+        }} />
+      ))}
+      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-[#241a43]/80 to-transparent" />
+      <div className="absolute bottom-[16%] left-[9%] h-[46%] w-[82%] rounded-t-[48%] border border-white/30 bg-gradient-to-b from-[#f4dafa]/90 via-[#d5b8ef]/95 to-[#8b6ab9] shadow-2xl">
+        <div className="absolute left-[8%] top-[12%] h-[48%] w-[26%] rounded-t-full border-[5px] border-[#f8e9ff] bg-gradient-to-b from-[#7768b2] to-[#f6c9e8] shadow-inner">
+          <div className="absolute inset-x-2 bottom-2 h-1/2 rounded-t-full bg-[#f8d9ef]/70" />
+          <span className="absolute right-2 top-4 text-white/90">✦</span>
+        </div>
+        <div className="absolute right-[12%] top-[25%] h-[45%] w-[27%] rounded-t-2xl border border-white/50 bg-gradient-to-b from-[#fff0fb] to-[#a88bc9] shadow-lg">
+          <div className="absolute inset-x-2 bottom-0 h-2/5 rounded-t-xl bg-[#755d9e]" />
+          <div className="absolute left-1/2 top-2 h-3 w-3 -translate-x-1/2 rounded-full bg-amber-100 shadow-[0_0_18px_8px_rgba(255,239,177,.55)]" />
+        </div>
+        <div className="absolute bottom-0 left-[34%] h-[38%] w-[34%] rounded-t-[45%] bg-gradient-to-b from-[#fff5fc] to-[#d9b7e8] shadow-xl">
+          <div className="absolute inset-x-2 top-3 h-8 rounded-full bg-[#b99bd8]" />
+          <div className="absolute bottom-0 left-0 right-0 h-4 rounded-t-full bg-[#8d70b6]" />
+        </div>
+        <div className="absolute -bottom-2 left-[6%] text-4xl drop-shadow-lg">🪴</div>
+        <div className="absolute -bottom-2 right-[5%] text-4xl drop-shadow-lg">🌿</div>
+        <div className="absolute left-[43%] top-[8%] text-xl text-white drop-shadow">☾</div>
+      </div>
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/30 bg-[#241a43]/45 px-4 py-1.5 text-xs font-semibold tracking-wide text-white/90 backdrop-blur-md">
+        YOUR LITTLE CORNER OF THE UNIVERSE
+      </div>
+    </div>
+  );
+}
 
 export const DashboardPage = () => {
   const { username } = useAuth();
   const navigate = useNavigate();
-
   const [dashData, setDashData] = useState(null);
   const [sleepStats, setSleepStats] = useState(null);
   const [customAvatar, setCustomAvatar] = useState('');
@@ -33,357 +77,175 @@ export const DashboardPage = () => {
     setCustomAvatar(localStorage.getItem('sc_av_' + username) || '');
 
     async function loadData() {
-      // Load Dashboard Stats
       const res = await api('GET', '/dashboard/');
       if (res && res.ok) {
         const data = await res.json();
         setDashData(data);
       }
 
-      // Load Sleep Stats
       try {
         const sRes = await api('GET', '/sleep/stats/');
         if (sRes && sRes.ok) {
           const sData = await sRes.json();
           setSleepStats(sData);
         }
-      } catch (e) {}
+      } catch (e) {
+        // Sleep stats are optional; the rest of the dashboard remains available.
+      }
     }
 
     loadData();
   }, [username]);
 
-  const getGreeting = () => {
-    const h = new Date().getHours();
-    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  };
-
-  const getDailyPrompt = () => {
-    return PROMPTS[(new Date().getDay() + new Date().getDate()) % PROMPTS.length];
-  };
-
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  }, []);
+  const dailyPrompt = PROMPTS[(new Date().getDay() + new Date().getDate()) % PROMPTS.length];
   const initials = (username || '?').slice(0, 2).toUpperCase();
 
+  const openAvatarPicker = () => {
+    if (window.openAvatarPicker) window.openAvatarPicker();
+  };
+
   return (
-    <div className="max-w-5xl mx-auto py-6 px-4 lg:py-8 lg:px-6 space-y-6 lg:space-y-8 animate-fadeIn">
-      {/* 1. TOP HERO SECTION */}
-      <div
-        className="p-6 lg:p-8 rounded-[32px] text-white relative overflow-hidden shadow-xl"
-        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #A78BFA 100%)' }}
-      >
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between relative z-10 gap-6">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider text-purple-100 backdrop-blur-md">
-                🌱 Daily Affirmation
-              </span>
+    <main className="min-h-full bg-[#fbf8fe] px-4 pb-8 pt-5 text-[#241b35] sm:px-6 lg:px-8 lg:pt-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-xl text-white shadow-md shadow-violet-200">✦</div>
+            <div>
+              <p className="text-lg font-extrabold leading-tight tracking-tight text-violet-800">SoulCare</p>
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-violet-400">Your personal universe</p>
             </div>
-            <p className="t-subtitle text-purple-200 text-base">{getGreeting()}</p>
-            <h1 className="t-display text-white text-2xl lg:text-3xl font-extrabold mb-2">{username || 'Friend'}</h1>
-            <p className="t-body-md text-purple-100 italic mb-5">
-              “Every small step matters. You are stronger than you think.” 💜
-            </p>
+          </div>
+          <button type="button" onClick={openAvatarPicker} aria-label="Change profile avatar"
+            className="relative flex h-11 w-11 items-center justify-center overflow-visible rounded-full border-2 border-white bg-violet-600 text-sm font-extrabold text-white shadow-md ring-2 ring-violet-100">
+            {customAvatar ? <img src={customAvatar} alt="Your avatar" className="h-full w-full rounded-full object-cover" /> : initials}
+            <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-400" />
+          </button>
+        </header>
 
-            {/* Streak Check-in Banner */}
-            <div className="flex items-center justify-between gap-4 bg-white/15 p-3.5 px-5 rounded-2xl backdrop-blur-md border border-white/20">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🌱</span>
-                <div>
-                  <p className="text-[10px] font-bold text-purple-200 uppercase">Healing Journey</p>
-                  <p className="text-xs lg:text-sm font-extrabold text-white">Start Your Daily Reflection Streak</p>
-                </div>
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="mb-1 text-sm font-semibold text-violet-500">A little space just for you ✨</p>
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#211832] sm:text-3xl">{greeting}, {username || 'friend'}</h1>
+              <p className="mt-1 text-sm text-[#796d8a]">Take a breath. Your sanctuary is waiting.</p>
+            </div>
+            <button type="button" onClick={() => navigate('/profile')}
+              className="rounded-full border border-violet-200 bg-white px-4 py-2 text-xs font-bold text-violet-700 shadow-sm transition hover:bg-violet-50">
+              View profile ↗
+            </button>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/80 px-4 py-3 shadow-sm">
+            <span className="text-lg">☾</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2 text-xs font-bold">
+                <span className="text-violet-800">Your sanctuary, your pace</span>
+                <span className="text-violet-400">One day at a time</span>
               </div>
-              <button
-                onClick={() => navigate('/journal')}
-                className="px-4 py-2 rounded-xl bg-white text-purple-900 font-bold text-xs hover:bg-purple-50 transition border-none cursor-pointer flex-shrink-0"
-              >
-                Check In Today →
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-violet-100"><div className="h-full w-2/3 rounded-full bg-gradient-to-r from-fuchsia-300 to-violet-500" /></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative h-[340px] overflow-hidden rounded-[28px] border border-violet-200/70 shadow-[0_18px_50px_-24px_rgba(91,49,145,.65)] sm:h-[390px]">
+          <RoomIllustration />
+          <div className="absolute left-4 top-4 rounded-full border border-white/60 bg-white/85 px-3 py-1.5 text-[11px] font-bold text-violet-800 shadow-sm backdrop-blur">✧ Sanctuary room</div>
+          <button type="button" onClick={() => navigate('/journal')}
+            className="absolute right-4 top-4 rounded-full bg-violet-700 px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:bg-violet-800">
+            ✍ Write today
+          </button>
+          <button type="button" onClick={() => navigate('/insights')}
+            className="absolute bottom-20 left-4 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-xs font-bold text-violet-800 shadow-md backdrop-blur transition hover:bg-white">
+            ✦ Your insights
+          </button>
+          <button type="button" onClick={() => navigate('/peers')}
+            className="absolute bottom-20 right-4 rounded-full border border-white/70 bg-white/90 px-3 py-2 text-xs font-bold text-violet-800 shadow-md backdrop-blur transition hover:bg-white">
+            ♡ Find connection
+          </button>
+          <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/90 p-3 shadow-xl backdrop-blur-md">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-200 to-violet-200 text-xl">🌙</div>
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold text-violet-900">A gentle reminder</p>
+              <p className="truncate text-xs text-[#766982]">You don't have to figure everything out today.</p>
+            </div>
+            <span className="ml-auto text-lg">✨</span>
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div><h2 className="text-lg font-extrabold text-[#2b2040]">Orbital shortcuts</h2><p className="text-xs text-[#887d98]">Jump back into your space</p></div>
+            <span className="text-lg text-violet-400">✣</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {shortcuts.map((item) => (
+              <button key={item.label} type="button" onClick={() => navigate(item.path)}
+                className="group flex min-h-[142px] flex-col items-center justify-center rounded-[25px] border border-violet-100 bg-white px-3 py-4 text-center shadow-[0_5px_18px_-14px_rgba(75,35,125,.5)] transition hover:-translate-y-1 hover:border-violet-300 hover:shadow-lg">
+                <span className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br ${item.tone} text-3xl text-violet-800 shadow-inner transition group-hover:scale-105`}>{item.icon}</span>
+                <span className="text-sm font-extrabold text-[#322644]">{item.label}</span>
+                <span className="mt-1 text-[11px] text-[#8a7d99]">{item.detail}</span>
               </button>
-            </div>
+            ))}
           </div>
+        </section>
 
-          {/* Mascot & Avatar */}
-          <div className="flex flex-row md:flex-col items-center gap-3 flex-shrink-0">
-            <div
-              onClick={() => window.openAvatarPicker && window.openAvatarPicker()}
-              className="w-16 h-16 rounded-full flex items-center justify-center text-white font-black text-xl shadow-lg border-2 border-white/40 cursor-pointer overflow-hidden"
-              style={{
-                background: customAvatar ? 'none' : 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
-              }}
-            >
-              {customAvatar ? (
-                <img src={customAvatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                initials
-              )}
-            </div>
-            <div className="w-24 h-24 lg:w-32 lg:h-32 relative">
-              <svg viewBox="0 0 120 120" fill="none" className="w-full h-full filter drop-shadow-lg">
-                <rect x="35" y="60" width="50" height="45" rx="16" fill="#EDE9FE" />
-                <path d="M40 60 C40 30 55 20 60 20 C65 20 80 30 80 60 Z" fill="#34D399" />
-                <path d="M60 20 C50 10 35 15 35 15 C35 15 45 35 60 20 Z" fill="#10B981" />
-                <circle cx="50" cy="78" r="3" fill="#374151" />
-                <circle cx="70" cy="78" r="3" fill="#374151" />
-                <path d="M55 86 Q60 90 65 86" stroke="#374151" strokeWidth="2" strokeLinecap="round" fill="none" />
-                <circle cx="45" cy="82" r="3.5" fill="#FCA5A5" opacity="0.7" />
-                <circle cx="75" cy="82" r="3.5" fill="#FCA5A5" opacity="0.7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Mood Check-in */}
-        <div className="mt-6 pt-5 border-t border-white/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <span className="text-xs font-bold text-purple-100 uppercase tracking-wider">How are you feeling right now?</span>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <button className="mood-pill active-pill bg-white/20 text-white border-white/30 hover:bg-white/30" onClick={() => navigate('/insights')}>
-              <span>😊</span> Great
-            </button>
-            <button className="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onClick={() => navigate('/insights')}>
-              <span>🙂</span> Good
-            </button>
-            <button className="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onClick={() => navigate('/insights')}>
-              <span>😐</span> Okay
-            </button>
-            <button className="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onClick={() => navigate('/insights')}>
-              <span>🙁</span> Down
-            </button>
-            <button className="mood-pill bg-white/10 text-white/90 border-white/20 hover:bg-white/20" onClick={() => navigate('/insights')}>
-              <span>😫</span> Awful
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. QUICK ACTIONS GRID */}
-      <div>
-        <h3 class="t-h4 text-gray-700 font-bold mb-3 flex items-center gap-2">
-          <span>⚡</span> Quick Sanctuary Actions
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div
-            onClick={() => navigate('/insights')}
-            className="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mb-3">😊</div>
-            <div>
-              <h4 className="t-h5 text-gray-900 font-bold mb-1">Check Mood</h4>
-              <p className="t-caption text-gray-500">Log emotional score</p>
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/journal')}
-            className="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl mb-3">📖</div>
-            <div>
-              <h4 className="t-h5 text-gray-900 font-bold mb-1">Write Journal</h4>
-              <p className="t-caption text-gray-500">Express thoughts</p>
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/insights')}
-            className="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-3">🤖</div>
-            <div>
-              <h4 className="t-h5 text-gray-900 font-bold mb-1">AI Insights</h4>
-              <p className="t-caption text-gray-500">Personalized coach</p>
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/peers')}
-            className="p-5 rounded-[24px] bg-white border border-purple-100 hover:border-purple-300 hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mb-3">🤝</div>
-            <div>
-              <h4 className="t-h5 text-gray-900 font-bold mb-1">Community</h4>
-              <p className="t-caption text-gray-500">Safe support chats</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. TODAY'S WELLNESS CARDS */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="t-h4 text-gray-700 font-bold flex items-center gap-2">
-            <span>✨</span> Today's Wellness
-          </h3>
-          <button onClick={() => navigate('/insights')} className="text-sm font-bold text-purple-600 hover:underline border-none bg-transparent cursor-pointer">
-            View Analytics →
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <button type="button" onClick={() => navigate('/insights')} className="rounded-2xl border border-violet-100 bg-white p-4 text-left shadow-sm transition hover:border-violet-300">
+            <p className="text-xs font-bold uppercase tracking-wide text-violet-500">Unread insights</p>
+            <p className="mt-1 text-2xl font-extrabold text-violet-900">{dashData?.unread_insights_count ?? 0}</p>
+            <p className="text-xs text-[#887d98]">AI reflections waiting</p>
           </button>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Mood Insights Card */}
-          <div
-            onClick={() => navigate('/insights')}
-            className="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">Unread Insights</span>
-              <span className="text-xl">🧠</span>
-            </div>
-            <div className="text-3xl font-black text-gray-900 mb-1">
-              {dashData?.unread_insights_count ?? 0}
-            </div>
-            <p className="t-caption text-purple-600 font-semibold">Active AI feedback</p>
-          </div>
-
-          {/* Sleep Card */}
-          <div
-            onClick={() => navigate('/sleep')}
-            className="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Restful Sleep</span>
-              <span className="text-xl">🌙</span>
-            </div>
-            <div className={`my-2 ${sleepStats?.has_data ? 'text-2xl font-black text-gray-900' : 'text-sm font-bold text-gray-400'}`}>
-              {sleepStats?.has_data ? `🌙 ${sleepStats.formatted_latest}` : 'No sleep data'}
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); navigate('/sleep'); }} className="text-xs font-bold text-indigo-600 hover:underline text-left border-none bg-transparent cursor-pointer">
-              {sleepStats?.has_data ? `Quality: ${sleepStats.sleep_quality} · 7d avg: ${sleepStats.formatted_avg}` : '+ Log Sleep'}
-            </button>
-          </div>
-
-          {/* Stress Card */}
-          <div className="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Calm Assessment</span>
-              <span className="text-xl">🍃</span>
-            </div>
-            <div className="text-sm font-bold text-gray-400 my-2">No stress logs</div>
-            <button onClick={() => navigate('/journal')} className="text-xs font-bold text-emerald-600 hover:underline text-left border-none bg-transparent cursor-pointer">
-              + Check Calm
-            </button>
-          </div>
-
-          {/* Energy Card */}
-          <div className="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Vitality</span>
-              <span className="text-xl">⚡</span>
-            </div>
-            <div className="text-sm font-bold text-gray-400 my-2">No energy logs</div>
-            <button onClick={() => navigate('/journal')} className="text-xs font-bold text-amber-600 hover:underline text-left border-none bg-transparent cursor-pointer">
-              + Log Energy
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. HEALING JOURNEY & PROGRESS SECTION */}
-      <div className="p-8 rounded-[28px] bg-white border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
-        <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-3">🌱</div>
-        <h4 className="t-h3 font-bold text-gray-900 mb-1">Your healing journey starts today.</h4>
-        <p className="t-body-md text-gray-500 max-w-md mb-4">
-          Complete your first mood check-in to begin tracking your emotional patterns and visual stability trends.
-        </p>
-        <button
-          onClick={() => navigate('/journal')}
-          className="px-6 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition border-none cursor-pointer shadow-md"
-        >
-          Check In Now →
-        </button>
-      </div>
-
-      {/* 5. AI COACH RECOMMENDATION & REFLECTION PROMPT CARD */}
-      <div
-        className="p-6 rounded-[28px] text-white relative overflow-hidden shadow-lg flex items-center justify-between gap-4"
-        style={{ background: 'linear-gradient(135deg, #4C1D95 0%, #5B21B6 50%, #6D28D9 100%)' }}
-      >
-        <div className="max-w-2xl relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-3 py-1 rounded-full bg-purple-700/60 text-purple-200 text-xs font-bold flex items-center gap-1.5">
-              <span>🤖</span> AI Companion
-            </span>
-          </div>
-          <h3 className="t-h3 text-white mb-2">Today's Reflection Prompt</h3>
-          <p className="t-body-lg text-purple-100 font-medium mb-4">{getDailyPrompt()}</p>
-          <button
-            onClick={() => navigate('/journal')}
-            className="px-5 py-2.5 rounded-xl bg-white text-purple-950 font-bold hover:bg-purple-50 transition border-none cursor-pointer inline-flex items-center gap-2 shadow-md"
-          >
-            <span>Write Journal</span>
-            <span>→</span>
+          <button type="button" onClick={() => navigate('/sleep')} className="rounded-2xl border border-indigo-100 bg-white p-4 text-left shadow-sm transition hover:border-indigo-300">
+            <p className="text-xs font-bold uppercase tracking-wide text-indigo-500">Restful sleep</p>
+            <p className="mt-1 text-lg font-extrabold text-indigo-900">{sleepStats?.has_data ? sleepStats.formatted_latest : 'No sleep data yet'}</p>
+            <p className="text-xs text-[#887d98]">{sleepStats?.has_data ? `Quality: ${sleepStats.sleep_quality} · 7-day avg: ${sleepStats.formatted_avg}` : 'Add a sleep entry when ready'}</p>
           </button>
-        </div>
-        <div className="text-6xl flex-shrink-0 opacity-80 hidden sm:block">💡</div>
-      </div>
-
-      {/* 6. COMMUNITY & SUPPORT SUMMARY TILES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div
-          onClick={() => navigate('/peers')}
-          className="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl flex-shrink-0">💬</div>
-            <div>
-              <h4 className="t-h4 font-bold text-gray-900">Active Peer Chats</h4>
-              <p className="t-caption text-gray-500">Connected companions</p>
-            </div>
-          </div>
-          <div className="text-2xl font-black text-purple-700">{dashData?.active_connections_count ?? 0}</div>
-        </div>
-
-        <div
-          onClick={() => navigate('/peers')}
-          className="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl flex-shrink-0">📬</div>
-            <div>
-              <h4 className="t-h4 font-bold text-gray-900">Support Requests</h4>
-              <p className="t-caption text-gray-500">Pending connection invitations</p>
-            </div>
-          </div>
-          <div className="text-2xl font-black text-purple-700">{dashData?.pending_requests_count ?? 0}</div>
-        </div>
-      </div>
-
-      {/* 7. JOURNAL LATEST REFLECTION ENTRY */}
-      <div className="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-black"
-              style={{ background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)' }}
-            >
-              {initials}
-            </div>
-            <div>
-              <h4 className="t-h4 font-bold text-gray-900">{username}</h4>
-              <p className="t-caption text-gray-400">Latest Journal Reflection</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/journal')}
-            className="px-4 py-2 rounded-xl bg-purple-50 text-purple-700 font-bold text-sm hover:bg-purple-100 transition border-none cursor-pointer"
-          >
-            Start Journaling →
+          <button type="button" onClick={() => navigate('/peers')} className="rounded-2xl border border-pink-100 bg-white p-4 text-left shadow-sm transition hover:border-pink-300">
+            <p className="text-xs font-bold uppercase tracking-wide text-pink-500">Connections</p>
+            <p className="mt-1 text-2xl font-extrabold text-pink-900">{dashData?.active_connections_count ?? 0}</p>
+            <p className="text-xs text-[#887d98]">People in your circle</p>
           </button>
-        </div>
-        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-          <p className="t-body-md text-gray-700 italic">
-            {dashData?.latest_journal_preview?.content ||
-              '✍️ Every journey begins with one page. Write your first reflection to unlock AI insights.'}
+          <button type="button" onClick={() => navigate('/peers')} className="rounded-2xl border border-amber-100 bg-white p-4 text-left shadow-sm transition hover:border-amber-300">
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-600">Requests</p>
+            <p className="mt-1 text-2xl font-extrabold text-amber-900">{dashData?.pending_requests_count ?? 0}</p>
+            <p className="text-xs text-[#887d98]">Connection invitations</p>
+          </button>
+        </section>
+
+        <section className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div><p className="text-xs font-bold uppercase tracking-[.16em] text-violet-500">Sanctuary vibe</p><h2 className="mt-1 text-lg font-extrabold text-[#2b2040]">Make space to pause</h2></div>
+            <span className="text-2xl">🌷</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex items-center gap-3 rounded-2xl bg-[#fff3fa] p-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-pink-100">☾</span><div><p className="text-[11px] text-[#9b7892]">A moment for</p><p className="text-sm font-bold text-[#583b63]">Gentle reflection</p></div></div>
+            <div className="flex items-center gap-3 rounded-2xl bg-[#f4f0ff] p-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100">✧</span><div><p className="text-[11px] text-[#8877a6]">Your daily prompt</p><p className="text-sm font-bold text-[#49356d]">Take it one thought at a time</p></div></div>
+          </div>
+          <div className="mt-4 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 p-4 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-violet-100">Today's reflection</p>
+            <p className="mt-2 text-base font-semibold leading-relaxed">{dailyPrompt}</p>
+            <button type="button" onClick={() => navigate('/journal')} className="mt-3 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-violet-800 transition hover:bg-violet-50">Open journal →</button>
+          </div>
+        </section>
+
+        <section className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div><p className="text-xs font-bold uppercase tracking-[.16em] text-violet-500">Your recent words</p><h2 className="mt-1 text-lg font-extrabold text-[#2b2040]">Latest journal reflection</h2></div>
+            <button type="button" onClick={() => navigate('/journal')} className="text-xs font-extrabold text-violet-700 hover:underline">Open journal ↗</button>
+          </div>
+          <p className="mt-4 rounded-2xl bg-[#faf7fd] p-4 text-sm leading-relaxed text-[#6e627d]">
+            {dashData?.latest_journal_preview?.content || 'Your page is waiting. Write your first reflection whenever you feel ready.'}
           </p>
-        </div>
-        <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
-          <span>
-            Total Journal Entries: <strong className="text-purple-700">{dashData?.journal_count ?? 0}</strong>
-          </span>
-          <span>🔒 100% Private & Encrypted</span>
-        </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#9489a0]">
+            <span>{dashData?.journal_count ?? 0} journal entries</span>
+            <span>🔒 Your reflections are private</span>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 
