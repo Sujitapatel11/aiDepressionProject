@@ -89,7 +89,7 @@ export const SettingsPage = () => {
   const CredentialSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 animate-pulse">
       {[0, 1, 2].map(i => (
-        <div key={i} className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
+        <div key={i} className="p-4 rounded-2xl bg-[#faf8fc] border border-violet-100 space-y-2">
           <div className="h-3 w-20 rounded bg-gray-200" />
           <div className="h-5 w-32 rounded bg-gray-300" />
         </div>
@@ -112,31 +112,31 @@ export const SettingsPage = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-5xl mx-auto py-6 px-4 lg:py-8 lg:px-6 space-y-6 lg:space-y-8 animate-fadeIn">
+    <div className="max-w-5xl mx-auto py-5 px-4 lg:py-8 lg:px-6 space-y-6 animate-fadeIn">
 
       {/* HERO HEADER */}
-      <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex items-center justify-between">
+      <div className="relative overflow-hidden p-6 lg:p-8 rounded-[30px] bg-gradient-to-br from-[#30224f] via-[#7354a1] to-[#d9a9d2] border border-violet-100 shadow-[0_18px_42px_-24px_rgba(91,49,145,.65)] flex items-center justify-between text-white">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider">
+            <span className="px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold uppercase tracking-wider">
               ⚙️ Control Center
             </span>
           </div>
-          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">
-            Account & Preferences
+          <h1 className="t-display text-white text-2xl lg:text-3xl font-extrabold mb-1">
+            Personal Sanctuary Settings
           </h1>
-          <p className="t-body-md text-gray-500 italic">
-            "Simple, transparent control over your privacy and security." 🔒
+          <p className="t-body-md text-white/80 italic">
+            Your account, security and local data — clearly under your control. 🔒
           </p>
         </div>
-        <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl flex-shrink-0">
+        <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-white/15 text-white flex items-center justify-center text-3xl flex-shrink-0">
           ⚙️
         </div>
       </div>
 
       {/* ACCOUNT CREDENTIALS */}
-      <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-gray-200 shadow-sm space-y-5">
-        <h3 className="t-h4 font-bold text-gray-900 flex items-center gap-2">
+      <div className="p-6 lg:p-8 rounded-[28px] bg-white border border-violet-100 shadow-sm space-y-5">
+        <h3 className="t-h4 font-bold text-[#34264b] flex items-center gap-2">
           <span>👤</span> Account Credentials
         </h3>
 
@@ -197,7 +197,7 @@ export const SettingsPage = () => {
           <button
             onClick={handlePasswordReset}
             disabled={resetPending || loadingMe || Boolean(meError)}
-            className="px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm transition border-none cursor-pointer shadow-md"
+            className="px-6 py-3.5 rounded-2xl bg-violet-700 hover:bg-violet-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm transition border-none cursor-pointer shadow-md"
           >
             {resetPending ? 'Sending…' : 'Send Password Reset Email →'}
           </button>
@@ -210,13 +210,13 @@ export const SettingsPage = () => {
       </div>
 
       {/* PRIVACY & LOCAL DATA */}
-      <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm space-y-4">
+      <div className="p-6 lg:p-8 rounded-[28px] bg-white border border-violet-100 shadow-sm space-y-4">
         <h3 className="t-h4 font-bold text-gray-900 flex items-center gap-2">
           <span>🛡️</span> Privacy & Local Data Sanctuary
         </h3>
         <ul className="space-y-2 text-sm text-gray-600 list-disc pl-5">
           <li>
-            <strong>Encrypted Journaling:</strong> Your reflection logs are 100% private
+            <strong>Encrypted Journaling:</strong> Your reflection logs are protected by user-level access controls
             and protected by user-level access controls.
           </li>
           <li>
@@ -231,13 +231,13 @@ export const SettingsPage = () => {
         <div className="pt-3 flex flex-wrap gap-4">
           <button
             onClick={handleClearDrafts}
-            className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition border-none cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-800 font-bold text-xs transition border-none cursor-pointer"
           >
             Clear Local Draft Cache
           </button>
           <button
             onClick={logout}
-            className="px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition border-none cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-rose-600 font-bold text-xs transition border-none cursor-pointer"
           >
             Sign Out Account
           </button>
