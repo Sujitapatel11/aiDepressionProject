@@ -2,12 +2,14 @@ from decimal import Decimal, InvalidOperation
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.dateparse import parse_date
+from datetime import date
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from .models import CreatorProfile, CreatorPost, AdRevenueEvent, CreatorEarning, CreatorWithdrawal
+from .models import CreatorProfile, CreatorPost, AdRevenueEvent, CreatorEarning, CreatorWithdrawal, CreatorSettlement, CreatorSettlementLine
 from .serializers import CreatorProfileSerializer, CreatorPostSerializer, CreatorEarningSerializer, CreatorWithdrawalSerializer
 
 def _profile(user):
@@ -148,3 +150,97 @@ def review_creator_withdrawal(request, withdrawal_id):
     withdrawal.reviewed_at = timezone.now()
     withdrawal.save(update_fields=["status", "admin_note", "reviewed_at"])
     return Response(CreatorWithdrawalSerializer(withdrawal).data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def creator_settlements(request):
+    profile = _profile(request.user)
+    settlements = profile.settlements.prefetch_related("lines").all()[:36]
+    return Response([
+        {
+            "id": str(item.id),
+            "currency": item.currency,
+            "period_start": item.period_start.isoformat(),
+            "period_end": item.period_end.isoformat(),
+            "total_amount": str(item.total_amount),
+            "status": item.status,
+            "payout_reference": item.payout_reference,
+            "created_at": item.created_at,
+            "paid_at": item.paid_at,
+            "earning_count": item.lines.count(),
+        }
+        for item in settlements
+    ])
+
+
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+@transaction.atomic
+def prepare_monthly_settlements(request):
+    month_value = str(request.data.get("month", "")).strip()
+    month_date = parse_date(f"{month_value}-01") if len(month_value) == 7 else None
+    if not month_date or month_date.day != 1:
+        return Response({"month": "Provide a month in YYYY-MM format."}, status=400)
+    if month_date > timezone.localdate().replace(day=1):
+        return Response({"month": "Cannot settle a future month."}, status=400)
+    if month_date.month == 12:
+        next_month = date(month_date.year + 1, 1, 1)
+    else:
+        next_month = date(month_date.year, month_date.month + 1, 1)
+
+    prepared = []
+    creators = CreatorProfile.objects.filter(is_enabled=True).order_by("id")
+    for profile in creators:
+        currencies = CreatorEarning.objects.filter(
+            creator=profile,
+            created_at__date__gte=month_date,
+            created_at__date__lt=next_month,
+        ).values_list("currency", flat=True).distinct()
+        for currency in currencies:
+            existing = CreatorSettlement.objects.filter(
+                creator=profile, currency=currency, period_start=month_date
+            ).first()
+            if existing:
+                prepared.append({"id": str(existing.id), "creator_id": profile.id, "currency": currency, "amount": str(existing.total_amount), "status": existing.status, "already_prepared": True})
+                continue
+            earnings = CreatorEarning.objects.select_for_update().filter(
+                creator=profile,
+                currency=currency,
+                created_at__date__gte=month_date,
+                created_at__date__lt=next_month,
+                settlement_line__isnull=True,
+            ).order_by("created_at", "id")
+            total = earnings.aggregate(total=Sum("creator_amount"))["total"] or Decimal("0.00")
+            if total <= 0:
+                continue
+            settlement = CreatorSettlement.objects.create(
+                creator=profile,
+                currency=currency,
+                period_start=month_date,
+                period_end=next_month,
+                total_amount=total,
+            )
+            CreatorSettlementLine.objects.bulk_create([
+                CreatorSettlementLine(settlement=settlement, earning=earning, amount=earning.creator_amount)
+                for earning in earnings
+            ])
+            prepared.append({"id": str(settlement.id), "creator_id": profile.id, "currency": currency, "amount": str(total), "status": settlement.status, "already_prepared": False})
+    return Response({"month": month_value, "settlements": prepared, "count": len(prepared)}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+@transaction.atomic
+def mark_settlement_paid(request, settlement_id):
+    settlement = get_object_or_404(CreatorSettlement.objects.select_for_update(), id=settlement_id)
+    if settlement.status == CreatorSettlement.Status.PAID:
+        return Response({"detail": "Settlement is already marked paid."}, status=409)
+    reference = str(request.data.get("payout_reference", "")).strip()
+    if not reference or len(reference) > 160:
+        return Response({"payout_reference": "A valid external payout reference is required."}, status=400)
+    settlement.status = CreatorSettlement.Status.PAID
+    settlement.payout_reference = reference
+    settlement.paid_at = timezone.now()
+    settlement.save(update_fields=["status", "payout_reference", "paid_at"])
+    return Response({"id": str(settlement.id), "status": settlement.status, "payout_reference": settlement.payout_reference, "paid_at": settlement.paid_at})
