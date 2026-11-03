@@ -13,6 +13,12 @@ class CreatorProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 class CreatorPost(models.Model):
+    class Format(models.TextChoices):
+        MICRO_POST = "micro-post", "Micro post"
+        STORY = "story", "Story"
+        POEM = "poem", "Poem"
+        JOURNAL_PIECE = "journal-piece", "Journal-inspired"
+
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         PUBLISHED = "published", "Published"
@@ -21,6 +27,7 @@ class CreatorPost(models.Model):
     creator = models.ForeignKey(CreatorProfile, on_delete=models.CASCADE, related_name="posts")
     title = models.CharField(max_length=160)
     body = models.TextField(max_length=20000)
+    format = models.CharField(max_length=20, choices=Format.choices, default=Format.MICRO_POST)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT, db_index=True)
     published_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
