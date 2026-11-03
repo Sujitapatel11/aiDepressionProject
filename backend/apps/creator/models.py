@@ -27,7 +27,7 @@ class CreatorPost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         ordering = ["-published_at", "-created_at"]
-        indexes = [models.Index(fields=["status", "-published_at"])]
+        indexes = [models.Index(fields=["status", "-published_at"], name="creator_post_status_pub_idx")]
 
 class AdRevenueEvent(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
