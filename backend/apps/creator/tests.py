@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.test import APIClient
-from .models import CreatorPost, CreatorProfile, CreatorEarning, AdRevenueEvent
+from .models import CreatorPost, CreatorProfile, CreatorEarning, AdRevenueEvent, CreatorSettlement, CreatorSettlementLine
 
 class CreatorPlatformTests(TestCase):
     def setUp(self):
@@ -59,3 +59,49 @@ class CreatorPlatformTests(TestCase):
         anon = APIClient()
         response = anon.get("/api/creator/profile/")
         self.assertEqual(response.status_code, 401)
+
+
+    def _create_revenue(self, event_id, amount="10.00"):
+        response = self.client.post("/api/creator/posts/", {"title": "Settlement post", "body": "Content"}, format="json")
+        post_id = response.data["id"]
+        self.client.post(f"/api/creator/posts/{post_id}/publish/", {}, format="json")
+        admin = User.objects.create_superuser(username=f"admin-{event_id}", email=f"{event_id}@example.com", password="test-pass-123")
+        admin_client = APIClient()
+        admin_client.force_authenticate(admin)
+        return admin_client.post("/api/creator/internal/ad-revenue/", {
+            "post_id": post_id, "provider": "test-network", "provider_event_id": event_id,
+            "gross_amount": amount, "currency": "USD"
+        }, format="json")
+
+    def test_monthly_settlement_includes_earnings_and_is_idempotent(self):
+        self.assertEqual(self._create_revenue("settlement-event-1").status_code, 201)
+        admin = User.objects.create_superuser(username="settlement-admin", email="settlement-admin@example.com", password="test-pass-123")
+        admin_client = APIClient()
+        admin_client.force_authenticate(admin)
+        month = __import__("django.utils.timezone", fromlist=["now"]).now().strftime("%Y-%m")
+        first = admin_client.post("/api/creator/internal/settlements/prepare/", {"month": month}, format="json")
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.data["count"], 1)
+        self.assertEqual(first.data["settlements"][0]["amount"], "5.00")
+        second = admin_client.post("/api/creator/internal/settlements/prepare/", {"month": month}, format="json")
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.data["count"], 1)
+        self.assertTrue(second.data["settlements"][0]["already_prepared"])
+        self.assertEqual(CreatorSettlement.objects.count(), 1)
+        self.assertEqual(CreatorSettlementLine.objects.count(), 1)
+
+    def test_creator_can_only_see_own_settlements(self):
+        self.assertEqual(self._create_revenue("settlement-event-2").status_code, 201)
+        admin = User.objects.create_superuser(username="settlement-admin-2", email="settlement-admin-2@example.com", password="test-pass-123")
+        admin_client = APIClient()
+        admin_client.force_authenticate(admin)
+        month = __import__("django.utils.timezone", fromlist=["now"]).now().strftime("%Y-%m")
+        admin_client.post("/api/creator/internal/settlements/prepare/", {"month": month}, format="json")
+        response = self.client.get("/api/creator/settlements/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        other_client = APIClient()
+        other_client.force_authenticate(self.other)
+        other = other_client.get("/api/creator/settlements/")
+        self.assertEqual(other.status_code, 200)
+        self.assertEqual(len(other.data), 0)
