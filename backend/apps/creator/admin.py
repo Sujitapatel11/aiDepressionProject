@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CreatorProfile, CreatorPost, AdRevenueEvent, CreatorEarning, CreatorWithdrawal
+from .models import CreatorProfile, CreatorPost, AdRevenueEvent, CreatorEarning, CreatorWithdrawal, CreatorSettlement, CreatorSettlementLine
 
 @admin.register(CreatorProfile)
 class CreatorProfileAdmin(admin.ModelAdmin):
@@ -31,3 +31,19 @@ class CreatorWithdrawalAdmin(admin.ModelAdmin):
     list_display = ("creator", "amount", "currency", "status", "created_at", "reviewed_at")
     list_filter = ("status", "currency")
     readonly_fields = ("creator", "amount", "currency", "created_at")
+
+
+class CreatorSettlementLineInline(admin.TabularInline):
+    model = CreatorSettlementLine
+    extra = 0
+    can_delete = False
+    readonly_fields = ("earning", "amount", "created_at")
+
+
+@admin.register(CreatorSettlement)
+class CreatorSettlementAdmin(admin.ModelAdmin):
+    list_display = ("creator", "currency", "period_start", "period_end", "total_amount", "status", "paid_at")
+    list_filter = ("status", "currency", "period_start")
+    search_fields = ("creator__display_name", "creator__user__username", "payout_reference")
+    readonly_fields = ("creator", "currency", "period_start", "period_end", "total_amount", "created_at", "paid_at", "payout_reference")
+    inlines = [CreatorSettlementLineInline]
