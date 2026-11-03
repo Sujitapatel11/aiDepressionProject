@@ -315,6 +315,10 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# Password-reset links expire after 24 hours (matches the reset email copy).
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+
 # =========================
 # EMAIL (password reset)
 # =========================
