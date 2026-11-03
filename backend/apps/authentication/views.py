@@ -75,14 +75,38 @@ def login_view(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
+    """
+    Revoke the authenticated user's refresh token.
+
+    The access token used for this request remains valid until its short expiry;
+    SimpleJWT's blacklist app revokes refresh tokens, not already-issued access tokens.
+    """
+    from rest_framework_simplejwt.exceptions import TokenError
+    from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+
+    refresh_token = request.data.get("refresh")
+    if not isinstance(refresh_token, str) or not refresh_token.strip():
+        return Response(
+            {"detail": "A refresh token is required.", "code": "refresh_token_required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     try:
-        refresh_token = request.data.get("refresh")
-        if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-    except Exception:
-        pass
-    return Response({"detail": "Logged out."})
+        token = RefreshToken(refresh_token.strip())
+        token_user_id = token.get("user_id")
+        if str(token_user_id) != str(request.user.pk):
+            return Response(
+                {"detail": "The refresh token does not belong to this account.", "code": "token_user_mismatch"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        token.blacklist()
+    except TokenError:
+        return Response(
+            {"detail": "The refresh token is invalid, expired, or already revoked.", "code": "invalid_refresh_token"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return Response({"detail": "Logged out successfully."}, status=status.HTTP_200_OK)
 
 
 from django.db import transaction
@@ -229,43 +253,34 @@ def _unique_username_from_email(email: str) -> str:
 @permission_classes([AllowAny])
 @throttle_classes([PasswordResetRateThrottle])
 def password_reset_view(request):
+    """
+    Always return the same response to avoid account/email enumeration.
+    Django's PasswordResetForm sends only to active users with usable passwords.
+    """
     serializer = PasswordResetSerializer(data=request.data)
-    if serializer.is_valid():
-        email = serializer.validated_data["email"].strip().lower()
-        try:
-            from django.contrib.auth.forms import PasswordResetForm
-            from django.contrib.auth import get_user_model
-            import logging
-            logger = logging.getLogger(__name__)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            User = get_user_model()
-            matching_users = list(User.objects.filter(email__iexact=email, is_active=True))
-            if not matching_users:
-                logger.warning("Password reset requested for non-existent or inactive email: %s", email)
-            else:
-                form = PasswordResetForm(data={"email": email})
-                if form.is_valid():
-                    domain = request.get_host() if hasattr(request, 'get_host') else '127.0.0.1:8000'
-                    is_secure = request.is_secure() if hasattr(request, 'is_secure') else False
-                    form.save(
-                        use_https=is_secure,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        domain_override=domain,
-                        email_template_name='registration/password_reset_email.txt',
-                        html_email_template_name='registration/password_reset_email.html',
-                        subject_template_name='registration/password_reset_subject.txt',
-                    )
-                    logger.info("Password reset email sent to %s", email)
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.exception("Password reset email error: %s", e)
-            if settings.DEBUG:
-                return Response(
-                    {"detail": f"SMTP Error: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-    return Response({"detail": "If that email exists, a reset link has been sent."})
+    email = serializer.validated_data["email"].strip()
+    try:
+        form = PasswordResetForm(data={"email": email})
+        if form.is_valid():
+            form.save(
+                request=request,
+                use_https=request.is_secure(),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                email_template_name="registration/password_reset_email.txt",
+                html_email_template_name="registration/password_reset_email.html",
+                subject_template_name="registration/password_reset_subject.txt",
+            )
+    except Exception:
+        # Do not disclose whether the address exists or expose SMTP/configuration details.
+        logger.exception("Password reset email delivery failed.")
+
+    return Response(
+        {"detail": "If that email exists, a reset link has been sent."},
+        status=status.HTTP_200_OK,
+    )
 
 
 
@@ -287,57 +302,62 @@ def me_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def password_reset_confirm_api(request):
+    """
+    Consume a one-time Django password-reset token, update the password, and
+    blacklist every outstanding refresh token for the account.
+    """
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.password_validation import validate_password
+    from django.contrib.auth.tokens import default_token_generator
+    from django.core.exceptions import ValidationError as DjangoValidationError
+    from django.db import transaction
+    from django.utils.http import urlsafe_base64_decode
+    from rest_framework_simplejwt.token_blacklist.models import (
+        BlacklistedToken,
+        OutstandingToken,
+    )
+
     serializer = PasswordResetConfirmSerializer(data=request.data)
     if not serializer.is_valid():
-        errors = serializer.errors
-        if 'confirm_password' in errors:
-            detail = errors['confirm_password'][0] if isinstance(errors['confirm_password'], list) else str(errors['confirm_password'])
-        elif 'non_field_errors' in errors:
-            detail = errors['non_field_errors'][0] if isinstance(errors['non_field_errors'], list) else str(errors['non_field_errors'])
-        else:
-            detail = "Missing required fields."
-        return Response({"detail": detail}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    uid_raw = serializer.validated_data['uid'].strip().strip('/')
-    token = serializer.validated_data['token'].strip().strip('/')
-    new_password = serializer.validated_data['new_password']
+    User = get_user_model()
+    uid_raw = serializer.validated_data["uid"].strip()
+    token_value = serializer.validated_data["token"].strip()
+    new_password = serializer.validated_data["new_password"]
 
     try:
-        from django.utils.http import urlsafe_base64_decode
-        from django.contrib.auth.tokens import default_token_generator
-        from django.contrib.auth.password_validation import validate_password
-        from django.core.exceptions import ValidationError as DjangoValidationError
-        from django.contrib.auth.models import User
+        uid = urlsafe_base64_decode(uid_raw).decode("utf-8")
+        user = User.objects.get(pk=uid, is_active=True)
+    except (TypeError, ValueError, UnicodeDecodeError, User.DoesNotExist):
+        return Response(
+            {"detail": "Invalid or expired reset link."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-        user = None
-        # 1. Try urlsafe_base64_decode
-        try:
-            uid_decoded = urlsafe_base64_decode(uid_raw).decode('utf-8')
-            user = User.objects.get(pk=uid_decoded)
-        except Exception:
-            # 2. Fallback to raw numeric PK if base64 decoding fails or user not found
-            if uid_raw.isdigit():
-                try:
-                    user = User.objects.get(pk=int(uid_raw))
-                except User.DoesNotExist:
-                    pass
+    if not default_token_generator.check_token(user, token_value):
+        return Response(
+            {"detail": "Invalid or expired reset link."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-        if not user:
-            return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not default_token_generator.check_token(user, token):
-            return Response({"detail": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
-
+    try:
         validate_password(new_password, user=user)
+    except DjangoValidationError as exc:
+        return Response({"new_password": list(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
+    with transaction.atomic():
         user.set_password(new_password)
-        user.save()
-        return Response({"detail": "Password has been reset successfully. You may now sign in."})
+        user.save(update_fields=["password"])
 
-    except DjangoValidationError as e:
-        return Response({"detail": " ".join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception:
-        return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)
+        # Password changes revoke all refresh sessions, not just the current device.
+        outstanding_tokens = OutstandingToken.objects.filter(user=user)
+        for outstanding in outstanding_tokens:
+            BlacklistedToken.objects.get_or_create(token=outstanding)
 
-
+    return Response(
+        {"detail": "Password has been reset successfully. Please sign in again."},
+        status=status.HTTP_200_OK,
+    )
