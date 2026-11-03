@@ -11,7 +11,7 @@ class CreatorProfileSerializer(serializers.ModelSerializer):
 class CreatorPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreatorPost
-        fields = ["id", "title", "body", "status", "published_at", "created_at", "updated_at"]
+        fields = ["id", "title", "body", "format", "status", "published_at", "created_at", "updated_at"]
         read_only_fields = ["id", "status", "published_at", "created_at", "updated_at"]
     def validate_title(self, value):
         value = value.strip()
