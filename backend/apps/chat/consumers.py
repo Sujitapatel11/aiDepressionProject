@@ -88,8 +88,26 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 logger.warning("Error during typing group_send: %s", e)
             return
 
-        content = data.get("message", "").strip()
+        raw_content = data.get("message", "")
+        if not isinstance(raw_content, str):
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "detail": "Message must be a text string",
+                "code": "invalid_message",
+            }))
+            return
+
+        content = raw_content.strip()
         if not content:
+            return
+
+        max_message_length = 4000
+        if len(content) > max_message_length:
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "detail": f"Message cannot exceed {max_message_length} characters",
+                "code": "message_too_long",
+            }))
             return
 
         try:
