@@ -25,6 +25,7 @@ export default function CreatorStudioPage() {
   const [selectedId, setSelectedId] = useState(null);
   const [earnings, setEarnings] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [settlements, setSettlements] = useState([]);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -37,13 +38,15 @@ export default function CreatorStudioPage() {
         api('GET', '/creator/posts/'),
         api('GET', '/creator/earnings/'),
         api('GET', '/creator/withdrawals/'),
+        api('GET', '/creator/settlements/'),
       ]);
-      const [postsData, earningsData, withdrawalsData] = await Promise.all([
-        readResponse(postsRes), readResponse(earningsRes), readResponse(withdrawalsRes),
+      const [postsData, earningsData, withdrawalsData, settlementsData] = await Promise.all([
+        readResponse(postsRes), readResponse(earningsRes), readResponse(withdrawalsRes), readResponse(settlementsRes),
       ]);
       setDrafts(Array.isArray(postsData) ? postsData : []);
       setEarnings(earningsData);
       setWithdrawals(Array.isArray(withdrawalsData) ? withdrawalsData : []);
+      setSettlements(Array.isArray(settlementsData) ? settlementsData : []);
     } catch (err) {
       setError(err.message);
     }
@@ -175,6 +178,11 @@ export default function CreatorStudioPage() {
               <input aria-label="Withdrawal amount in USD" type="number" min="1" step="0.01" value={withdrawAmount} onChange={(event) => setWithdrawAmount(event.target.value)} placeholder="Amount in USD" className="mt-3 w-full rounded-xl border border-violet-100 px-3 py-2 text-sm" />
               <button type="button" disabled={busy || !withdrawAmount || Number(withdrawAmount) <= 0} onClick={requestWithdrawal} className="mt-2 w-full rounded-full bg-violet-700 px-4 py-2.5 text-xs font-extrabold text-white disabled:opacity-50">Request withdrawal</button>
               <div className="mt-4 space-y-2">{withdrawals.map((item) => <div key={item.id} className="flex justify-between gap-2 text-[11px]"><span>{item.currency} {item.amount}</span><span className="font-bold capitalize">{item.status}</span></div>)}</div>
+            </div>
+            <div className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-extrabold">Monthly statements</h3>
+              <p className="mt-1 text-[11px] text-[#847891]">Statements are prepared by the SoulCare finance team.</p>
+              <div className="mt-3 space-y-2">{settlements.length === 0 && <p className="text-xs text-[#847891]">No monthly statements yet.</p>}{settlements.map((item) => <div key={item.id} className="rounded-xl bg-[#f8f4fc] p-3"><div className="flex justify-between gap-2 text-xs font-bold"><span>{item.period_start.slice(0, 7)} · {item.currency} {item.total_amount}</span><span className="capitalize">{item.status}</span></div><p className="mt-1 text-[10px] text-[#847891]">{item.earning_count} earning entries{item.payout_reference ? ' · Ref: ' + item.payout_reference : ''}</p></div>)}</div>
             </div>
             <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4">
               <p className="text-xs font-extrabold text-amber-900">Monetization status</p>
