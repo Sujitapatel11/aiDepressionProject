@@ -64,8 +64,8 @@ export default function CreatorStudioPage() {
     setBusy(true); setError(''); setNotice('');
     try {
       const response = selectedId
-        ? await api('PATCH', `/creator/posts/${selectedId}/`, { title: title.trim(), body: body.trim() })
-        : await api('POST', '/creator/posts/', { title: title.trim(), body: body.trim() });
+        ? await api('PATCH', `/creator/posts/${selectedId}/`, { title: title.trim(), body: body.trim(), format })
+        : await api('POST', '/creator/posts/', { title: title.trim(), body: body.trim(), format });
       const saved = await readResponse(response);
       setSelectedId(saved.id);
       setNotice('Draft saved securely to your SoulCare account.');
@@ -76,7 +76,7 @@ export default function CreatorStudioPage() {
 
   const openDraft = (draft) => {
     if (draft.status !== 'draft') return;
-    setSelectedId(draft.id); setTitle(draft.title); setBody(draft.body);
+    setSelectedId(draft.id); setTitle(draft.title); setBody(draft.body); setFormat(draft.format || 'micro-post');
     setNotice('Draft loaded.'); setError('');
   };
 
