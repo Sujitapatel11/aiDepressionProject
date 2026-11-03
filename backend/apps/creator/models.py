@@ -70,3 +70,33 @@ class CreatorWithdrawal(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     class Meta:
         ordering = ["-created_at"]
+
+
+class CreatorSettlement(models.Model):
+    class Status(models.TextChoices):
+        PREPARED = "prepared", "Prepared"
+        PAID = "paid", "Paid"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    creator = models.ForeignKey(CreatorProfile, on_delete=models.PROTECT, related_name="settlements")
+    currency = models.CharField(max_length=3)
+    period_start = models.DateField()
+    period_end = models.DateField()
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PREPARED, db_index=True)
+    payout_reference = models.CharField(max_length=160, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-period_start", "creator_id", "currency"]
+        constraints = [
+            models.UniqueConstraint(fields=["creator", "currency", "period_start"], name="uniq_creator_month_settlement"),
+        ]
+
+
+class CreatorSettlementLine(models.Model):
+    settlement = models.ForeignKey(CreatorSettlement, on_delete=models.PROTECT, related_name="lines")
+    earning = models.OneToOneField(CreatorEarning, on_delete=models.PROTECT, related_name="settlement_line")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
