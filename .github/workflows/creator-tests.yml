@@ -30,7 +30,7 @@ jobs:
       - name: Check migration drift
         env:
           DEBUG: "True"
-        run: python manage.py makemigrations --check --dry-run
+        run: python manage.py makemigrations creator --check --dry-run
       - name: Run creator platform tests
         env:
           DEBUG: "True"
