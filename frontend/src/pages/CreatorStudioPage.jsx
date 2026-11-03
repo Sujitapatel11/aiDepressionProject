@@ -34,7 +34,7 @@ export default function CreatorStudioPage() {
   const loadCreatorData = useCallback(async () => {
     setError('');
     try {
-      const [postsRes, earningsRes, withdrawalsRes] = await Promise.all([
+      const [postsRes, earningsRes, withdrawalsRes, settlementsRes] = await Promise.all([
         api('GET', '/creator/posts/'),
         api('GET', '/creator/earnings/'),
         api('GET', '/creator/withdrawals/'),
