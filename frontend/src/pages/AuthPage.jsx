@@ -437,7 +437,23 @@ function LoginForm({ onForgotPassword, onSuccessAlert }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput, password: passwordInput }),
       });
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        showAlert(
+          response.status >= 500
+            ? `Login service is temporarily unavailable (HTTP ${response.status}). Please try again later.`
+            : 'Login service returned an unexpected response. Please try again.'
+        );
+        return;
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        showAlert('Login service returned an invalid response. Please try again.');
+        return;
+      }
 
       if (response.ok) {
         login(data);

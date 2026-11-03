@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.support.models import SupportConnection
-from .models import Message
+from .models import Message, WebSocketAuthTicket
 from .serializers import MessageSerializer
 
 
@@ -28,3 +28,16 @@ def message_history(request, connection_id):
         Q(sender=user, deleted_for_sender=True) | Q(receiver=user, deleted_for_receiver=True)
     ).select_related('sender').order_by("created_at")[:100]
     return Response(MessageSerializer(messages, many=True).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def websocket_ticket(request):
+    if not request.user.is_active:
+        return Response({"detail": "Authentication required."}, status=status.HTTP_403_FORBIDDEN)
+
+    raw_ticket, _ = WebSocketAuthTicket.issue_for_user(request.user)
+    return Response(
+        {"ticket": raw_ticket, "expires_in": WebSocketAuthTicket.LIFETIME_SECONDS},
+        status=status.HTTP_201_CREATED,
+    )

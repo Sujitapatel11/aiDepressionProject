@@ -4,11 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import Toast from '../components/common/Toast';
 import ConfirmModal from '../components/common/ConfirmModal';
 import AvatarPickerModal from '../components/common/AvatarPickerModal';
+import { useResponsive } from '../hooks/useResponsive';
 
 export const MainLayout = () => {
   const { username, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isDesktop } = useResponsive();
 
   // Toast state
   const [toast, setToast] = useState({ message: '', visible: false });
@@ -94,6 +96,7 @@ export const MainLayout = () => {
       />
 
       {/* ── DESKTOP SHELL (hidden on mobile) ── */}
+      {(!isChatRoute || isDesktop) && (
       <div id="desk" className="hidden lg:flex h-screen overflow-hidden bg-[#FAF8FE]">
         {/* Sidebar */}
         <aside id="sidebar" className="w-[260px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col py-3">
@@ -235,8 +238,10 @@ export const MainLayout = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* ── MOBILE SHELL (hidden on desktop) ── */}
+      {(!isChatRoute || !isDesktop) && (
       <div id="mob" className="flex lg:hidden flex-col h-[100dvh] overflow-hidden bg-[#FAF8FE]">
         <div id="mob-content" className="flex-1 overflow-y-auto">
           <Outlet />
@@ -308,6 +313,7 @@ export const MainLayout = () => {
           </nav>
         )}
       </div>
+      )}
     </div>
   );
 };

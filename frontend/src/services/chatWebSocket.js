@@ -1,10 +1,10 @@
 /**
  * WebSocket Chat Client for SoulCare
  * Resolves WebSocket host dynamically from VITE_WS_BASE_URL or VITE_API_BASE_URL.
- * Includes proactive token validation, single-flight refresh, close 4003 handling,
- * and exponential backoff reconnection.
+ * Requests a single-use authentication ticket for each connection and reconnect.
+ * Includes close 4003 handling and exponential backoff reconnection.
  */
-import { refreshAccessToken, getStoredToken } from './api.js';
+import { api } from './api.js';
 
 export function getWsHost() {
   const envWs = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WS_BASE_URL || '').trim();
@@ -26,52 +26,15 @@ export function getWsHost() {
   return `${proto}//${host}`;
 }
 
-export function parseJwtPayload(token) {
-  if (!token || typeof token !== 'string') return null;
-  const parts = token.split('.');
-  if (parts.length < 2) return null;
-  try {
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let jsonPayload;
-    if (typeof atob === 'function') {
-      jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-    } else if (typeof Buffer !== 'undefined') {
-      jsonPayload = Buffer.from(base64, 'base64').toString('utf8');
-    } else {
-      return null;
-    }
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    return null;
-  }
-}
-
-export function isTokenExpiringSoon(token, bufferSeconds = 60) {
-  const payload = parseJwtPayload(token);
-  if (!payload || !payload.exp) {
-    return true;
-  }
-  const nowInSeconds = Math.floor(Date.now() / 1000);
-  return payload.exp <= (nowInSeconds + bufferSeconds);
-}
-
 export class ChatWebSocketClient {
-  constructor(connectionId, token, callbacks = {}) {
+  constructor(connectionId, callbacks = {}) {
     this.connectionId = connectionId;
-    this.token = token || getStoredToken();
     this.callbacks = callbacks;
     this.ws = null;
     this.pingInterval = null;
     this.reconnectTimer = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 6;
-    this.auth4003Retried = false;
     this.isManualDisconnect = false;
   }
 
@@ -86,18 +49,6 @@ export class ChatWebSocketClient {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-  }
-
-  async ensureValidToken() {
-    let token = this.token || getStoredToken();
-    if (!token || isTokenExpiringSoon(token, 60)) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        token = refreshed;
-        this.token = refreshed;
-      }
-    }
-    return token;
   }
 
   async connect() {
@@ -115,17 +66,26 @@ export class ChatWebSocketClient {
 
     this.reportStatus('Connecting...', false);
 
-    // Requirement 4: Ensure access token is valid before connect & reconnect
-    const validToken = await this.ensureValidToken();
-    if (!validToken || isTokenExpiringSoon(validToken, 0)) {
-      console.warn('[WebSocket] Cannot connect: access token expired and refresh failed.');
+    const response = await api('POST', '/chat/ws-ticket/');
+    if (this.isManualDisconnect) return;
+    if (!response || !response.ok) {
       this.reportStatus('Session expired, please log in again', false);
       return;
     }
-    this.token = validToken;
+
+    let ticket;
+    try {
+      ticket = (await response.json()).ticket;
+    } catch (e) {
+      ticket = null;
+    }
+    if (typeof ticket !== 'string' || !ticket) {
+      this.reportStatus('Unable to authenticate chat connection', false);
+      return;
+    }
 
     const host = getWsHost();
-    const url = `${host}/ws/chat/${this.connectionId}/?token=${encodeURIComponent(this.token)}`;
+    const url = `${host}/ws/chat/${encodeURIComponent(this.connectionId)}/?ticket=${encodeURIComponent(ticket)}`;
 
     // Note: NEVER log tokens (Requirement 7)
     try {
@@ -138,7 +98,6 @@ export class ChatWebSocketClient {
 
     this.ws.onopen = () => {
       this.reconnectAttempts = 0;
-      this.auth4003Retried = false;
       this.reportStatus('Online', true);
       this.startHeartbeat();
     };
@@ -157,6 +116,12 @@ export class ChatWebSocketClient {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'ping' || data.type === 'pong') {
+          return;
+        }
+        if (data.type === 'error') {
+          if (this.callbacks.onError) {
+            this.callbacks.onError(data.detail || 'Message could not be sent.');
+          }
           return;
         }
         if (data.type === 'typing') {
@@ -179,20 +144,8 @@ export class ChatWebSocketClient {
   async handleClose(event) {
     const code = event ? event.code : null;
 
-    // Requirement 5: Handle close code 4003 - refresh token and reconnect ONCE
     if (code === 4003) {
-      if (!this.auth4003Retried) {
-        this.auth4003Retried = true;
-        this.reportStatus('Refreshing session...', false);
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          this.token = refreshed;
-          this.connect();
-          return;
-        }
-      }
-      console.warn('[WebSocket] Closed with code 4003; session expired.');
-      this.reportStatus('Session expired, please log in again', false);
+      this.reportStatus('Unable to authenticate chat connection', false);
       return;
     }
 
@@ -222,7 +175,9 @@ export class ChatWebSocketClient {
     const openState = typeof WebSocket !== 'undefined' ? WebSocket.OPEN : 1;
     if (this.ws && this.ws.readyState === openState) {
       this.ws.send(JSON.stringify({ message: messageText }));
+      return true;
     }
+    return false;
   }
 
   sendTyping(isTyping = true) {

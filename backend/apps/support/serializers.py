@@ -35,6 +35,11 @@ class AnonymousUserSerializer(serializers.ModelSerializer):
         return IdentityService.resolve_avatar_url(obj)
 
 
+class ActivityConsentSerializer(serializers.Serializer):
+    """Strict boolean parsing - the string "false" must not become True."""
+    consent = serializers.BooleanField(default=False)
+
+
 class SupportRequestSerializer(serializers.ModelSerializer):
     from_user = AnonymousUserSerializer(read_only=True)
     to_user = AnonymousUserSerializer(read_only=True)
@@ -103,4 +108,3 @@ class SupportConnectionSerializer(serializers.ModelSerializer):
             'sender_id': msg.sender_id,
             'created_at': msg.created_at.isoformat(),
         }
-
