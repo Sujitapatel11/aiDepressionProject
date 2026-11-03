@@ -78,36 +78,6 @@ class Migration(migrations.Migration):
             ],
             options={"ordering": ["-created_at"]},
         ),
-        migrations.CreateModel(
-            name="CreatorSettlement",
-            fields=[
-                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ("currency", models.CharField(max_length=3)),
-                ("period_start", models.DateField()),
-                ("period_end", models.DateField()),
-                ("total_amount", models.DecimalField(decimal_places=2, max_digits=12)),
-                ("status", models.CharField(choices=[("prepared", "Prepared"), ("paid", "Paid")], db_index=True, default="prepared", max_length=12)),
-                ("payout_reference", models.CharField(blank=True, default="", max_length=160)),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("paid_at", models.DateTimeField(blank=True, null=True)),
-                ("creator", models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name="settlements", to="creator.creatorprofile")),
-            ],
-            options={"ordering": ["-period_start", "creator_id", "currency"]},
-        ),
-        migrations.CreateModel(
-            name="CreatorSettlementLine",
-            fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("amount", models.DecimalField(decimal_places=2, max_digits=12)),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("earning", models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name="settlement_line", to="creator.creatorearning")),
-                ("settlement", models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name="lines", to="creator.creatorsettlement")),
-            ],
-        ),
-        migrations.AddConstraint(
-            model_name="creatorsettlement",
-            constraint=models.UniqueConstraint(fields=("creator", "currency", "period_start"), name="uniq_creator_month_settlement"),
-        ),
         migrations.AddIndex(
             model_name="creatorpost",
             index=models.Index(fields=["status", "-published_at"], name="creator_post_status_pub_idx"),
