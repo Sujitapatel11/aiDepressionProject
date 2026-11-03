@@ -12,10 +12,11 @@ class CreatorPlatformTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_edit_publish_and_feed(self):
-        response = self.client.post("/api/creator/posts/", {"title": "Hello", "body": "My first post"}, format="json")
+        response = self.client.post("/api/creator/posts/", {"title": "Hello", "body": "My first post", "format": "poem"}, format="json")
         self.assertEqual(response.status_code, 201)
         post_id = response.data["id"]
         self.assertEqual(response.data["status"], "draft")
+        self.assertEqual(response.data["format"], "poem")
         response = self.client.post(f"/api/creator/posts/{post_id}/publish/", {}, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["status"], "published")
