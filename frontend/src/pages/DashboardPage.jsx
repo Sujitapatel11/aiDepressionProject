@@ -70,6 +70,7 @@ export const DashboardPage = () => {
   const { username } = useAuth();
   const navigate = useNavigate();
   const [dashData, setDashData] = useState(null);
+  const [dashboardError, setDashboardError] = useState('');
   const [customAvatar, setCustomAvatar] = useState('');
 
   useEffect(() => {
@@ -80,6 +81,9 @@ export const DashboardPage = () => {
       if (res && res.ok) {
         const data = await res.json();
         setDashData(data);
+        setDashboardError('');
+      } else {
+        setDashboardError('Dashboard data could not load. Please refresh or try again.');
       }
 
     }
@@ -115,6 +119,8 @@ export const DashboardPage = () => {
             <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-400" />
           </button>
         </header>
+
+        {dashboardError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dashboardError}</p>}
 
         <section className="space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-3">

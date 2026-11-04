@@ -13,6 +13,7 @@ export const PeersPage = () => {
     users: [],
   });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [findSubMode, setFindSubMode] = useState('matches'); // 'matches' (card UI) vs 'browse' (list UI)
@@ -29,6 +30,9 @@ export const PeersPage = () => {
         api('GET', '/support/users/'),
       ]);
 
+      const failed = [cRes, incRes, sntRes, usrRes].some((response) => !response || !response.ok);
+      if (failed) setLoadError('Some connection data could not load. Retry to refresh your circle.');
+      else setLoadError('');
       const parse = async (r) => (r && r.ok ? await r.json() : []);
       const c = await parse(cRes);
       const inc = await parse(incRes);
@@ -43,6 +47,7 @@ export const PeersPage = () => {
       });
     } catch (e) {
       console.error('Support data fetch error:', e);
+      setLoadError('Connection data could not load. Check your connection and retry.');
     }
     setLoading(false);
   };
@@ -68,9 +73,9 @@ export const PeersPage = () => {
     if (res && res.ok) {
       if (window.showToast) window.showToast('Request sent to ' + uname);
       fetchSupportData();
-    } else if (res) {
-      const err = await res.json();
-      if (window.showToast) window.showToast(err.detail || 'Failed');
+    } else {
+      const err = res ? await res.json().catch(() => ({})) : {};
+      if (window.showToast) window.showToast(err.detail || 'Could not send request. Please try again.');
     }
   };
 
@@ -80,12 +85,17 @@ export const PeersPage = () => {
       if (window.showToast) window.showToast('Connected with ' + uname);
       fetchSupportData();
       setActiveTab('connections');
+    } else if (window.showToast) {
+      window.showToast('Could not accept request. Please try again.');
     }
   };
 
   const handleRejectRequest = async (id) => {
-    await api('POST', `/support/reject/${id}/`, {});
-    fetchSupportData();
+    const res = await api('POST', `/support/reject/${id}/`, {});
+    if (res && res.ok) {
+      if (window.showToast) window.showToast('Request declined.');
+      fetchSupportData();
+    } else if (window.showToast) window.showToast('Could not decline request. Please retry.');
   };
 
   const handleCancelRequest = async (id, uname) => {
@@ -112,9 +122,11 @@ export const PeersPage = () => {
       window.showConfirm(
         `Disconnect from ${peerName}?`,
         async () => {
-          await api('POST', `/support/connections/${connId}/disconnect/`, {});
-          if (window.showToast) window.showToast('Disconnected');
-          fetchSupportData();
+          const res = await api('POST', `/support/connections/${connId}/disconnect/`, {});
+          if (res && res.ok) {
+            if (window.showToast) window.showToast('Disconnected');
+            fetchSupportData();
+          } else if (window.showToast) window.showToast('Could not disconnect. Please try again.');
         },
         false
       );
@@ -126,9 +138,11 @@ export const PeersPage = () => {
       window.showConfirm(
         `Block ${peerName}?`,
         async () => {
-          await api('POST', `/support/connections/${connId}/block/`, {});
-          if (window.showToast) window.showToast('Blocked');
-          fetchSupportData();
+          const res = await api('POST', `/support/connections/${connId}/block/`, {});
+          if (res && res.ok) {
+            if (window.showToast) window.showToast('Blocked');
+            fetchSupportData();
+          } else if (window.showToast) window.showToast('Could not block this connection. Please try again.');
         },
         true
       );
@@ -223,6 +237,8 @@ export const PeersPage = () => {
             <div className="w-6 h-6 rounded bg-gray-100"></div>
           </div>
         </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center"><p role="alert" className="text-sm text-rose-700">{loadError}</p><button type="button" onClick={fetchSupportData} className="mt-3 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white">Retry</button></div>
       ) : activeTab === 'connections' ? (
         <div className="space-y-3">
           {supportData.connections.length === 0 ? (

@@ -70,7 +70,7 @@ export class ChatWebSocketClient {
     this.pingInterval = null;
     this.reconnectTimer = null;
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 6;
+    this.isConnecting = false;
     this.auth4003Retried = false;
     this.isManualDisconnect = false;
   }
@@ -101,7 +101,8 @@ export class ChatWebSocketClient {
   }
 
   async connect() {
-    if (this.isManualDisconnect) return;
+    if (this.isManualDisconnect || this.isConnecting) return;
+    this.isConnecting = true;
     this.clearReconnectTimer();
 
     if (this.ws) {
@@ -116,8 +117,17 @@ export class ChatWebSocketClient {
     this.reportStatus('Connecting...', false);
 
     // Requirement 4: Ensure access token is valid before connect & reconnect
-    const validToken = await this.ensureValidToken();
+    let validToken;
+    try {
+      validToken = await this.ensureValidToken();
+    } catch (err) {
+      console.error('[WebSocket] Token refresh failed:', err);
+      this.isConnecting = false;
+      this.scheduleReconnect();
+      return;
+    }
     if (!validToken || isTokenExpiringSoon(validToken, 0)) {
+      this.isConnecting = false;
       console.warn('[WebSocket] Cannot connect: access token expired and refresh failed.');
       this.reportStatus('Session expired, please log in again', false);
       return;
@@ -131,12 +141,14 @@ export class ChatWebSocketClient {
     try {
       this.ws = new WebSocket(url);
     } catch (err) {
+      this.isConnecting = false;
       console.error('[WebSocket] Failed to instantiate WebSocket:', err);
       this.scheduleReconnect();
       return;
     }
 
     this.ws.onopen = () => {
+      this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.auth4003Retried = false;
       this.reportStatus('Online', true);
@@ -144,6 +156,7 @@ export class ChatWebSocketClient {
     };
 
     this.ws.onclose = (event) => {
+      this.isConnecting = false;
       this.stopHeartbeat();
       if (this.isManualDisconnect) return;
       this.handleClose(event);
@@ -163,6 +176,8 @@ export class ChatWebSocketClient {
           if (this.callbacks.onTyping) {
             this.callbacks.onTyping(data.sender_id, data.is_typing);
           }
+        } else if (data.type === 'error') {
+          if (this.callbacks.onDeliveryError) this.callbacks.onDeliveryError(data.detail || 'Message could not be saved.');
         } else if (data.type === 'message' || data.type === 'chat.message') {
           if (this.callbacks.onMessage) {
             this.callbacks.onMessage(data);
@@ -196,19 +211,14 @@ export class ChatWebSocketClient {
       return;
     }
 
-    // Requirement 6: Reconnect with exponential backoff (1s, 2s, 4s... capped at 30s, max 6 attempts)
     this.scheduleReconnect();
   }
 
   scheduleReconnect() {
-    if (this.isManualDisconnect) return;
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.warn(`[WebSocket] Max reconnect attempts (${this.maxReconnectAttempts}) reached.`);
-      this.reportStatus('Disconnected', false);
-      return;
-    }
+    if (this.isManualDisconnect || this.reconnectTimer || this.isConnecting) return;
 
-    const delayMs = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    const baseDelayMs = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    const delayMs = Math.round(baseDelayMs * (0.8 + Math.random() * 0.4));
     this.reconnectAttempts += 1;
     this.reportStatus(`Reconnecting in ${Math.round(delayMs / 1000)}s...`, false);
 
@@ -218,10 +228,15 @@ export class ChatWebSocketClient {
     }, delayMs);
   }
 
-  sendMessage(messageText) {
+  sendMessage(messageText, clientMessageId) {
     const openState = typeof WebSocket !== 'undefined' ? WebSocket.OPEN : 1;
-    if (this.ws && this.ws.readyState === openState) {
-      this.ws.send(JSON.stringify({ message: messageText }));
+    if (!this.ws || this.ws.readyState !== openState) return false;
+    try {
+      this.ws.send(JSON.stringify({ message: messageText, client_message_id: clientMessageId }));
+      return true;
+    } catch (err) {
+      console.error('[WebSocket] Message send failed:', err);
+      return false;
     }
   }
 
@@ -251,6 +266,7 @@ export class ChatWebSocketClient {
 
   disconnect() {
     this.isManualDisconnect = true;
+    this.isConnecting = false;
     this.clearReconnectTimer();
     this.stopHeartbeat();
     if (this.ws) {

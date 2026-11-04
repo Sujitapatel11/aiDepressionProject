@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import time
 import redis.exceptions
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -37,9 +38,13 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             return
 
         try:
+            started = time.monotonic()
             await self.channel_layer.group_add(self.group_name, self.channel_name)
+            logger.info("chat.redis.group_add duration_ms=%.2f", (time.monotonic() - started) * 1000)
         except Exception as e:
-            logger.warning("Channel layer error during connect group_add: %s. Continuing with active socket...", e)
+            logger.exception("Chat channel layer unavailable during connect; rejecting socket: %s", e)
+            await self.close(code=1013)
+            return
 
         await self.accept()
         self.ping_task = asyncio.create_task(self.start_ping_loop())
@@ -89,11 +94,14 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             return
 
         content = data.get("message", "").strip()
+        client_message_id = str(data.get("client_message_id", ""))[:80]
         if not content:
             return
 
         try:
+            started = time.monotonic()
             msg = await self.save_message(content)
+            logger.info("chat.database.save_message duration_ms=%.2f", (time.monotonic() - started) * 1000)
         except Exception as e:
             logger.exception("Exception in save_message during receive: %s", e)
             msg = None
@@ -110,21 +118,30 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
             }))
             return
 
+        event = {
+            "type": "chat.message",
+            "message_id": str(msg.message_id),
+            "client_message_id": client_message_id,
+            "message": msg.content,
+            "sender_id": self.user.id,
+            "timestamp": msg.created_at.isoformat(),
+        }
+        # Acknowledge only after the database commit succeeded. The client can
+        # distinguish persisted messages from merely queued socket writes.
+        await self.send(text_data=json.dumps({**event, "type": "message"}))
         try:
-            await self.channel_layer.group_send(self.group_name, {
-                "type": "chat.message",
-                "message_id": str(msg.message_id),
-                "message": msg.content,
-                "sender_id": self.user.id,
-                "timestamp": msg.created_at.isoformat(),
-            })
+            started = time.monotonic()
+            await self.channel_layer.group_send(self.group_name, event)
+            logger.info("chat.redis.group_send duration_ms=%.2f", (time.monotonic() - started) * 1000)
         except Exception as e:
-            logger.warning("Error during message group_send: %s", e)
+            # Persistence succeeded; recipient can retrieve the message via history.
+            logger.exception("Chat broadcast failed after DB save; message_id=%s: %s", msg.message_id, e)
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             "type": "message",
             "message_id": event["message_id"],
+            "client_message_id": event.get("client_message_id", ""),
             "message": event["message"],
             "sender_id": event["sender_id"],
             "timestamp": event["timestamp"],

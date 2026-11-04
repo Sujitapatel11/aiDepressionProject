@@ -18,6 +18,8 @@ export const ChatPage = () => {
   const [isOnline, setIsOnline] = useState(false);
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sendError, setSendError] = useState('');
+  const [historyError, setHistoryError] = useState('');
 
   // Connection Level & Activity State
   const [activityState, setActivityState] = useState(null);
@@ -37,6 +39,7 @@ export const ChatPage = () => {
 
   const messagesEndRef = useRef(null);
   const wsClientRef = useRef(null);
+  const pendingMessageRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -54,9 +57,12 @@ export const ChatPage = () => {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.results || [];
         setMessages(list);
+        setHistoryError('');
       } catch (e) {
-        setMessages([]);
+        setHistoryError('Message history could not be read. Retry to load it again.');
       }
+    } else {
+      setHistoryError('Message history could not load. Check your connection and retry.');
     }
     setLoading(false);
     scrollToBottom();
@@ -79,7 +85,10 @@ export const ChatPage = () => {
   };
 
   useEffect(() => {
-    if (!connId) return;
+    if (!connId) {
+      navigate('/peers', { replace: true });
+      return;
+    }
 
     fetchHistory();
     fetchActivityStatus();
@@ -88,8 +97,15 @@ export const ChatPage = () => {
       onStatusChange: (statusText, online) => {
         setStatus(statusText);
         setIsOnline(online);
+        if (!online && pendingMessageRef.current) {
+          setInputText((current) => current || pendingMessageRef.current.text);
+          pendingMessageRef.current = null;
+        }
       },
       onMessage: (msgData) => {
+        if (msgData.client_message_id && pendingMessageRef.current?.id === msgData.client_message_id) {
+          pendingMessageRef.current = null;
+        }
         console.log('[ChatPage] WS message received, updating state:', msgData);
         setMessages((prev) => {
           if (msgData.message_id && prev.some((m) => m.message_id === msgData.message_id)) {
@@ -100,6 +116,13 @@ export const ChatPage = () => {
         // Re-evaluate level score after new messages arrive
         fetchActivityStatus();
         scrollToBottom();
+      },
+      onDeliveryError: (detail) => {
+        if (pendingMessageRef.current) {
+          setInputText((current) => current || pendingMessageRef.current.text);
+          pendingMessageRef.current = null;
+        }
+        setSendError(detail);
       },
       onTyping: (senderId, isTyping) => {
         if (senderId !== userId) {
@@ -124,10 +147,22 @@ export const ChatPage = () => {
   const handleSend = (e) => {
     e.preventDefault();
     const msg = inputText.trim();
-    if (!msg || !wsClientRef.current) return;
+    if (!msg) return;
+    if (!wsClientRef.current) {
+      setSendError('Chat is still connecting. Your message has not been sent; please try again shortly.');
+      return;
+    }
 
-    wsClientRef.current.sendMessage(msg);
-    setInputText('');
+    setSendError('');
+    const clientMessageId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    pendingMessageRef.current = { id: clientMessageId, text: msg };
+    const sent = wsClientRef.current.sendMessage(msg, clientMessageId);
+    if (sent) {
+      setInputText('');
+    } else {
+      pendingMessageRef.current = null;
+      setSendError('Not connected. Your message is still here — reconnecting. Tap Send again when Online.');
+    }
   };
 
   const handleTypingInput = (val) => {
@@ -244,7 +279,7 @@ export const ChatPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-68px)] lg:h-screen bg-white max-w-5xl mx-auto shadow-sm animate-fadeIn relative">
       {/* CHAT HEADER WITH LEVEL INDICATOR BADGE */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-white flex-shrink-0 relative">
+      <div className="flex min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4 border-b border-gray-200 bg-white flex-shrink-0 relative">
         <button
           onClick={() => navigate('/peers')}
           className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition border-none bg-transparent cursor-pointer mr-1"
@@ -423,7 +458,8 @@ export const ChatPage = () => {
           })
         )}
 
-        {/* Typing indicator */}
+        {historyError && <div className="mx-4 mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><span role="alert">{historyError}</span><button type="button" onClick={fetchHistory} className="ml-2 font-bold underline">Retry</button></div>}
+      {/* Typing indicator */}
         {isPeerTyping && (
           <div className="flex flex-col items-start fade-in">
             <div className="p-3 px-4 rounded-2xl bg-white border border-gray-200 text-xs font-semibold text-purple-600 flex items-center gap-1.5 shadow-sm">
@@ -439,19 +475,20 @@ export const ChatPage = () => {
       {/* INPUT FORM */}
       <form
         onSubmit={handleSend}
-        className="flex items-center gap-3 px-6 py-4 flex-shrink-0 bg-white border-t border-gray-200"
+        className="flex min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4 flex-shrink-0 bg-white border-t border-gray-200"
       >
         <input
           type="text"
           value={inputText}
           onChange={(e) => handleTypingInput(e.target.value)}
           placeholder="Write a supportive message..."
-          className="inp flex-1 t-body-md"
+          className="inp min-w-0 flex-1 t-body-md"
           style={{ borderRadius: '24px', padding: '12px 20px' }}
         />
-        <button type="submit" className="btn-blue py-3 px-6" style={{ width: 'auto' }}>
+        <button type="submit" disabled={!inputText.trim()} className="btn-blue py-3 px-6 disabled:cursor-not-allowed disabled:opacity-50" style={{ width: 'auto' }}>
           Send
         </button>
+        {sendError && <span role="alert" className="text-xs text-red-600">{sendError}</span>}
       </form>
 
       {/* EXPLICIT ONE-TIME CONSENT MODAL */}
