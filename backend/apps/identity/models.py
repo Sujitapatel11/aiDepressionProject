@@ -68,3 +68,24 @@ class UserCosmeticInventory(models.Model):
     def __str__(self):
         status = "Equipped" if self.is_equipped else "Inventory"
         return f"{self.user.username} - {self.cosmetic_item.name} ({status})"
+
+
+class PublicProfile(models.Model):
+    """
+    User-editable public profile fields. Authentication details and private
+    personality/matching signals deliberately live in separate models.
+    """
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="public_profile"
+    )
+    display_name = models.CharField(max_length=50, blank=True)
+    bio = models.CharField(max_length=280, blank=True)
+    interests = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "identity_publicprofile"
+
+    def __str__(self):
+        return f"PublicProfile({self.user.username})"
