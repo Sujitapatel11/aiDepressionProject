@@ -278,7 +278,9 @@ ASGI_APPLICATION = "config.asgi.application"
 
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 
-if REDIS_URL:
+is_local_redis = REDIS_URL.startswith("redis://127.0.0.1") or REDIS_URL.startswith("redis://localhost")
+
+if REDIS_URL and not (DEBUG and is_local_redis):
     is_tls = REDIS_URL.startswith("rediss://")
     host_config = {
         "address": REDIS_URL,
