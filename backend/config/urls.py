@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/chat/', include('apps.chat.urls')),
     path('api/sleep/', include('apps.sleep.urls')),
     path('api/community/', include('apps.community.urls')),
+    path('api/payments/', include('apps.payments.urls')),
     path('api/dashboard/', include('apps.support.dashboard_urls')),
     path('api/dashboard/beta/', beta_dashboard_stats, name='beta_dashboard_stats'),
     path('api/telemetry/', include('apps.telemetry.urls')),
