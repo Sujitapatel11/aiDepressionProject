@@ -241,26 +241,6 @@ This document provides a comprehensive API specification for the **SoulCare** pl
 
 ---
 
-## 8. Sleep Tracker API (`/api/sleep/`)
-
-### List / Log Sleep Entries
-- **Endpoints:** `GET /api/sleep/`, `POST /api/sleep/`
-- **POST Request Body:**
-  ```json
-  {
-    "sleep_date": "2026-08-01",
-    "bedtime": "2026-07-31T23:00:00Z",
-    "wake_time": "2026-08-01T07:00:00Z",
-    "total_sleep_hours": 8.0,
-    "sleep_quality": "good",
-    "sleep_notes": "Rested well"
-  }
-  ```
-
-### Sleep Metrics & Today Summary
-- **Endpoints:** `GET /api/sleep/today/`, `GET /api/sleep/stats/`
-- **Auth Required:** Yes (`Bearer`)
-
 ---
 
 ## 9. Telemetry & Feedback API (`/api/telemetry/` & `/api/feedback/`)

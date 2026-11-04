@@ -48,7 +48,6 @@ const endpoints = [
   { name: 'Journal', path: '/journal/', expected: 'https://aidepressionproject.onrender.com/api/journal/' },
   { name: 'Dashboard', path: '/dashboard/', expected: 'https://aidepressionproject.onrender.com/api/dashboard/' },
   { name: 'Insights', path: '/insights/', expected: 'https://aidepressionproject.onrender.com/api/insights/' },
-  { name: 'Sleep', path: '/sleep/', expected: 'https://aidepressionproject.onrender.com/api/sleep/' },
   { name: 'Support', path: '/support/connections/', expected: 'https://aidepressionproject.onrender.com/api/support/connections/' },
   { name: 'Chat Messages', path: '/chat/1/messages/', expected: 'https://aidepressionproject.onrender.com/api/chat/1/messages/' },
   { name: 'Feedback', path: '/feedback/', expected: 'https://aidepressionproject.onrender.com/api/feedback/' },

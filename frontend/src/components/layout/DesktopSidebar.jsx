@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Smile, MessageSquare, Moon, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Smile, MessageSquare, User, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Avatar from '../common/Avatar';
 
@@ -18,7 +18,6 @@ export const DesktopSidebar = ({ pendingRequestsCount = 0 }) => {
     { to: '/journal', label: 'Journal', icon: BookOpen },
     { to: '/insights', label: 'Insights', icon: Smile },
     { to: '/support', label: 'Messages', icon: MessageSquare, badge: pendingRequestsCount },
-    { to: '/sleep', label: 'Sleep Tracker', icon: Moon },
   ];
 
   return (
