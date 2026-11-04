@@ -228,11 +228,11 @@ export class ChatWebSocketClient {
     }, delayMs);
   }
 
-  sendMessage(messageText) {
+  sendMessage(messageText, clientMessageId) {
     const openState = typeof WebSocket !== 'undefined' ? WebSocket.OPEN : 1;
     if (!this.ws || this.ws.readyState !== openState) return false;
     try {
-      this.ws.send(JSON.stringify({ message: messageText }));
+      this.ws.send(JSON.stringify({ message: messageText, client_message_id: clientMessageId }));
       return true;
     } catch (err) {
       console.error('[WebSocket] Message send failed:', err);
