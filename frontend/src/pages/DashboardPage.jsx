@@ -70,7 +70,6 @@ export const DashboardPage = () => {
   const { username } = useAuth();
   const navigate = useNavigate();
   const [dashData, setDashData] = useState(null);
-  const [sleepStats, setSleepStats] = useState(null);
   const [customAvatar, setCustomAvatar] = useState('');
 
   useEffect(() => {
@@ -83,15 +82,6 @@ export const DashboardPage = () => {
         setDashData(data);
       }
 
-      try {
-        const sRes = await api('GET', '/sleep/stats/');
-        if (sRes && sRes.ok) {
-          const sData = await sRes.json();
-          setSleepStats(sData);
-        }
-      } catch (e) {
-        // Sleep stats are optional; the rest of the dashboard remains available.
-      }
     }
 
     loadData();
@@ -198,16 +188,11 @@ export const DashboardPage = () => {
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <button type="button" onClick={() => navigate('/insights')} className="rounded-2xl border border-violet-100 bg-white p-4 text-left shadow-sm transition hover:border-violet-300">
             <p className="text-xs font-bold uppercase tracking-wide text-violet-500">Unread insights</p>
             <p className="mt-1 text-2xl font-extrabold text-violet-900">{dashData?.unread_insights_count ?? 0}</p>
             <p className="text-xs text-[#887d98]">AI reflections waiting</p>
-          </button>
-          <button type="button" onClick={() => navigate('/sleep')} className="rounded-2xl border border-indigo-100 bg-white p-4 text-left shadow-sm transition hover:border-indigo-300">
-            <p className="text-xs font-bold uppercase tracking-wide text-indigo-500">Restful sleep</p>
-            <p className="mt-1 text-lg font-extrabold text-indigo-900">{sleepStats?.has_data ? sleepStats.formatted_latest : 'No sleep data yet'}</p>
-            <p className="text-xs text-[#887d98]">{sleepStats?.has_data ? `Quality: ${sleepStats.sleep_quality} · 7-day avg: ${sleepStats.formatted_avg}` : 'Add a sleep entry when ready'}</p>
           </button>
           <button type="button" onClick={() => navigate('/peers')} className="rounded-2xl border border-pink-100 bg-white p-4 text-left shadow-sm transition hover:border-pink-300">
             <p className="text-xs font-bold uppercase tracking-wide text-pink-500">Connections</p>
