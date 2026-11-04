@@ -17,7 +17,7 @@ for env_path in [
 # =========================
 # SECURITY
 # =========================
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False").strip().lower() in {"1", "true", "yes"}
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
@@ -288,7 +288,7 @@ if REDIS_URL and not REDIS_URL.startswith("redis://127.0.0.1") and not REDIS_URL
     }
     if is_tls:
         import ssl
-        host_config["ssl_cert_reqs"] = ssl.CERT_NONE
+        host_config["ssl_cert_reqs"] = ssl.CERT_REQUIRED
 
     CHANNEL_LAYERS = {
         "default": {
