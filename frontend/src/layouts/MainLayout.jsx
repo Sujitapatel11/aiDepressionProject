@@ -172,6 +172,14 @@ export const MainLayout = () => {
             </Link>
 
             <Link
+              to="/world"
+              className={`snav-item ${currentTab === 'world' || currentTab === 'creator-studio' ? 'active' : ''}`}
+            >
+              <span className="text-lg" aria-hidden="true">✦</span>
+              <span>Soul World</span>
+            </Link>
+
+            <Link
               to="/profile"
               className={`snav-item ${currentTab === 'profile' ? 'active' : ''}`}
             >
@@ -288,7 +296,7 @@ export const MainLayout = () => {
 
             <Link
               to="/profile"
-              className={`nav-item ${currentTab === 'profile' || currentTab === 'settings' ? 'active' : ''}`}
+              className={`nav-item ${currentTab === 'profile' || currentTab === 'settings' || currentTab === 'world' || currentTab === 'creator-studio' || currentTab === 'beta-admin' ? 'active' : ''}`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
