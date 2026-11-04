@@ -20,8 +20,11 @@ def _required_env(name):
     return value
 
 
-def _frontend_url():
-    return os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+def _backend_url():
+    value = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
+    if not value:
+        raise PaymentProviderError("Payment provider is not configured: BACKEND_URL")
+    return value
 
 
 def initiate_esewa(transaction):
@@ -41,7 +44,7 @@ def initiate_esewa(transaction):
         "product_code": product_code,
         "product_service_charge": "0",
         "product_delivery_charge": "0",
-        "success_url": f"{_frontend_url()}/payment/return/esewa",
+        "success_url": f"{_backend_url()}/api/payments/return/esewa/",
         "failure_url": f"{_frontend_url()}/payment/failed",
         "signed_field_names": signed_fields,
         "signature": signature,
@@ -79,7 +82,7 @@ def verify_esewa(encoded_data, transaction):
 def initiate_khalti(transaction, customer=None):
     secret = _required_env("KHALTI_SECRET_KEY")
     base_url = os.environ.get("KHALTI_INITIATE_URL", "https://khalti.com/api/v2/epayment/initiate/")
-    callback = f"{_frontend_url()}/payment/return/khalti"
+    callback = f"{_backend_url()}/api/payments/return/khalti/"
     user = transaction.user
     payload = {
         "return_url": callback,
