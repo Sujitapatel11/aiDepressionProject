@@ -431,10 +431,6 @@ textarea { resize: none; }
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         <span>Messages <span id="desk-req-badge" class="hidden ml-1 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full align-middle" style="background:var(--coral)"></span></span>
       </div>
-      <div class="snav-item" onclick="showTab('sleep')" data-tab="sleep">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-        <span>Sleep</span>
-      </div>
     </div>
 
     <div class="px-3 py-4" style="border-top:1px solid var(--clue-border)">
@@ -561,16 +557,6 @@ textarea { resize: none; }
               </div>
               <div class="text-3xl font-black text-gray-900 mb-1" id="d-dash-insights">0</div>
               <p class="t-caption text-purple-600 font-semibold">Active AI feedback</p>
-            </div>
-
-            <!-- Sleep Card (PRESERVED: id="d-dash-sleep", id="d-dash-sleep-sub") -->
-            <div class="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer" onclick="showTab('sleep')">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Restful Sleep</span>
-                <span class="text-xl">🌙</span>
-              </div>
-              <div class="text-sm font-bold text-gray-400 my-2" id="d-dash-sleep">No sleep data</div>
-              <button onclick="event.stopPropagation();showTab('sleep')" class="text-xs font-bold text-indigo-600 hover:underline text-left border-none bg-transparent cursor-pointer" id="d-dash-sleep-sub">+ Log Sleep</button>
             </div>
 
             <!-- Stress Card (Empty State) -->
@@ -977,89 +963,6 @@ textarea { resize: none; }
         </div>
       </div>
 
-      <!-- DESKTOP SLEEP TRACKER (PRESERVED: id="desk-sleep", id="sleep-bedtime-input", id="sleep-wake-input", id="sleep-save-btn", id="sleep-error", id="sleep-chart", id="sleep-chart-labels", id="sleep-history-list") -->
-      <div id="desk-sleep" class="hidden max-w-5xl mx-auto py-8 px-6 space-y-8">
-        <!-- Hero Header -->
-        <div class="p-8 rounded-[32px] bg-white border border-indigo-100 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider">🌙 Independent Rest Subsystem</span>
-            </div>
-            <h1 class="t-display text-gray-900 text-3xl font-extrabold mb-1">Restful Sleep Tracker</h1>
-            <p class="t-body-md text-gray-500 italic">“Quality sleep is the foundation of mental clarity & emotional peace.” 🌌</p>
-          </div>
-          <div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-3xl flex-shrink-0">🌙</div>
-        </div>
-
-        <!-- Today's Sleep Entry Card -->
-        <div class="p-8 rounded-[32px] bg-white border border-indigo-100 shadow-md space-y-6">
-          <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>🛏️</span> Log Today's Rest</h3>
-          <div class="grid grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Bedtime</label>
-              <input type="time" id="sleep-bedtime-input" value="23:00" class="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-base font-bold text-gray-900 focus:outline-none focus:border-indigo-500 transition" />
-            </div>
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Wake Time</label>
-              <input type="time" id="sleep-wake-input" value="07:00" class="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-base font-bold text-gray-900 focus:outline-none focus:border-indigo-500 transition" />
-            </div>
-          </div>
-
-          <!-- Sleep Quality Selector -->
-          <div class="space-y-2 pt-2 border-t border-gray-100">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Sleep Quality</label>
-            <div class="flex items-center gap-3">
-              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
-                <input type="radio" name="sleep-quality" value="great" checked class="accent-indigo-600" /> 😊 Great
-              </label>
-              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
-                <input type="radio" name="sleep-quality" value="good" class="accent-indigo-600" /> 🙂 Good
-              </label>
-              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
-                <input type="radio" name="sleep-quality" value="fair" class="accent-indigo-600" /> 😐 Fair
-              </label>
-              <label class="flex-1 p-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 font-semibold text-sm">
-                <input type="radio" name="sleep-quality" value="poor" class="accent-indigo-600" /> 🙁 Poor
-              </label>
-            </div>
-          </div>
-
-          <!-- Sleep Notes Input -->
-          <div class="space-y-2 pt-2 border-t border-gray-100">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Sleep Notes (Optional)</label>
-            <textarea id="sleep-notes-input" rows="2" placeholder="Woke up feeling peaceful and refreshed..." class="w-full p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
-          </div>
-
-          <!-- Error Feedback & Submit Button -->
-          <div class="flex items-center justify-between pt-2">
-            <div id="sleep-error" class="hidden text-xs font-bold text-red-500"></div>
-            <button id="sleep-save-btn" onclick="saveSleep()" class="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-lg border-none cursor-pointer flex items-center gap-2 ml-auto">
-              <span>Save Sleep Record</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 7-Day Sleep Duration Chart -->
-        <div class="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="t-h4 font-bold text-gray-900">7-Day Sleep Duration Trend</h3>
-            <span class="text-xs font-bold text-gray-400">Target: 7-9 hrs/night</span>
-          </div>
-          <div id="sleep-chart" class="flex items-end gap-3 h-28 pt-4 pb-2 px-2 border-b border-gray-100"></div>
-          <div id="sleep-chart-labels" class="flex gap-3"></div>
-        </div>
-
-        <!-- Sleep History Timeline -->
-        <div>
-          <h3 class="t-h3 text-gray-900 font-bold mb-4 flex items-center gap-2"><span>📚</span> Sleep History</h3>
-          <div id="sleep-history-list" class="space-y-4">
-            <p class="t-body-sm text-center py-8 text-gray-400">Loading sleep records...</p>
-          </div>
-        </div>
-
-      </div>
-
     </div>
   </div>
 </div>
@@ -1316,45 +1219,6 @@ textarea { resize: none; }
         <button onclick="openAvatarPicker()" class="w-full py-4 t-btn rounded-2xl btn-gray">Choose anonymous avatar</button>
         <button onclick="logout()" class="w-full py-4 t-btn rounded-2xl btn-gray" style="color:#EF4444;border-color:#FCA5A5;background:#FEF2F2">Sign out</button>
       </div>
-    <!-- SLEEP TRACKER (MOBILE) -->
-    <div id="mob-sleep" class="screen pb-24 space-y-4">
-      <div class="top-bar">
-        <h1 class="t-h3" style="color:var(--coral-dk)">🌙 Restful Sleep</h1>
-      </div>
-
-      <!-- Mobile Log Sleep Form Card -->
-      <div class="mx-5 p-5 rounded-[24px] bg-white border border-indigo-100 shadow-sm space-y-4">
-        <h3 class="t-h4 font-bold text-gray-900 flex items-center gap-2"><span>🛏️</span> Log Today's Rest</h3>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Bedtime</label>
-            <input type="time" id="m-sleep-bedtime-input" value="23:00" onchange="syncTimeInput(this, 'sleep-bedtime-input')" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-bold text-gray-900" />
-          </div>
-          <div>
-            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Wake Time</label>
-            <input type="time" id="m-sleep-wake-input" value="07:00" onchange="syncTimeInput(this, 'sleep-wake-input')" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-bold text-gray-900" />
-          </div>
-        </div>
-
-        <button onclick="saveSleep()" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-md border-none cursor-pointer">
-          Save Sleep Record →
-        </button>
-      </div>
-
-      <!-- Mobile 7-Day Chart -->
-      <div class="mx-5 p-4 rounded-[24px] bg-white border border-gray-200 shadow-sm space-y-3">
-        <h3 class="t-h5 font-bold text-gray-900">7-Day Sleep Duration Trend</h3>
-        <div id="m-sleep-chart" class="flex items-end gap-2 h-20 pt-2 pb-1 border-b border-gray-100"></div>
-        <div id="m-sleep-chart-labels" class="flex gap-2"></div>
-      </div>
-
-      <!-- Mobile History List -->
-      <div class="mx-5">
-        <h3 class="t-h4 font-bold text-gray-900 mb-3">Sleep History</h3>
-        <div id="m-sleep-history-list" class="space-y-3"><p class="t-body-sm text-center py-8 text-gray-400">Loading sleep records...</p></div>
-      </div>
-    </div>
-
     <!-- AVATAR PICKER SHEET -->
     <div id="avatar-picker" class="hidden fixed inset-0 z-[300] flex flex-col justify-end" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px)">
       <div class="rounded-t-[32px] p-6" style="background:#FFFFFF;border-top:1px solid var(--clue-border2)">
@@ -1384,10 +1248,6 @@ textarea { resize: none; }
     <button class="nav-item" onclick="showTab('support')" data-tab="support">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       <span class="nav-label">Chat</span>
-    </button>
-    <button class="nav-item" onclick="showTab('sleep')" data-tab="sleep">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-      <span class="nav-label">Sleep</span>
     </button>
     <button class="nav-item" onclick="showTab('profile')" data-tab="profile">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
