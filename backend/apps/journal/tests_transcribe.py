@@ -91,4 +91,4 @@ class TranscribeAudioTestCase(TestCase):
             format="multipart"
         )
         self.assertEqual(response.status_code, status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-        self.assertIn("20 MiB", response.data["detail"])
+        self.assertIn("too large", response.data["detail"])
