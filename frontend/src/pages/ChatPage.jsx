@@ -90,6 +90,10 @@ export const ChatPage = () => {
       onStatusChange: (statusText, online) => {
         setStatus(statusText);
         setIsOnline(online);
+        if (!online && pendingMessageRef.current) {
+          setInputText((current) => current || pendingMessageRef.current.text);
+          pendingMessageRef.current = null;
+        }
       },
       onMessage: (msgData) => {
         if (msgData.client_message_id && pendingMessageRef.current?.id === msgData.client_message_id) {
