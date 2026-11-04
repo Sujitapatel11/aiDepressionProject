@@ -19,6 +19,7 @@ export const ChatPage = () => {
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sendError, setSendError] = useState('');
+  const [historyError, setHistoryError] = useState('');
 
   // Connection Level & Activity State
   const [activityState, setActivityState] = useState(null);
@@ -56,9 +57,12 @@ export const ChatPage = () => {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.results || [];
         setMessages(list);
+        setHistoryError('');
       } catch (e) {
-        setMessages([]);
+        setHistoryError('Message history could not be read. Retry to load it again.');
       }
+    } else {
+      setHistoryError('Message history could not load. Check your connection and retry.');
     }
     setLoading(false);
     scrollToBottom();
@@ -81,7 +85,10 @@ export const ChatPage = () => {
   };
 
   useEffect(() => {
-    if (!connId) return;
+    if (!connId) {
+      navigate('/peers', { replace: true });
+      return;
+    }
 
     fetchHistory();
     fetchActivityStatus();
@@ -140,7 +147,11 @@ export const ChatPage = () => {
   const handleSend = (e) => {
     e.preventDefault();
     const msg = inputText.trim();
-    if (!msg || !wsClientRef.current) return;
+    if (!msg) return;
+    if (!wsClientRef.current) {
+      setSendError('Chat is still connecting. Your message has not been sent; please try again shortly.');
+      return;
+    }
 
     setSendError('');
     const clientMessageId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -447,7 +458,8 @@ export const ChatPage = () => {
           })
         )}
 
-        {/* Typing indicator */}
+        {historyError && <div className="mx-4 mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><span role="alert">{historyError}</span><button type="button" onClick={fetchHistory} className="ml-2 font-bold underline">Retry</button></div>}
+      {/* Typing indicator */}
         {isPeerTyping && (
           <div className="flex flex-col items-start fade-in">
             <div className="p-3 px-4 rounded-2xl bg-white border border-gray-200 text-xs font-semibold text-purple-600 flex items-center gap-1.5 shadow-sm">
@@ -473,7 +485,7 @@ export const ChatPage = () => {
           className="inp flex-1 t-body-md"
           style={{ borderRadius: '24px', padding: '12px 20px' }}
         />
-        <button type="submit" className="btn-blue py-3 px-6" style={{ width: 'auto' }}>
+        <button type="submit" disabled={!inputText.trim()} className="btn-blue py-3 px-6 disabled:cursor-not-allowed disabled:opacity-50" style={{ width: 'auto' }}>
           Send
         </button>
         {sendError && <span role="alert" className="text-xs text-red-600">{sendError}</span>}
