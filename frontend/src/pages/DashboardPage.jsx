@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
+import CreatorHomeFeed from '../components/CreatorHomeFeed';
 
 const PROMPTS = [
   "What's one small thing that went well today?",
@@ -250,6 +251,8 @@ export const DashboardPage = () => {
             <span>🔒 Your reflections are private</span>
           </div>
         </section>
+
+        <CreatorHomeFeed />
       </div>
     </main>
   );
