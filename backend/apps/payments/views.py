@@ -1,4 +1,3 @@
-import uuid
 from datetime import timedelta
 
 from django.db import transaction as db_transaction
@@ -96,6 +95,7 @@ def _activate_subscription(payment):
         locked.save(update_fields=["status", "paid_at", "updated_at"])
         current = UserSubscription.objects.filter(user=locked.user, active=True, ends_at__gt=now).order_by("-ends_at").first()
         starts_at = current.ends_at if current else now
+        UserSubscription.objects.filter(user=locked.user, active=True).update(active=False)
         duration = timedelta(days=365 if locked.plan.interval == "year" else 30)
         UserSubscription.objects.create(
             user=locked.user, plan=locked.plan, payment=locked,
