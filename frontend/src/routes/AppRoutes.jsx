@@ -59,7 +59,6 @@ export const AppRoutes = () => {
           <Route path="/chat"       element={<ChatPage />} />
           <Route path="/community"  element={<CommunityFeedPage />} />
           <Route path="/sleep"      element={<SleepPage />} />
-          <Route path="/profile font-bold" element={<ProfilePage />} />
           <Route path="/profile"    element={<ProfilePage />} />
           <Route path="/settings"   element={<SettingsPage />} />
           <Route path="/beta-admin" element={<BetaAdminPage />} />
