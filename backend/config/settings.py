@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     'apps.support',
     'apps.chat',
     'apps.telemetry',
-    'apps.sleep',
     'apps.community',
 
     # Web frontend
