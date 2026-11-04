@@ -13,7 +13,6 @@ const CreatorStudioPage = lazy(() => import('../pages/CreatorStudioPage'));
 const InsightsPage  = lazy(() => import('../pages/InsightsPage'));
 const PeersPage     = lazy(() => import('../pages/PeersPage'));
 const ChatPage      = lazy(() => import('../pages/ChatPage'));
-const SleepPage     = lazy(() => import('../pages/SleepPage'));
 const CommunityFeedPage = lazy(() => import('../pages/CommunityFeedPage'));
 const ProfilePage   = lazy(() => import('../pages/ProfilePage'));
 const SettingsPage  = lazy(() => import('../pages/SettingsPage'));
@@ -58,7 +57,8 @@ export const AppRoutes = () => {
           <Route path="/support"    element={<PeersPage />} />
           <Route path="/chat"       element={<ChatPage />} />
           <Route path="/community"  element={<CommunityFeedPage />} />
-          <Route path="/sleep"      element={<SleepPage />} />
+          {/* Preserve old bookmarks while retiring the Sleep feature. */}
+          <Route path="/sleep" element={<Navigate to="/" replace />} />
           <Route path="/profile font-bold" element={<ProfilePage />} />
           <Route path="/profile"    element={<ProfilePage />} />
           <Route path="/settings"   element={<SettingsPage />} />
