@@ -128,7 +128,7 @@ export const MainLayout = () => {
                 <circle cx="12" cy="12" r="10" strokeWidth="1.8" />
                 <path d="M12 8v4l3 3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
               </svg>
-              <span>Today</span>
+              <span>Home</span>
             </Link>
 
             <Link
@@ -253,7 +253,7 @@ export const MainLayout = () => {
                 <circle cx="12" cy="12" r="10" strokeWidth="1.8" />
                 <path d="M12 8v4l3 3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
               </svg>
-              <span className="nav-label">Today</span>
+              <span className="nav-label">Home</span>
             </Link>
 
             <Link
