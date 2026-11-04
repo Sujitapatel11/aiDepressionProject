@@ -72,11 +72,17 @@ Add these variables under **Environment Variables** in Vercel:
 
 ## 3. Redis Setup (Upstash / Managed Redis)
 
-Django Channels relies on Redis as a message broker for pub/sub broadcasting across WebSockets.
+Django Channels relies on a shared Redis message broker for pub/sub broadcasting across WebSockets. Production startup fails closed when `DEBUG=False` and `REDIS_URL` is missing; do not use the process-local in-memory channel layer for production multi-worker or multi-instance traffic.
+
+### Production Redis requirements
+- Use a managed Redis instance reachable from the backend service.
+- For `rediss://` URLs, TLS certificate verification is enabled (`CERT_REQUIRED`). Do not disable it to work around certificate errors; fix the endpoint/CA configuration instead.
+- Keep `REDIS_URL` in the backend host's secret environment variables, never in frontend `VITE_` variables.
+- The in-memory channel layer is retained only for local development/testing.
 
 ### Why Managed Redis (Upstash) Matters for WebSocket Reliability
 - **Connection Retention:** Managed Redis providers like Upstash enforce stable TCP sockets and high memory capacity compared to temporary free instances.
-- **Connection Resilience:** The backend `CHANNEL_LAYERS` is configured with connection retries and explicit timeouts:
+- **Connection Resilience:** The backend `CHANNEL_LAYERS` uses the shared Redis channel backend with explicit connection timeouts:
   ```python
   CHANNEL_LAYERS = {
       "default": {
