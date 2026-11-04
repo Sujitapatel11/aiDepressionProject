@@ -238,6 +238,8 @@ export const DashboardPage = () => {
           </div>
         </section>
 
+        <CreatorHomeFeed />
+
         <section className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div><p className="text-xs font-bold uppercase tracking-[.16em] text-violet-500">Your recent words</p><h2 className="mt-1 text-lg font-extrabold text-[#2b2040]">Latest journal reflection</h2></div>
@@ -251,8 +253,6 @@ export const DashboardPage = () => {
             <span>🔒 Your reflections are private</span>
           </div>
         </section>
-
-        <CreatorHomeFeed />
       </div>
     </main>
   );
