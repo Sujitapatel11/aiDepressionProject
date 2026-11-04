@@ -96,23 +96,34 @@ def creator_earnings(request):
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def creator_withdrawals(request):
-    profile = _profile(request.user)
     if request.method == "GET":
+        profile = _profile(request.user)
         return Response(CreatorWithdrawalSerializer(profile.withdrawals.all()[:100], many=True).data)
+
     serializer = CreatorWithdrawalSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
     amount = serializer.validated_data["amount"]
     currency = serializer.validated_data.get("currency", "USD").upper()
-    if len(currency) != 3:
-        return Response({"currency": "Use a 3-letter currency code."}, status=400)
+    if len(currency) != 3 or not currency.isalpha():
+        return Response({"currency": "Use a valid 3-letter currency code."}, status=400)
+
     with transaction.atomic():
+        # Serialize withdrawal requests per account. Without a row lock, two
+        # concurrent requests can both read the same available balance and
+        # reserve more than the creator has earned.
+        type(request.user).objects.select_for_update().get(pk=request.user.pk)
+        profile = _profile(request.user)
         earned = profile.earnings.filter(currency=currency).aggregate(total=Sum("creator_amount"))["total"] or Decimal("0.00")
-        reserved = profile.withdrawals.filter(status__in=[CreatorWithdrawal.Status.REQUESTED, CreatorWithdrawal.Status.APPROVED], currency=currency).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        reserved = profile.withdrawals.filter(
+            status__in=[CreatorWithdrawal.Status.REQUESTED, CreatorWithdrawal.Status.APPROVED],
+            currency=currency,
+        ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
         available = earned - reserved
         if amount > available:
             return Response({"detail": "Insufficient available creator balance.", "available": str(available), "currency": currency}, status=400)
         withdrawal = serializer.save(creator=profile, currency=currency)
+
     return Response(CreatorWithdrawalSerializer(withdrawal).data, status=201)
 
 @api_view(["POST"])
