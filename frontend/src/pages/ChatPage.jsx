@@ -18,6 +18,7 @@ export const ChatPage = () => {
   const [isOnline, setIsOnline] = useState(false);
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sendError, setSendError] = useState('');
 
   // Connection Level & Activity State
   const [activityState, setActivityState] = useState(null);
@@ -101,6 +102,7 @@ export const ChatPage = () => {
         fetchActivityStatus();
         scrollToBottom();
       },
+      onDeliveryError: (detail) => setSendError(detail),
       onTyping: (senderId, isTyping) => {
         if (senderId !== userId) {
           setIsPeerTyping(isTyping);
@@ -126,8 +128,13 @@ export const ChatPage = () => {
     const msg = inputText.trim();
     if (!msg || !wsClientRef.current) return;
 
-    wsClientRef.current.sendMessage(msg);
-    setInputText('');
+    setSendError('');
+    const sent = wsClientRef.current.sendMessage(msg);
+    if (sent) {
+      setInputText('');
+    } else {
+      setSendError('Not connected. Your message is still here — reconnecting. Tap Send again when Online.');
+    }
   };
 
   const handleTypingInput = (val) => {
@@ -452,6 +459,7 @@ export const ChatPage = () => {
         <button type="submit" className="btn-blue py-3 px-6" style={{ width: 'auto' }}>
           Send
         </button>
+        {sendError && <span role="alert" className="text-xs text-red-600">{sendError}</span>}
       </form>
 
       {/* EXPLICIT ONE-TIME CONSENT MODAL */}
