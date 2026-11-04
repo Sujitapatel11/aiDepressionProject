@@ -10,6 +10,7 @@ const REACTION_CONFIG = [
 export const CommunityFeedPage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -27,9 +28,13 @@ export const CommunityFeedPage = () => {
       if (res && res.ok) {
         const data = await res.json();
         setPosts(Array.isArray(data) ? data : data.results || []);
+        setLoadError('');
+      } else {
+        setLoadError('The community feed could not load. Please retry.');
       }
     } catch (e) {
       console.error('Error fetching community posts:', e);
+      setLoadError('Network error while loading the community feed.');
     }
     setLoading(false);
   };
@@ -54,13 +59,16 @@ export const CommunityFeedPage = () => {
         setShowCreateModal(false);
         if (window.showToast) window.showToast('✓ Anonymous entry posted to community feed');
       } else if (res) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         if (window.showToast) window.showToast(err.detail || 'Failed to post entry');
+      } else if (window.showToast) {
+        window.showToast('Could not reach SoulCare. Your post is still in the editor.');
       }
     } catch (e) {
       if (window.showToast) window.showToast('Network error while posting');
+    } finally {
+      setIsPosting(false);
     }
-    setIsPosting(false);
   };
 
   const handleReact = async (postId, reactionType) => {
@@ -70,12 +78,13 @@ export const CommunityFeedPage = () => {
       });
       if (res && res.ok) {
         const data = await res.json();
-        setPosts((prev) =>
-          prev.map((p) => (p.id === postId ? data.post : p))
-        );
+        setPosts((prev) => prev.map((p) => (p.id === postId ? data.post : p)));
+      } else if (window.showToast) {
+        window.showToast('Could not save reaction. Please try again.');
       }
     } catch (e) {
       console.error('Reaction error:', e);
+      if (window.showToast) window.showToast('Network error while saving reaction.');
     }
   };
 
@@ -325,6 +334,8 @@ export const CommunityFeedPage = () => {
             </div>
           ))}
         </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center"><p role="alert" className="text-sm text-rose-700">{loadError}</p><button type="button" onClick={fetchPosts} className="mt-3 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white">Retry</button></div>
       ) : posts.length === 0 ? (
         <div className="p-8 rounded-[32px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-4 shadow-sm my-4">
           <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1 shadow-inner">
