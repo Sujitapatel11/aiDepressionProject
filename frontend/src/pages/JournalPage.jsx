@@ -10,6 +10,7 @@ export const JournalPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
 
   // Voice-to-Text state hooks
   const [recording, setRecording] = useState(false);
@@ -30,9 +31,12 @@ export const JournalPage = () => {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.results || [];
         setEntries(list);
+        setLoadError('');
       } catch (e) {
-        setEntries([]);
+        setLoadError('Journal response could not be read. Please retry.');
       }
+    } else {
+      setLoadError('Your journal could not load. Check your connection and retry.');
     }
     setLoading(false);
   };
@@ -41,6 +45,7 @@ export const JournalPage = () => {
     fetchEntries();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
       if (speechRecRef.current) {
         try { speechRecRef.current.abort(); } catch (e) {}
       }
@@ -223,9 +228,13 @@ export const JournalPage = () => {
       window.showConfirm(
         'Delete this journal entry?',
         async () => {
-          await api('DELETE', `/journal/${id}/`);
-          if (window.showToast) window.showToast('Entry deleted.');
-          fetchEntries();
+          const res = await api('DELETE', `/journal/${id}/`);
+          if (res && res.ok) {
+            if (window.showToast) window.showToast('Entry deleted.');
+            fetchEntries();
+          } else if (window.showToast) {
+            window.showToast('Could not delete this entry. Please try again.');
+          }
         },
         true
       );
@@ -392,6 +401,8 @@ export const JournalPage = () => {
 
         {loading ? (
           <p className="t-body-sm text-center py-8 text-gray-400">Loading reflections...</p>
+        ) : loadError ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center"><p role="alert" className="text-sm text-rose-700">{loadError}</p><button type="button" onClick={fetchEntries} className="mt-3 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white">Retry</button></div>
         ) : entries.length === 0 ? (
           <div className="p-8 rounded-[28px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-3 shadow-sm">
             <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1">📖</div>
