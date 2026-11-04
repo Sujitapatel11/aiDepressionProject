@@ -73,9 +73,9 @@ export const PeersPage = () => {
     if (res && res.ok) {
       if (window.showToast) window.showToast('Request sent to ' + uname);
       fetchSupportData();
-    } else if (res) {
-      const err = await res.json();
-      if (window.showToast) window.showToast(err.detail || 'Failed');
+    } else {
+      const err = res ? await res.json().catch(() => ({})) : {};
+      if (window.showToast) window.showToast(err.detail || 'Could not send request. Please try again.');
     }
   };
 
@@ -85,6 +85,8 @@ export const PeersPage = () => {
       if (window.showToast) window.showToast('Connected with ' + uname);
       fetchSupportData();
       setActiveTab('connections');
+    } else if (window.showToast) {
+      window.showToast('Could not accept request. Please try again.');
     }
   };
 
