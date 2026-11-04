@@ -8,6 +8,7 @@ export const ProfilePage = () => {
   const navigate = useNavigate();
 
   const [dashData, setDashData] = useState(null);
+  const [loadError, setLoadError] = useState('');
   const [customAvatar, setCustomAvatar] = useState(() => localStorage.getItem('sc_av_' + username) || '');
 
   useEffect(() => {
@@ -18,6 +19,8 @@ export const ProfilePage = () => {
       if (res && res.ok) {
         const data = await res.json();
         setDashData(data);
+      } else {
+        setLoadError('Profile statistics could not load. Please refresh.');
       }
     }
     loadData();
@@ -82,6 +85,7 @@ export const ProfilePage = () => {
         </div>
       </div>
 
+      {loadError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</p>}
       <section className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
         <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-violet-500">Your universe</p>
         <h2 className="mt-1 text-lg font-extrabold text-[#2b2040]">Keep exploring your spaces</h2>
