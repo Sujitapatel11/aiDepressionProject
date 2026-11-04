@@ -112,17 +112,16 @@ function showTab(name){
 
 function showDeskTab(name){
   document.querySelectorAll('.snav-item').forEach(i=>i.classList.toggle('active',i.dataset.tab===name))
-  ;['dashboard','journal','insights','support','sleep','profile','settings'].forEach(t=>{const p=el('desk-'+t);if(p)p.classList.toggle('hidden',t!==name)})
+  ;['dashboard','journal','insights','support','profile','settings'].forEach(t=>{const p=el('desk-'+t);if(p)p.classList.toggle('hidden',t!==name)})
   if(name==='dashboard')loadDashboard()
   else if(name==='journal')loadJournal()
   else if(name==='insights')loadInsights()
   else if(name==='support')loadSupport()
-  else if(name==='sleep')loadSleep()
   else if(name==='profile'||name==='settings')loadProfile()
 }
 
 function showMobTab(name){
-  ;['dashboard','journal','insights','support','chat','profile','sleep','settings'].forEach(t=>{const s=el('mob-'+t);if(s)s.classList.remove('active')})
+  ;['dashboard','journal','insights','support','chat','profile','settings'].forEach(t=>{const s=el('mob-'+t);if(s)s.classList.remove('active')})
   const s=el('mob-'+name);if(s)s.classList.add('active')
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name))
   if(el('bot-nav'))el('bot-nav').style.display=name==='chat'?'none':'flex'
@@ -130,7 +129,6 @@ function showMobTab(name){
   else if(name==='journal')loadJournal()
   else if(name==='insights')loadInsights()
   else if(name==='support')loadSupport()
-  else if(name==='sleep')loadSleep()
   else if(name==='profile'||name==='settings')loadProfile()
 }
 
@@ -171,175 +169,6 @@ async function loadDashboard(){
     console.error('Error loading dashboard:', e)
   }
 
-  // Load Sleep Stats for Dashboard Card (Modular Health Architecture)
-  try {
-    const sleepRes = await api('GET', '/sleep/stats/')
-    if (sleepRes && sleepRes.ok) {
-      const stats = await sleepRes.json()
-      ;['d-dash-sleep', 'm-dash-sleep'].forEach(id => {
-        const e = el(id)
-        if (e) {
-          e.textContent = stats.has_data ? `🌙 ${stats.formatted_latest}` : 'No sleep data'
-          e.className = stats.has_data ? 'text-2xl font-black text-gray-900 my-1' : 'text-sm font-bold text-gray-400 my-2'
-        }
-      })
-      ;['d-dash-sleep-sub', 'm-dash-sleep-sub'].forEach(id => {
-        const e = el(id)
-        if (e) {
-          e.textContent = stats.has_data ? `Quality: ${stats.sleep_quality} · 7d avg: ${stats.formatted_avg}` : '+ Log Sleep'
-        }
-      })
-    }
-  } catch(e) {}
-}
-
-// SLEEP TRACKER MODULE (INDEPENDENT SUBSYSTEM)
-let activeTodaySleepId = null
-
-async function loadSleep(){
-  ;['sleep-history-list','m-sleep-history-list'].forEach(id=>{
-    const e=el(id);if(e)e.innerHTML='<p class="t-body-sm text-center py-8 text-gray-400">Loading sleep records...</p>'
-  })
-
-  const statsRes = await api('GET', '/sleep/stats/')
-  if(statsRes && statsRes.ok){
-    const stats = await statsRes.json()
-    if(el('sleep-stat-avg')) el('sleep-stat-avg').textContent = stats.has_data ? stats.formatted_avg : '—'
-    if(el('sleep-stat-quality')) el('sleep-stat-quality').textContent = stats.has_data ? stats.sleep_quality : '—'
-    if(el('sleep-stat-total')) el('sleep-stat-total').textContent = stats.total_logs
-  }
-
-  const historyRes = await api('GET', '/sleep/')
-  if(!historyRes || !historyRes.ok){
-    ;['sleep-history-list','m-sleep-history-list'].forEach(id=>{
-      const e=el(id);if(e)e.innerHTML='<p class="t-body-sm text-center py-8 text-gray-400">Failed to load sleep records.</p>'
-    })
-    return
-  }
-
-  const entries = await historyRes.json()
-  renderSleepChart(entries)
-
-  const emptyHtml = `
-    <div class="p-8 rounded-[28px] bg-white border border-indigo-100 text-center flex flex-col items-center justify-center space-y-3 shadow-sm">
-      <div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-3xl mb-1">🌙</div>
-      <h3 class="t-h3 font-bold text-gray-900">No sleep records yet.</h3>
-      <p class="t-body-md text-gray-500 max-w-sm">Record your first night's sleep to start tracking your rest patterns and emotional clarity.</p>
-    </div>
-  `
-
-  if(entries.length === 0){
-    ;['sleep-history-list','m-sleep-history-list'].forEach(id=>{
-      const e=el(id);if(e)e.innerHTML=emptyHtml
-    })
-    return
-  }
-
-  const cardsHtml = entries.map(e => `
-    <div class="p-5 rounded-[24px] bg-white border border-gray-200 shadow-sm hover:border-indigo-200 transition space-y-3">
-      <div class="flex items-center justify-between pb-2 border-b border-gray-100">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">🌙</div>
-          <div>
-            <h4 class="t-h5 font-bold text-gray-900">${fmtDate(e.sleep_date)}</h4>
-            <span class="text-xs font-semibold text-indigo-600 block">${e.formatted_duration} · ${e.sleep_quality.toUpperCase()} Rest</span>
-          </div>
-        </div>
-        <button onclick="deleteSleep(${e.id})" class="p-1.5 rounded-full hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition border-none bg-transparent cursor-pointer" title="Delete record">✕</button>
-      </div>
-      <div class="flex items-center justify-between text-xs text-gray-500">
-        <span>Bedtime: <strong>${fmtTime(e.bedtime)}</strong></span>
-        <span>Wake time: <strong>${fmtTime(e.wake_time)}</strong></span>
-      </div>
-      ${e.sleep_notes ? `<p class="t-body-sm text-gray-700 italic pt-1">${escHtml(e.sleep_notes)}</p>` : ''}
-    </div>
-  `).join('')
-
-  ;['sleep-history-list','m-sleep-history-list'].forEach(id=>{
-    const e=el(id);if(e)e.innerHTML=cardsHtml
-  })
-}
-
-function renderSleepChart(entries){
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], ordered = []
-  for(let i = 6; i >= 0; i--){
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    ordered.push({ dateStr: d.toISOString().split('T')[0], label: days[(d.getDay() + 6) % 7] })
-  }
-  const map = {}
-  entries.forEach(e => { map[e.sleep_date] = e.total_sleep_hours })
-  
-  const chartHtml = ordered.map(({ dateStr }) => {
-    const h = map[dateStr] || 0
-    const barPct = h > 0 ? Math.min(100, Math.max(12, Math.round((h / 12) * 100))) : 8
-    const color = h === 0 ? 'rgba(229,231,235,0.6)' : h >= 7 ? '#6366f1' : h >= 5 ? '#f59e0b' : '#ef4444'
-    return `<div style="flex:1;height:${barPct}%;background:${color};border-radius:6px 6px 0 0;transition:height 0.3s" title="${h > 0 ? h + ' hrs' : 'No data'}"></div>`
-  }).join('')
-
-  const labelsHtml = ordered.map(({ label }) => `<div style="flex:1;text-align:center" class="text-xs font-semibold text-gray-400">${label}</div>`).join('')
-
-  ;['sleep-chart','m-sleep-chart'].forEach(id=>{const e=el(id);if(e)e.innerHTML=chartHtml})
-  ;['sleep-chart-labels','m-sleep-chart-labels'].forEach(id=>{const e=el(id);if(e)e.innerHTML=labelsHtml})
-}
-
-function syncTimeInput(srcEl, targetId){
-  const target = el(targetId)
-  if(target && srcEl) target.value = srcEl.value
-}
-
-async function saveSleep(){
-  const bedInput = el('sleep-bedtime-input')?.value
-  const wakeInput = el('sleep-wake-input')?.value
-  const quality = document.querySelector('input[name="sleep-quality"]:checked')?.value || 'good'
-  const notes = el('sleep-notes-input')?.value.trim() || ''
-  const errEl = el('sleep-error')
-
-  if(!bedInput || !wakeInput){
-    if(errEl){ errEl.textContent = 'Please select both bedtime and wake time.'; errEl.classList.remove('hidden'); }
-    return
-  }
-  if(errEl) errEl.classList.add('hidden')
-
-  const todayStr = new Date().toISOString().split('T')[0]
-  const bedtime = `${todayStr}T${bedInput}:00`
-  const wake_time = `${todayStr}T${wakeInput}:00`
-
-  const payload = {
-    sleep_date: todayStr,
-    bedtime: bedtime,
-    wake_time: wake_time,
-    sleep_quality: quality,
-    sleep_notes: notes,
-  }
-
-  const btn = el('sleep-save-btn')
-  if(btn){ btn.textContent = 'Saving...'; btn.disabled = true; }
-
-  const method = activeTodaySleepId ? 'PUT' : 'POST'
-  const url = activeTodaySleepId ? `/sleep/${activeTodaySleepId}/` : '/sleep/'
-
-  const res = await api(method, url, payload)
-  if(btn){ btn.textContent = 'Save Sleep Record'; btn.disabled = false; }
-
-  if(!res || !res.ok){
-    const data = await res.json().catch(() => ({}))
-    if(errEl){ errEl.textContent = data.detail || 'Failed to save sleep record.'; errEl.classList.remove('hidden'); }
-    return
-  }
-
-  showToast('Sleep record saved!')
-  loadSleep()
-  loadDashboard()
-}
-
-async function deleteSleep(id){
-  showConfirm('Delete this sleep record?', async function(){
-    await api('DELETE', `/sleep/${id}/`)
-    showToast('Record deleted.')
-    loadSleep()
-    loadDashboard()
-  }, true)
 }
 
 async function loadJournal(){
