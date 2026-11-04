@@ -45,8 +45,13 @@ def create_checkout(request):
 
     existing = PaymentTransaction.objects.filter(idempotency_key=idempotency_key).first()
     if existing:
-        if existing.user_id != request.user.id:
-            return Response({"detail": "Idempotency key conflict."}, status=status.HTTP_409_CONFLICT)
+        if (
+            existing.user_id != request.user.id
+            or existing.plan_id != plan.id
+            or existing.provider != provider
+            or existing.currency != currency
+        ):
+            return Response({"detail": "Idempotency key was already used for a different checkout."}, status=status.HTTP_409_CONFLICT)
         return Response({"transaction_id": str(existing.id), "status": existing.status, "checkout_url": existing.checkout_url, "provider_payload": existing.provider_payload})
 
     payment = PaymentTransaction.objects.create(
@@ -111,7 +116,10 @@ def esewa_return(request):
         return Response({"detail": "Missing eSewa response data."}, status=status.HTTP_400_BAD_REQUEST)
     try:
         import base64, json
-        payload = json.loads(base64.b64decode(encoded).decode("utf-8"))
+        try:
+            payload = json.loads(base64.b64decode(encoded, validate=True).decode("utf-8"))
+        except Exception as exc:
+            raise PaymentProviderError("Invalid eSewa callback payload.") from exc
         payment = get_object_or_404(PaymentTransaction, id=payload.get("transaction_uuid"), provider=PaymentTransaction.Provider.ESEWA)
         verified = verify_esewa(encoded, payment)
         if verified.get("status") != "COMPLETE":
