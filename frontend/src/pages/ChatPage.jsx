@@ -279,7 +279,7 @@ export const ChatPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-68px)] lg:h-screen bg-white max-w-5xl mx-auto shadow-sm animate-fadeIn relative">
       {/* CHAT HEADER WITH LEVEL INDICATOR BADGE */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-white flex-shrink-0 relative">
+      <div className="flex min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4 border-b border-gray-200 bg-white flex-shrink-0 relative">
         <button
           onClick={() => navigate('/peers')}
           className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition border-none bg-transparent cursor-pointer mr-1"
@@ -475,14 +475,14 @@ export const ChatPage = () => {
       {/* INPUT FORM */}
       <form
         onSubmit={handleSend}
-        className="flex items-center gap-3 px-6 py-4 flex-shrink-0 bg-white border-t border-gray-200"
+        className="flex min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4 flex-shrink-0 bg-white border-t border-gray-200"
       >
         <input
           type="text"
           value={inputText}
           onChange={(e) => handleTypingInput(e.target.value)}
           placeholder="Write a supportive message..."
-          className="inp flex-1 t-body-md"
+          className="inp min-w-0 flex-1 t-body-md"
           style={{ borderRadius: '24px', padding: '12px 20px' }}
         />
         <button type="submit" disabled={!inputText.trim()} className="btn-blue py-3 px-6 disabled:cursor-not-allowed disabled:opacity-50" style={{ width: 'auto' }}>
