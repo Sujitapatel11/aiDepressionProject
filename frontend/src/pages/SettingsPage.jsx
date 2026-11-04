@@ -217,7 +217,7 @@ export const SettingsPage = () => {
         <ul className="space-y-2 text-sm text-gray-600 list-disc pl-5">
           <li>
             <strong>Private Journaling:</strong> Your reflection entries are protected by account-level access controls
-            and protected by user-level access controls.
+.
           </li>
           <li>
             <strong>Draft Protection:</strong> Unsaved journal drafts are saved locally
