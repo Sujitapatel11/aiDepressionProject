@@ -1,0 +1,54 @@
+name: Home creator feed checks
+
+on:
+  push:
+    branches: [feat/home-creator-discovery-feed]
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Build frontend
+        run: npm run build
+
+  creator-backend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run Django system checks
+        env:
+          DEBUG: "True"
+        run: python manage.py check
+      - name: Check creator migration drift
+        env:
+          DEBUG: "True"
+        run: python manage.py makemigrations creator --check --dry-run
+      - name: Run creator platform tests
+        env:
+          DEBUG: "True"
+        run: python manage.py test apps.creator --verbosity 2
