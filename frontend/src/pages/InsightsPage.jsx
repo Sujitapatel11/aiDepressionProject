@@ -1,356 +1,133 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
 const MOOD = {
-  positive: { color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', icon: '😊', label: 'Positive', bar: 'linear-gradient(90deg,#10b981,#059669)' },
-  negative: { color: '#f87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', icon: '😔', label: 'Negative', bar: 'linear-gradient(90deg,#f87171,#dc2626)' },
-  neutral:  { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.3)', icon: '😐', label: 'Neutral',  bar: 'linear-gradient(90deg,#94a3b8,#64748b)' },
-  mixed:    { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', icon: '🌤', label: 'Mixed',    bar: 'linear-gradient(90deg,#f59e0b,#d97706)' },
+  positive: { icon: '😊', label: 'Positive', bar: 'linear-gradient(90deg,#10b981,#059669)' },
+  negative: { icon: '😔', label: 'Negative', bar: 'linear-gradient(90deg,#f87171,#dc2626)' },
+  neutral: { icon: '😐', label: 'Neutral', bar: 'linear-gradient(90deg,#94a3b8,#64748b)' },
+  mixed: { icon: '🌤', label: 'Mixed', bar: 'linear-gradient(90deg,#f59e0b,#d97706)' },
 };
 
-export const InsightsPage = () => {
+export default function InsightsPage() {
   const navigate = useNavigate();
-
-  const [allInsights, setAllInsights] = useState([]);
-  const [insightFilter, setInsightFilter] = useState('all');
+  const [insights, setInsights] = useState([]);
+  const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [dismissingId, setDismissingId] = useState(null);
 
   const fetchInsights = async () => {
     setLoading(true);
-    const res = await api('GET', '/insights/');
-    if (res && res.ok) {
-      try {
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : data.results || [];
-        setAllInsights(list);
-      } catch (e) {
-        setAllInsights([]);
+    setError('');
+    try {
+      const response = await api('GET', '/insights/');
+      if (!response || !response.ok) {
+        setError('Insights could not load. Check your connection and try again.');
+        return;
       }
+      const data = await response.json();
+      setInsights(Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : []);
+    } catch (err) {
+      setError('Something went wrong while loading your insights. Please retry.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  useEffect(() => {
-    fetchInsights();
-  }, []);
+  useEffect(() => { fetchInsights(); }, []);
 
   const handleDismiss = async (id) => {
-    await api('POST', `/insights/dismiss/${id}/`, {});
-    setAllInsights((prev) => prev.filter((i) => (i.insight_id || i.id) !== id));
-    if (window.showToast) window.showToast('Insight dismissed');
+    if (!id || dismissingId) return;
+    setDismissingId(id);
+    try {
+      const response = await api('POST', `/insights/dismiss/${id}/`, {});
+      if (response && response.ok) {
+        setInsights((current) => current.filter((item) => (item.insight_id || item.id) !== id));
+        if (window.showToast) window.showToast('Insight dismissed');
+      } else if (window.showToast) {
+        window.showToast('Could not dismiss this insight. Please try again.');
+      }
+    } catch (err) {
+      if (window.showToast) window.showToast('Network error. Insight was not dismissed.');
+    } finally {
+      setDismissingId(null);
+    }
   };
 
-  // Build chart data
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const chartDays = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    chartDays.push({ date: d.toDateString(), label: days[(d.getDay() + 6) % 7] });
-  }
+  const chartDays = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    return { key: date.toDateString(), label: date.toLocaleDateString([], { weekday: 'short' }) };
+  }), []);
 
-  const dayMap = {};
-  allInsights.forEach((ins) => {
-    const d = new Date(ins.created_at).toDateString();
-    if (!dayMap[d]) dayMap[d] = [];
-    dayMap[d].push(ins.sentiment_score);
-  });
+  const dayScores = useMemo(() => {
+    const scores = {};
+    insights.forEach((item) => {
+      const timestamp = new Date(item.created_at);
+      const score = Number(item.sentiment_score);
+      if (Number.isNaN(timestamp.getTime()) || !Number.isFinite(score)) return;
+      const key = timestamp.toDateString();
+      if (!scores[key]) scores[key] = [];
+      scores[key].push(score);
+    });
+    return scores;
+  }, [insights]);
 
-  const filteredInsights =
-    insightFilter === 'all'
-      ? allInsights
-      : allInsights.filter((i) => i.mood === insightFilter);
-
-  const fmtDate = (iso) => {
-    try {
-      return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch (e) {
-      return '';
-    }
+  const filteredInsights = filter === 'all' ? insights : insights.filter((item) => item.mood === filter);
+  const formatDate = (value) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-6 px-4 lg:py-8 lg:px-6 space-y-6 lg:space-y-8 animate-fadeIn">
-      {/* SECTION 1: HERO HEADER */}
-      <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-purple-100 shadow-sm flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wider">
-              😊 30-Second Check-In
-            </span>
-          </div>
-          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">
-            How are you feeling today?
-          </h1>
-          <p className="t-body-md text-gray-500 italic">“Take a moment to pause, breathe, and listen to your inner state.” 💜</p>
-        </div>
-        <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
-          🌸
-        </div>
-      </div>
+    <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 lg:px-6 lg:py-8">
+      <header className="rounded-[28px] border border-violet-100 bg-white p-5 shadow-sm sm:p-7">
+        <p className="text-xs font-extrabold uppercase tracking-[.16em] text-violet-600">Your journal patterns</p>
+        <h1 className="mt-2 text-2xl font-extrabold text-[#2b2040] sm:text-3xl">AI Companion Insights</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#796d8a]">Reflections generated from your journal entries. These are supportive observations, not a diagnosis or a substitute for professional care.</p>
+      </header>
 
-      {/* SECTION 2: WELLNESS INDICATORS CARD */}
-      <div className="p-6 lg:p-8 rounded-[32px] bg-white border border-purple-100 shadow-md space-y-6">
-        <div className="space-y-3">
-          <h3 className="t-h4 font-bold text-gray-900 flex items-center gap-2">
-            <span>✨</span> Select Primary Mood
-          </h3>
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-2">
-            {['Great', 'Calm', 'Good', 'Neutral', 'Sad', 'Very Sad', 'Angry', 'Tired'].map((m) => (
-              <button key={m} type="button" className="mood-pill active-pill py-2 px-4">
-                <span>
-                  {m === 'Great' ? '😊' : m === 'Calm' ? '😌' : m === 'Good' ? '🙂' : m === 'Neutral' ? '😐' : m === 'Sad' ? '😔' : m === 'Very Sad' ? '😢' : m === 'Angry' ? '😡' : '😴'}
-                </span>{' '}
-                {m}
-              </button>
-            ))}
-          </div>
+      <section className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="text-lg font-extrabold text-[#34264b]">Recent emotional patterns</h2><p className="mt-1 text-xs text-[#887d98]">Based only on insights generated from your journal entries</p></div>
+          <span className="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700">{insights.length} insights</span>
         </div>
-
-        {/* Wellness Check Sliders */}
-        <div className="pt-4 border-t border-gray-100 space-y-4">
-          <h3 className="t-h4 font-bold text-gray-900 flex items-center gap-2">
-            <span>📊</span> Wellness Indicators
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-gray-600">
-                <span>⚡ Energy</span>
-                <span className="text-purple-600">High</span>
-              </div>
-              <input type="range" min="1" max="5" defaultValue="4" className="w-full accent-purple-600 cursor-pointer" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-gray-600">
-                <span>🍃 Stress</span>
-                <span className="text-emerald-600">Low</span>
-              </div>
-              <input type="range" min="1" max="5" defaultValue="2" className="w-full accent-emerald-600 cursor-pointer" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-gray-600">
-                <span>🌙 Sleep Quality</span>
-                <span className="text-indigo-600">Great</span>
-              </div>
-              <input type="range" min="1" max="5" defaultValue="4" className="w-full accent-indigo-600 cursor-pointer" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-gray-600">
-                <span>🎯 Focus</span>
-                <span className="text-amber-600">Good</span>
-              </div>
-              <input type="range" min="1" max="5" defaultValue="3" className="w-full accent-amber-600 cursor-pointer" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 3: 7-DAY MOOD CHART */}
-      <div className="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="t-h4 font-bold text-gray-900">7-Day Emotional Stability Chart</h3>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setInsightFilter('all')}
-              className={`mood-pill ${insightFilter === 'all' ? 'active-pill' : ''}`}
-            >
-              ✦ All
-            </button>
-            {Object.entries(MOOD).map(([k, cfg]) => (
-              <button
-                key={k}
-                onClick={() => setInsightFilter(insightFilter === k ? 'all' : k)}
-                className={`mood-pill ${insightFilter === k ? 'active-pill' : ''}`}
-              >
-                {cfg.icon} {cfg.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Bar Chart Container */}
-        <div className="flex items-end gap-3 h-28 pt-4 pb-2 px-2 border-b border-gray-100">
-          {chartDays.map(({ date }, idx) => {
-            const scores = dayMap[date] || [];
-            const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
-            const h = avg !== null ? Math.max(12, Math.round(((avg + 1) / 2) * 100)) : 8;
-            const color =
-              avg === null
-                ? 'rgba(229, 231, 235, 0.6)'
-                : avg >= 0.35
-                ? '#10b981'
-                : avg <= -0.35
-                ? '#f87171'
-                : '#6366f1';
-
-            return (
-              <div
-                key={idx}
-                style={{ height: `${h}%`, background: color }}
-                className="flex-1 rounded-t-md transition-all duration-300 min-h-[6px]"
-                title={avg !== null ? `Score: ${avg.toFixed(2)}` : 'No data'}
-              ></div>
-            );
+        <div className="mt-5 flex h-28 items-end gap-2 border-b border-violet-100 px-1 pb-1">
+          {chartDays.map(({ key, label }) => {
+            const values = dayScores[key] || [];
+            const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+            const height = average === null ? 6 : Math.max(12, Math.round(((average + 1) / 2) * 100));
+            const background = average === null ? '#e9e4ef' : average >= 0.35 ? '#10b981' : average <= -0.35 ? '#f87171' : '#8b5cf6';
+            return <div key={key} className="flex h-full flex-1 flex-col justify-end"><div title={average === null ? 'No insight recorded' : `Average sentiment: ${average.toFixed(2)}`} style={{ height: `${height}%`, background }} className="min-h-[6px] rounded-t-md" /><span className="mt-2 text-center text-[10px] font-semibold text-gray-400">{label}</span></div>;
           })}
         </div>
+      </section>
 
-        {/* Labels */}
-        <div className="flex gap-3">
-          {chartDays.map(({ label }, idx) => (
-            <div key={idx} className="flex-1 text-center t-caption text-gray-400 font-semibold">
-              {label}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* SECTION 4: AI INSIGHTS & HISTORY FEED */}
-      <div>
-        <h3 className="t-h3 text-gray-900 font-bold mb-4 flex items-center gap-2">
-          <span>🤖</span> AI Companion Insights
-        </h3>
-
-        {/* AI & Mental Health Medical Disclaimer */}
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3.5 shadow-sm">
-          <span className="text-xl flex-shrink-0 mt-0.5" role="img" aria-label="disclaimer">ℹ️</span>
-          <p className="t-body-sm text-amber-900/90 leading-relaxed font-medium m-0">
-            These insights are generated by AI based on patterns in your journal entries. They are not a substitute for professional mental health advice, diagnosis, or treatment. If you're struggling, please reach out to a licensed therapist, counselor, or a mental health helpline.
-          </p>
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-extrabold text-[#34264b]">Your reflections</h2>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setFilter('all')} aria-pressed={filter === 'all'} className={`rounded-full px-3 py-2 text-xs font-bold ${filter === 'all' ? 'bg-violet-700 text-white' : 'bg-white text-violet-700 border border-violet-100'}`}>All</button>
+            {Object.entries(MOOD).map(([key, value]) => <button type="button" key={key} onClick={() => setFilter(key)} aria-pressed={filter === key} className={`rounded-full px-3 py-2 text-xs font-bold ${filter === key ? 'bg-violet-700 text-white' : 'bg-white text-violet-700 border border-violet-100'}`}>{value.icon} {value.label}</button>)}
+          </div>
         </div>
 
-        {loading ? (
-          <p className="t-body-sm text-center py-8 text-gray-400">Loading insights...</p>
-        ) : filteredInsights.length === 0 ? (
-          <div className="p-8 rounded-[28px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-3 shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1">🌱</div>
-            <h3 className="t-h3 font-bold text-gray-900">Your AI companion is still learning.</h3>
-            <p className="t-body-md text-gray-500 max-w-sm">
-              Write a few journal reflections and check back to discover gentle emotional patterns over time.
-            </p>
-            <button
-              onClick={() => navigate('/journal')}
-              className="px-6 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition border-none cursor-pointer shadow-md"
-            >
-              Write First Reflection →
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredInsights.map((i) => {
-              const cfg = MOOD[i.mood] || MOOD.neutral;
-              const pct = Math.round(((i.sentiment_score + 1) / 2) * 100);
-              const insightId = i.insight_id || i.id;
-
-              if (i.status === 'too_short') {
-                return (
-                  <div
-                    key={insightId}
-                    className="p-6 rounded-[28px] bg-gradient-to-r from-purple-50/60 to-amber-50/60 border border-purple-100/80 shadow-sm space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                          💡
-                        </span>
-                        <div>
-                          <h4 className="t-h4 font-bold text-gray-900">{i.title || 'A Starting Reflection'}</h4>
-                          <span className="text-xs font-semibold text-amber-700 block">
-                            Reflection Nudge · {fmtDate(i.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDismiss(insightId)}
-                        className="p-1.5 rounded-full hover:bg-white/60 text-gray-400 hover:text-gray-600 transition border-none bg-transparent cursor-pointer"
-                        title="Dismiss note"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <p className="t-body-md text-gray-700 leading-relaxed font-medium pl-1">
-                      {i.message}
-                    </p>
-                  </div>
-                );
-              }
-
-              if (i.status === 'invalid') {
-                return (
-                  <div
-                    key={insightId}
-                    className="p-6 rounded-[28px] bg-gray-50/80 border border-gray-200 shadow-sm space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-2xl bg-slate-200 text-slate-700 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                          ℹ️
-                        </span>
-                        <div>
-                          <h4 className="t-h4 font-bold text-gray-800">{i.title || 'Entry Content Note'}</h4>
-                          <span className="text-xs font-semibold text-gray-500 block">
-                            System Note · {fmtDate(i.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDismiss(insightId)}
-                        className="p-1.5 rounded-full hover:bg-gray-200/60 text-gray-400 hover:text-gray-600 transition border-none bg-transparent cursor-pointer"
-                        title="Dismiss note"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <p className="t-body-md text-gray-600 leading-relaxed pl-1">
-                      {i.message}
-                    </p>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={insightId}
-                  className="p-6 rounded-[28px] bg-white border border-gray-200 shadow-sm hover:border-purple-200 transition space-y-4"
-                >
-                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{cfg.icon}</span>
-                      <div>
-                        <h4 className="t-h4 font-bold text-gray-900">{i.title || 'Gentle Reflection Pattern'}</h4>
-                        <span className="text-xs font-semibold text-purple-600 block">
-                          {cfg.label} · {fmtDate(i.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDismiss(insightId)}
-                      className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition border-none bg-transparent cursor-pointer"
-                      title="Dismiss insight"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="t-body-md text-gray-800 leading-relaxed">{i.message || i.summary}</p>
-                  <div className="pt-2 border-t border-gray-100 space-y-1">
-                    <div className="flex justify-between text-xs font-bold text-gray-500">
-                      <span>Emotional Wellbeing Trend</span>
-                      <span className="text-purple-700">
-                        {(i.sentiment_score > 0 ? '+' : '') + i.sentiment_score.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: cfg.bar }}></div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+        {loading ? <p className="rounded-2xl bg-white p-8 text-center text-sm text-gray-500">Loading your insights…</p> :
+          error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center"><p role="alert" className="text-sm text-rose-700">{error}</p><button type="button" onClick={fetchInsights} className="mt-3 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white">Retry</button></div> :
+          filteredInsights.length === 0 ? <div className="rounded-[26px] border border-violet-100 bg-white p-8 text-center shadow-sm"><div className="text-3xl">🌱</div><h3 className="mt-3 text-lg font-extrabold text-[#34264b]">{insights.length ? 'No insights in this category' : 'Your first insight starts with a journal entry'}</h3><p className="mx-auto mt-2 max-w-md text-sm text-[#796d8a]">{insights.length ? 'Try another mood filter to see your reflections.' : 'Write a reflection and your AI insights will appear here when analysis is available.'}</p><button type="button" onClick={() => navigate('/journal')} className="mt-4 rounded-full bg-violet-700 px-5 py-3 text-xs font-extrabold text-white">Open Journal →</button></div> :
+          <div className="space-y-3">{filteredInsights.map((item) => {
+            const id = item.insight_id || item.id;
+            const mood = MOOD[item.mood] || MOOD.neutral;
+            const score = Number(item.sentiment_score);
+            const scorePercent = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(((score + 1) / 2) * 100))) : null;
+            return <article key={id} className="rounded-[24px] border border-violet-100 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-start gap-3"><span className="text-2xl">{item.status === 'too_short' ? '💡' : item.status === 'invalid' ? 'ℹ️' : mood.icon}</span><div className="min-w-0"><h3 className="font-extrabold text-[#34264b]">{item.title || 'Journal reflection'}</h3><p className="mt-1 text-xs font-semibold text-violet-600">{item.status === 'too_short' ? 'Reflection prompt' : item.status === 'invalid' ? 'Content note' : mood.label} · {formatDate(item.created_at)}</p></div></div><button type="button" disabled={dismissingId === id} onClick={() => handleDismiss(id)} aria-label="Dismiss insight" className="rounded-full px-3 py-1 text-sm text-gray-400 hover:bg-violet-50 disabled:opacity-50">{dismissingId === id ? '…' : '×'}</button></div>
+              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-[#5f536f]">{item.message || item.summary || 'No additional details available.'}</p>
+              {scorePercent !== null && item.status !== 'too_short' && item.status !== 'invalid' && <div className="mt-4 border-t border-violet-50 pt-3"><div className="flex justify-between text-xs font-semibold text-gray-500"><span>Sentiment signal</span><span>{score.toFixed(2)}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full" style={{ width: `${scorePercent}%`, background: mood.bar }} /></div></div>}
+            </article>;
+          })}</div>}
+      </section>
+    </main>
   );
-};
-
-export default InsightsPage;
+}
