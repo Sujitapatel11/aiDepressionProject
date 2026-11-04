@@ -64,7 +64,14 @@ export const MainLayout = () => {
     window.showToast(`Avatar updated — ${label}`);
   };
 
-  const currentTab = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
+  const routePath = location.pathname.replace(/\/$/, '') || '/';
+  const currentTab = routePath === '/'
+    ? 'dashboard'
+    : ['/peers', '/support', '/chat'].includes(routePath)
+      ? 'peers'
+      : ['/profile', '/settings'].includes(routePath)
+        ? 'profile'
+        : routePath.substring(1);
 
   const initials = (username || '?').slice(0, 2).toUpperCase();
 
@@ -129,6 +136,14 @@ export const MainLayout = () => {
                 <path d="M12 8v4l3 3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
               </svg>
               <span>Today</span>
+            </Link>
+
+            <Link
+              to="/world"
+              className={`snav-item ${currentTab === 'world' ? 'active' : ''}`}
+            >
+              <span className="w-5 h-5 flex items-center justify-center text-lg" aria-hidden="true">✧</span>
+              <span>Soul World</span>
             </Link>
 
             <Link
@@ -267,13 +282,11 @@ export const MainLayout = () => {
             </Link>
 
             <Link
-              to="/insights"
-              className={`nav-item ${currentTab === 'insights' ? 'active' : ''}`}
+              to="/world"
+              className={`nav-item ${currentTab === 'world' ? 'active' : ''}`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span className="nav-label">Insights</span>
+              <span className="text-xl leading-none" aria-hidden="true">✧</span>
+              <span className="nav-label">Explore</span>
             </Link>
 
             <Link
