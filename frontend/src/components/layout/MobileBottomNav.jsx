@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Edit3, BarChart2, MessageSquare, Moon, User } from 'lucide-react';
+import { Home, Edit3, BarChart2, MessageSquare, User } from 'lucide-react';
 
 export const MobileBottomNav = () => {
   const items = [
@@ -8,7 +8,6 @@ export const MobileBottomNav = () => {
     { to: '/journal', label: 'Log', icon: Edit3 },
     { to: '/insights', label: 'Data', icon: BarChart2 },
     { to: '/support', label: 'Chat', icon: MessageSquare },
-    { to: '/sleep', label: 'Sleep', icon: Moon },
     { to: '/profile', label: 'Me', icon: User },
   ];
 
