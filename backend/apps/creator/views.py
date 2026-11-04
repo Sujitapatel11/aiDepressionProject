@@ -202,7 +202,7 @@ def prepare_monthly_settlements(request):
                 creator=profile, currency=currency, period_start=month_date
             ).first()
             if existing:
-                prepared.append({"id": str(existing.id), "creator_id": profile.id, "currency": currency, "amount": str(existing.total_amount), "status": existing.status, "already_prepared": True})
+                prepared.append({"id": str(existing.id), "creator_id": profile.id, "currency": currency, "amount": format(existing.total_amount, ".2f"), "status": existing.status, "already_prepared": True})
                 continue
             earnings = CreatorEarning.objects.select_for_update().filter(
                 creator=profile,
@@ -225,7 +225,7 @@ def prepare_monthly_settlements(request):
                 CreatorSettlementLine(settlement=settlement, earning=earning, amount=earning.creator_amount)
                 for earning in earnings
             ])
-            prepared.append({"id": str(settlement.id), "creator_id": profile.id, "currency": currency, "amount": str(total), "status": settlement.status, "already_prepared": False})
+            prepared.append({"id": str(settlement.id), "creator_id": profile.id, "currency": currency, "amount": format(total, ".2f"), "status": settlement.status, "already_prepared": False})
     return Response({"month": month_value, "settlements": prepared, "count": len(prepared)}, status=200)
 
 
