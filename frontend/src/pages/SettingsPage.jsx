@@ -216,12 +216,12 @@ export const SettingsPage = () => {
         </h3>
         <ul className="space-y-2 text-sm text-gray-600 list-disc pl-5">
           <li>
-            <strong>Encrypted Journaling:</strong> Your reflection logs are protected by user-level access controls
+            <strong>Private Journaling:</strong> Your reflection entries are protected by account-level access controls
             and protected by user-level access controls.
           </li>
           <li>
             <strong>Draft Protection:</strong> Unsaved journal drafts are saved locally
-            in your browser's encrypted storage.
+            in this browser's local storage. This feature does not encrypt drafts.
           </li>
           <li>
             <strong>No Popularity Tracking:</strong> SoulCare does not rank users, track
