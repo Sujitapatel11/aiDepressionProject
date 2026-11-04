@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
 export const ProfilePage = () => {
   const { username, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [dashData, setDashData] = useState(null);
   const [customAvatar, setCustomAvatar] = useState(() => localStorage.getItem('sc_av_' + username) || '');
@@ -85,9 +87,9 @@ export const ProfilePage = () => {
         <h2 className="mt-1 text-lg font-extrabold text-[#2b2040]">Keep exploring your spaces</h2>
         <p className="mt-1 text-xs leading-relaxed text-[#91859e]">Jump back into the parts of SoulCare that matter to you.</p>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <button type="button" onClick={() => window.location.assign('/world')} className="rounded-2xl bg-[#f8f4fc] p-3 text-left text-xs font-extrabold text-violet-800 transition hover:bg-violet-100">🌌 Soul World <span className="float-right">→</span></button>
-          <button type="button" onClick={() => window.location.assign('/journal')} className="rounded-2xl bg-[#f8f4fc] p-3 text-left text-xs font-extrabold text-violet-800 transition hover:bg-violet-100">🌿 Journal Forest <span className="float-right">→</span></button>
-          <button type="button" onClick={() => window.location.assign('/creator-studio')} className="rounded-2xl bg-[#f8f4fc] p-3 text-left text-xs font-extrabold text-violet-800 transition hover:bg-violet-100">✍️ Creator Studio <span className="float-right">→</span></button>
+          <button type="button" onClick={() => navigate('/world')} className="rounded-2xl bg-[#f8f4fc] p-3 text-left text-xs font-extrabold text-violet-800 transition hover:bg-violet-100">🌌 Soul World <span className="float-right">→</span></button>
+          <button type="button" onClick={() => navigate('/journal')} className="rounded-2xl bg-[#f8f4fc] p-3 text-left text-xs font-extrabold text-violet-800 transition hover:bg-violet-100">🌿 Journal Forest <span className="float-right">→</span></button>
+          <button type="button" onClick={() => navigate('/creator-studio')} className="rounded-2xl bg-[#f8f4fc] p-3 text-left text-xs font-extrabold text-violet-800 transition hover:bg-violet-100">✍️ Creator Studio <span className="float-right">→</span></button>
         </div>
       </section>
 
