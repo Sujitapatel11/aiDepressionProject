@@ -38,6 +38,7 @@ export const ChatPage = () => {
 
   const messagesEndRef = useRef(null);
   const wsClientRef = useRef(null);
+  const pendingMessageRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -91,6 +92,9 @@ export const ChatPage = () => {
         setIsOnline(online);
       },
       onMessage: (msgData) => {
+        if (msgData.client_message_id && pendingMessageRef.current?.id === msgData.client_message_id) {
+          pendingMessageRef.current = null;
+        }
         console.log('[ChatPage] WS message received, updating state:', msgData);
         setMessages((prev) => {
           if (msgData.message_id && prev.some((m) => m.message_id === msgData.message_id)) {
@@ -102,7 +106,13 @@ export const ChatPage = () => {
         fetchActivityStatus();
         scrollToBottom();
       },
-      onDeliveryError: (detail) => setSendError(detail),
+      onDeliveryError: (detail) => {
+        if (pendingMessageRef.current) {
+          setInputText((current) => current || pendingMessageRef.current.text);
+          pendingMessageRef.current = null;
+        }
+        setSendError(detail);
+      },
       onTyping: (senderId, isTyping) => {
         if (senderId !== userId) {
           setIsPeerTyping(isTyping);
@@ -129,10 +139,13 @@ export const ChatPage = () => {
     if (!msg || !wsClientRef.current) return;
 
     setSendError('');
-    const sent = wsClientRef.current.sendMessage(msg);
+    const clientMessageId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    pendingMessageRef.current = { id: clientMessageId, text: msg };
+    const sent = wsClientRef.current.sendMessage(msg, clientMessageId);
     if (sent) {
       setInputText('');
     } else {
+      pendingMessageRef.current = null;
       setSendError('Not connected. Your message is still here — reconnecting. Tap Send again when Online.');
     }
   };
