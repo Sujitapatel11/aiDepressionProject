@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     'apps.telemetry',
     'apps.sleep',
     'apps.community',
+    'apps.payments',
 
     # Web frontend
     'web',
