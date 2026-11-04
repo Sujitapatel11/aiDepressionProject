@@ -59,7 +59,6 @@ export const AppRoutes = () => {
           <Route path="/community"  element={<CommunityFeedPage />} />
           {/* Preserve old bookmarks while retiring the Sleep feature. */}
           <Route path="/sleep" element={<Navigate to="/" replace />} />
-          <Route path="/profile font-bold" element={<ProfilePage />} />
           <Route path="/profile"    element={<ProfilePage />} />
           <Route path="/settings"   element={<SettingsPage />} />
           <Route path="/beta-admin" element={<BetaAdminPage />} />
