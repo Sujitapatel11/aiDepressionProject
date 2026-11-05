@@ -6,6 +6,7 @@ class CommunityPostSerializer(serializers.ModelSerializer):
     reaction_counts = serializers.SerializerMethodField()
     user_reactions = serializers.SerializerMethodField()
     user_has_reported = serializers.SerializerMethodField()
+    media = serializers.SerializerMethodField()
 
     class Meta:
         model = CommunityPost
@@ -19,8 +20,16 @@ class CommunityPostSerializer(serializers.ModelSerializer):
             "reaction_counts",
             "user_reactions",
             "user_has_reported",
+            "media",
         ]
         read_only_fields = fields
+
+    def get_media(self, obj):
+        from apps.mediahub.serializers import MediaAssetSerializer
+        return MediaAssetSerializer(
+            obj.media_assets.order_by("created_at"), many=True,
+            context=self.context,
+        ).data
 
     def get_reaction_counts(self, obj):
         counts = {

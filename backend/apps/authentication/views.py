@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from config.throttles import PasswordResetRateThrottle
@@ -67,7 +68,10 @@ def login_view(request):
             user = authenticate(request, username=user_by_email.username, password=password)
 
     if not user:
-        return Response({"detail": "Invalid email/username or password."}, status=status.HTTP_400_BAD_REQUEST)
+        # 401, not 400: the request was well-formed but the credentials failed.
+        # The message is intentionally generic for both unknown accounts and
+        # wrong passwords to avoid account enumeration.
+        return Response({"detail": "Invalid email/username or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
     return Response(_token_response(user))
 
@@ -75,13 +79,46 @@ def login_view(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
+    """
+    POST /api/auth/logout/ {"refresh": "<refresh token>"}
+
+    Revokes the submitted refresh token. The token must be valid and must
+    belong to the authenticated user; otherwise nothing is blacklisted and an
+    explicit error is returned. Failures are reported, never silently ignored.
+    """
+    refresh_token = request.data.get("refresh")
+    if not refresh_token or not isinstance(refresh_token, str):
+        return Response(
+            {"detail": "Refresh token is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     try:
-        refresh_token = request.data.get("refresh")
-        if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+        # Constructor verifies signature, expiry and blacklist status.
+        token = RefreshToken(refresh_token)
+    except TokenError:
+        return Response(
+            {"detail": "Invalid or expired refresh token."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Ownership check: a valid token for a different account must not be
+    # revocable through this session (prevents cross-user token invalidation).
+    if str(token.get("user_id")) != str(request.user.pk):
+        return Response(
+            {"detail": "Invalid or expired refresh token."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        token.blacklist()
     except Exception:
-        pass
+        logger.exception("Refresh token blacklisting failed for user %s", request.user.pk)
+        return Response(
+            {"detail": "Could not revoke token. Please try again."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     return Response({"detail": "Logged out."})
 
 
@@ -257,14 +294,13 @@ def password_reset_view(request):
                     )
                     logger.info("Password reset email sent to %s", email)
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.exception("Password reset email error: %s", e)
-            if settings.DEBUG:
-                return Response(
-                    {"detail": f"SMTP Error: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+            # Never surface SMTP/provider internals (hosts, credentials,
+            # exception text) to the client, even in DEBUG.
+            return Response(
+                {"detail": "We could not send the reset email right now. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
     return Response({"detail": "If that email exists, a reset link has been sent."})
 
 
@@ -311,17 +347,14 @@ def password_reset_confirm_api(request):
         from django.contrib.auth.models import User
 
         user = None
-        # 1. Try urlsafe_base64_decode
+        # Django's canonical encoded UID only. There is deliberately no raw
+        # numeric-PK fallback: accepting bare integers would widen the attack
+        # surface for the reset endpoint for no compatibility benefit.
         try:
             uid_decoded = urlsafe_base64_decode(uid_raw).decode('utf-8')
             user = User.objects.get(pk=uid_decoded)
         except Exception:
-            # 2. Fallback to raw numeric PK if base64 decoding fails or user not found
-            if uid_raw.isdigit():
-                try:
-                    user = User.objects.get(pk=int(uid_raw))
-                except User.DoesNotExist:
-                    pass
+            user = None
 
         if not user:
             return Response({"detail": "Invalid reset link or user ID."}, status=status.HTTP_400_BAD_REQUEST)

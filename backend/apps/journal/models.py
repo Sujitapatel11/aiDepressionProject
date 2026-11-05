@@ -12,7 +12,10 @@ class JournalEntry(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["user", "is_deleted", "-created_at"]),
+            # Matches the committed 0002 migration's index name; without this
+            # pin Django regenerates a different default name and
+            # `makemigrations --check` reports a spurious index rename.
+            models.Index(fields=["user", "is_deleted", "-created_at"], name='journal_jou_user_id_0b563a_idx'),
         ]
 
     def __str__(self):

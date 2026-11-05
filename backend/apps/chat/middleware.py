@@ -1,42 +1,53 @@
-"""
-JWT authentication middleware for Django Channels WebSockets.
-Reads token from query string: ws://host/ws/chat/{id}/?token=<jwt>
-"""
+"""Authenticate Django Channels WebSockets with single-use tickets."""
 import logging
 from urllib.parse import parse_qs
 from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.tokens import AccessToken
-from django.contrib.auth import get_user_model
+
+from .models import WebSocketAuthTicket
 
 logger = logging.getLogger(__name__)
-User = get_user_model()
 
 
 @database_sync_to_async
-def get_user_from_token(token_str):
+def consume_ticket(ticket):
+    return WebSocketAuthTicket.consume(ticket)
+
+
+def get_ticket_from_scope(scope):
+    query_string = scope.get("query_string", b"")
+    if not isinstance(query_string, bytes) or len(query_string) > 256:
+        return None
+
     try:
-        token = AccessToken(token_str)
-        return User.objects.get(id=token['user_id'])
-    except Exception as exc:
-        logger.warning("WebSocket auth failed in get_user_from_token [%s]: %s", exc.__class__.__name__, exc)
-        return AnonymousUser()
+        params = parse_qs(
+            query_string.decode("ascii"),
+            keep_blank_values=True,
+            strict_parsing=True,
+        )
+    except (UnicodeDecodeError, ValueError):
+        return None
+
+    tickets = params.get("ticket", [])
+    if set(params) != {"ticket"} or len(tickets) != 1:
+        return None
+    return tickets[0]
 
 
-class JWTAuthMiddleware(BaseMiddleware):
+class TicketAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
-        query_string = scope.get("query_string", b"").decode()
-        params = parse_qs(query_string)
-        token_list = params.get("token", [])
-
-        if token_list:
-            scope["user"] = await get_user_from_token(token_list[0])
-        else:
-            scope["user"] = AnonymousUser()
+        ticket = get_ticket_from_scope(scope)
+        user = None
+        if ticket:
+            try:
+                user = await consume_ticket(ticket)
+            except Exception:
+                logger.warning("WebSocket ticket authentication failed.")
+        scope["user"] = user if user and user.is_active else AnonymousUser()
 
         return await super().__call__(scope, receive, send)
 
 
-def JWTAuthMiddlewareStack(inner):
-    return JWTAuthMiddleware(inner)
+def TicketAuthMiddlewareStack(inner):
+    return TicketAuthMiddleware(inner)

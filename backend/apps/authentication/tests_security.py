@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import timedelta
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
@@ -37,6 +38,22 @@ class SecurityHardeningTests(TestCase):
             "password_confirm": "Compl3x!Password#2026",
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_login_returns_tokens_for_a_valid_test_account(self):
+        username = f"login-test-{secrets.token_hex(8)}"
+        password = secrets.token_urlsafe(24)
+        user = User.objects.create_user(username=username, password=password)
+
+        response = self.client.post(
+            "/api/auth/login/",
+            {"username": username, "password": password},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("token"))
+        self.assertTrue(response.data.get("refresh"))
+        self.assertEqual(response.data.get("user_id"), user.id)
 
     def test_jwt_access_token_lifetime_and_rotation(self):
         """P1: Verifies ACCESS_TOKEN_LIFETIME is 30 minutes and refresh token rotates."""

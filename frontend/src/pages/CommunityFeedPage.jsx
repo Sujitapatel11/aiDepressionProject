@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import Avatar from '../components/common/Avatar';
+import PostMediaUploader from '../components/common/PostMediaUploader';
+import PostMediaGrid from '../components/common/PostMediaGrid';
 
 const REACTION_CONFIG = [
   { key: 'here_for_you', icon: '🫂', label: 'Here for you' },
@@ -7,10 +11,21 @@ const REACTION_CONFIG = [
   { key: 'listening', icon: '💙', label: 'Listening' },
 ];
 
+const FEED_PAGE_SIZE = 15;        // matches backend CommunityPostPagination
+const FOLLOWING_PAGE_SIZE = 10;   // creator posts render as compact rows
+
 export const CommunityFeedPage = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('foryou');
+  const activeTabRef = useRef('foryou');
   const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef(null);
   const [newPostContent, setNewPostContent] = useState('');
+  const [postAssets, setPostAssets] = useState([]);
   const [isPosting, setIsPosting] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -20,23 +35,80 @@ export const CommunityFeedPage = () => {
   const [reportDetails, setReportDetails] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const fetchPosts = async () => {
-    setLoading(true);
+  // Loads one page of the "For You" community feed; appends when paginating.
+  const fetchPosts = async (targetPage = 1, append = false) => {
+    if (append) setLoadingMore(true); else setLoading(true);
     try {
-      const res = await api('GET', '/community/posts/');
+      const res = await api('GET', `/community/posts/?page=${targetPage}&page_size=${FEED_PAGE_SIZE}`);
       if (res && res.ok) {
         const data = await res.json();
-        setPosts(Array.isArray(data) ? data : data.results || []);
+        const list = Array.isArray(data) ? data : data.results || [];
+        setPosts((prev) => (append ? [...prev, ...list] : list));
+        setHasNextPage(Boolean(data && data.next));
+        setPage(targetPage);
       }
     } catch (e) {
       console.error('Error fetching community posts:', e);
     }
-    setLoading(false);
+    if (append) setLoadingMore(false); else setLoading(false);
+  };
+
+  // Loads one page of published posts from creators the user follows.
+  const fetchFollowing = async (targetPage = 1, append = false) => {
+    if (append) setLoadingMore(true); else setLoading(true);
+    try {
+      const res = await api('GET', `/creators/posts/following/?page=${targetPage}&page_size=${FOLLOWING_PAGE_SIZE}`);
+      if (res && res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : data.results || [];
+        setPosts((prev) => (append ? [...prev, ...list] : list));
+        setHasNextPage(Boolean(data && data.next));
+        setPage(targetPage);
+      }
+    } catch (e) {
+      console.error('Error fetching followed-creator posts:', e);
+    }
+    if (append) setLoadingMore(false); else setLoading(false);
   };
 
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  // Discard un-posted draft media when the composer closes (server-side
+  // orphan cleanup also removes them after the grace period).
+  useEffect(() => {
+    if (!showCreateModal) setPostAssets([]);
+  }, [showCreateModal]);
+
+  const switchTab = (tab) => {
+    if (tab === activeTabRef.current) return;
+    activeTabRef.current = tab;
+    setActiveTab(tab);
+    setHasNextPage(false);
+    if (tab === 'foryou') fetchPosts(1, false);
+    else fetchFollowing(1, false);
+  };
+
+  const loadMore = () => {
+    if (loading || loadingMore || !hasNextPage) return;
+    if (activeTabRef.current === 'foryou') fetchPosts(page + 1, true);
+    else fetchFollowing(page + 1, true);
+  };
+
+  // Auto-load the next page when the sentinel scrolled into view.
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) loadMore(); },
+      { rootMargin: '480px 0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, hasNextPage, loading, loadingMore, posts]);
+
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
@@ -44,13 +116,21 @@ export const CommunityFeedPage = () => {
 
     setIsPosting(true);
     try {
-      const res = await api('POST', '/community/posts/create/', {
-        content: newPostContent.trim(),
-      });
+      const body = { content: newPostContent.trim() };
+      if (postAssets.length) {
+        body.media_asset_ids = postAssets.map((asset) => asset.id);
+      }
+      const res = await api('POST', '/community/posts/create/', body);
       if (res && res.ok) {
         const createdPost = await res.json();
-        setPosts((prev) => [createdPost, ...prev]);
+        if (activeTabRef.current === 'foryou') {
+          setPosts((prev) => [createdPost, ...prev]);
+        } else {
+          // Their new anonymous entry lives on the For You tab.
+          switchTab('foryou');
+        }
         setNewPostContent('');
+        setPostAssets([]);
         setShowCreateModal(false);
         if (window.showToast) window.showToast('✓ Anonymous entry posted to community feed');
       } else if (res) {
@@ -182,6 +262,28 @@ export const CommunityFeedPage = () => {
         </div>
       </section>
 
+      {/* FEED TABS (For You = community posts · Following = creators you follow) */}
+      <div className="flex items-center gap-1.5 p-1.5 rounded-full bg-white border border-purple-100 shadow-sm w-fit">
+        <button
+          type="button"
+          onClick={() => switchTab('foryou')}
+          className={`px-4 py-2 rounded-full text-xs font-extrabold transition border-none cursor-pointer ${
+            activeTab === 'foryou' ? 'bg-violet-700 text-white shadow-md' : 'bg-transparent text-gray-500 hover:text-violet-700'
+          }`}
+        >
+          For You
+        </button>
+        <button
+          type="button"
+          onClick={() => switchTab('following')}
+          className={`px-4 py-2 rounded-full text-xs font-extrabold transition border-none cursor-pointer ${
+            activeTab === 'following' ? 'bg-violet-700 text-white shadow-md' : 'bg-transparent text-gray-500 hover:text-violet-700'
+          }`}
+        >
+          Following
+        </button>
+      </div>
+
       {/* CREATE POST MODAL / DRAWER */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
@@ -214,6 +316,17 @@ export const CommunityFeedPage = () => {
                   <span>🔒 Fully unlinked anonymous handle generated automatically</span>
                   <span>{newPostContent.length}/2000</span>
                 </div>
+              </div>
+
+              <div>
+                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-500">Add photos or a video (optional)</p>
+                <PostMediaUploader
+                  value={postAssets}
+                  onChange={setPostAssets}
+                  disabled={isPosting}
+                  imageLimit={4}
+                  videoLimit={1}
+                />
               </div>
 
               <div className="p-3.5 rounded-2xl bg-purple-50/80 border border-purple-100 text-purple-900 text-xs font-medium leading-relaxed flex items-start gap-2.5">
@@ -328,18 +441,66 @@ export const CommunityFeedPage = () => {
       ) : posts.length === 0 ? (
         <div className="p-8 rounded-[32px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-4 shadow-sm my-4">
           <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1 shadow-inner">
-            🕊️
+            {activeTab === 'following' ? '🔎' : '🕊️'}
           </div>
-          <h3 className="t-h3 font-bold text-gray-900">The community sanctuary is quiet right now.</h3>
+          <h3 className="t-h3 font-bold text-gray-900">
+            {activeTab === 'following' ? 'Your following feed is quiet right now.' : 'The community sanctuary is quiet right now.'}
+          </h3>
           <p className="t-body-md text-gray-500 max-w-sm">
-            Be the first to share an anonymous reflection with the community.
+            {activeTab === 'following'
+              ? 'Follow creators you connect with, and their published posts will appear here.'
+              : 'Be the first to share an anonymous reflection with the community.'}
           </p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={activeTab === 'following' ? () => navigate('/world') : () => setShowCreateModal(true)}
             className="px-6 py-3.5 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition border-none cursor-pointer shadow-md"
           >
-            Post First Reflection →
+            {activeTab === 'following' ? 'Discover creators →' : 'Post First Reflection →'}
           </button>
+        </div>
+      ) : activeTab === 'following' ? (
+        <div className="space-y-3">
+          {posts.map((post) => (
+            <Link
+              key={post.id}
+              to={`/creators/${post.creator_username}/posts/${post.id}`}
+              className="block p-5 rounded-[26px] bg-white border border-violet-100 shadow-sm hover:shadow-md hover:border-violet-200 transition duration-200 space-y-3"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar
+                  name={post.creator_display_name || post.creator_username}
+                  customSrc={post.creator_avatar}
+                  className="w-9 h-9 text-xs"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-extrabold text-gray-900 truncate">
+                    {post.creator_display_name || post.creator_username}
+                  </p>
+                  <p className="text-[11px] text-gray-400">{timeAgo(post.published_at)}</p>
+                </div>
+                {post.content_type !== 'text' && (
+                  <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider border border-amber-100">
+                    {post.content_type === 'image' ? '🖼️ Image' : '🎬 Video'}
+                  </span>
+                )}
+                {post.category && (
+                  <span className="px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 text-[10px] font-bold uppercase tracking-wider border border-violet-100">
+                    {post.category}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap line-clamp-3">
+                {post.caption}
+              </p>
+              <PostMediaGrid post={post} compact />
+              <div className="pt-2 border-t border-gray-100 flex items-center gap-3 text-[11px] font-semibold text-gray-400">
+                <span>♥ {post.likes_count ?? 0}</span>
+                <span>💬 {post.comments_count ?? 0}</span>
+                <span>↗ {post.shares_count ?? 0}</span>
+                <span className="ml-auto text-violet-600 font-bold">Read post →</span>
+              </div>
+            </Link>
+          ))}
         </div>
       ) : (
         <div className="space-y-4">
@@ -381,6 +542,9 @@ export const CommunityFeedPage = () => {
                 <p className="t-body-lg text-gray-800 leading-relaxed font-normal whitespace-pre-wrap">
                   {post.content}
                 </p>
+
+                {/* UPLOADED IMAGES / VIDEO */}
+                <PostMediaGrid post={post} />
 
                 {/* CRISIS HELPLINE SUPPORT CARD (if crisis keywords detected) */}
                 {post.has_crisis_resources && (
@@ -424,6 +588,14 @@ export const CommunityFeedPage = () => {
               </div>
             );
           })}
+          {hasNextPage && <div ref={sentinelRef} className="h-4" aria-hidden="true" />}
+        </div>
+      )}
+
+      {/* Infinite-scroll loading indicator (sits below the feed) */}
+      {loadingMore && (
+        <div className="flex justify-center py-6">
+          <div className="w-7 h-7 rounded-full border-2 border-purple-600 border-t-transparent animate-spin" />
         </div>
       )}
     </div>

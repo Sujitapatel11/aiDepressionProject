@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from apps.chat.models import Message
 from .models import SupportRequest, SupportConnection, UserProfile
-from .serializers import UserSerializer, SupportRequestSerializer, SupportConnectionSerializer
+from .serializers import UserSerializer, SupportRequestSerializer, SupportConnectionSerializer, ActivityConsentSerializer
 
 
 def _cosine_similarity(a: list, b: list) -> float:
@@ -93,7 +93,8 @@ def available_users(request):
         connected_q, status__in=[SupportConnection.STATUS_ACTIVE, SupportConnection.STATUS_BLOCKED]
     )
     pending_reqs = SupportRequest.objects.filter(
-        Q(from_user=user) | Q(to_user=user), status=SupportRequest.PENDING
+        Q(from_user=user) | Q(to_user=user), status=SupportRequest.PENDING,
+        expires_at__gt=timezone.now(),
     )
 
     candidates = User.objects.filter(is_active=True).exclude(
@@ -179,7 +180,8 @@ def available_users(request):
 @permission_classes([IsAuthenticated])
 def incoming_requests(request):
     reqs = SupportRequest.objects.filter(
-        to_user=request.user, status=SupportRequest.PENDING
+        to_user=request.user, status=SupportRequest.PENDING,
+        expires_at__gt=timezone.now(),
     ).select_related('from_user', 'to_user')
     return Response(SupportRequestSerializer(reqs, many=True).data)
 
@@ -202,18 +204,36 @@ def send_request(request, user_id):
     ).exists():
         return Response({"detail": "Cannot send request to this user."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Prevent duplicate pending requests in either direction
-    if SupportRequest.objects.filter(
-        Q(from_user=request.user, to_user=to_user) | Q(from_user=to_user, to_user=request.user),
-        status=SupportRequest.PENDING
-    ).exists():
+    now = timezone.now()
+    try:
+        with transaction.atomic():
+            # Free the unconditional unique slot (from_user, to_user, status) held
+            # by an expired "pending" row for this pair (either direction). The
+            # pending uniqueness constraint is unconditioned, so a stale row would
+            # otherwise block any insert with IntegrityError.
+            SupportRequest.objects.filter(
+                Q(from_user=request.user, to_user=to_user) | Q(from_user=to_user, to_user=request.user),
+                status=SupportRequest.PENDING,
+                expires_at__lte=now,
+            ).update(status=SupportRequest.EXPIRED)
+
+            # Prevent duplicate non-expired pending requests in either direction.
+            # select_for_update() is unnecessary: the row being checked does not
+            # exist yet; the unique constraint serializes concurrent senders.
+            if SupportRequest.objects.filter(
+                Q(from_user=request.user, to_user=to_user) | Q(from_user=to_user, to_user=request.user),
+                status=SupportRequest.PENDING,
+                expires_at__gt=now,
+            ).exists():
+                return Response({"detail": "Request already pending."}, status=status.HTTP_400_BAD_REQUEST)
+
+            req = SupportRequest.objects.create(from_user=request.user, to_user=to_user)
+    except IntegrityError:
+        # The atomic block rolled back and exited, so the transaction is closed
+        # and no further DB access happens before the response below.
         return Response({"detail": "Request already pending."}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        req = SupportRequest.objects.create(from_user=request.user, to_user=to_user)
-        return Response(SupportRequestSerializer(req).data, status=status.HTTP_201_CREATED)
-    except IntegrityError:
-        return Response({"detail": "Request already pending."}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(SupportRequestSerializer(req).data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -222,10 +242,32 @@ def send_request(request, user_id):
 def accept_request(request, request_id):
     try:
         req = SupportRequest.objects.select_for_update().get(
-            id=request_id, to_user=request.user, status=SupportRequest.PENDING
+            id=request_id, to_user=request.user, status=SupportRequest.PENDING,
+            expires_at__gt=timezone.now(),
         )
     except SupportRequest.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # BLOCKED invariant, checked before ANY state mutation: accepting a request
+    # must never undo a block, and no other path creates or reactivates
+    # connections (verified: accept_request is the sole production creation site).
+    if SupportConnection.objects.filter(
+        Q(user_one=req.from_user_id, user_two=req.to_user_id)
+        | Q(user_one=req.to_user_id, user_two=req.from_user_id),
+        status=SupportConnection.STATUS_BLOCKED,
+    ).exists():
+        return Response({"detail": "Connection is blocked."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # The pending-uniqueness constraint is unconditioned on
+    # (from_user, to_user, status), so only one ACCEPTED row may exist per pair.
+    # A re-accept after disconnect would collide with the superseded ACCEPTED
+    # row; close it as EXPIRED — the SupportConnection row itself remains the
+    # source of truth for the active relationship.
+    SupportRequest.objects.filter(
+        Q(from_user=req.from_user_id, to_user=req.to_user_id)
+        | Q(from_user=req.to_user_id, to_user=req.from_user_id),
+        status=SupportRequest.ACCEPTED,
+    ).exclude(pk=req.pk).update(status=SupportRequest.EXPIRED)
 
     req.status = SupportRequest.ACCEPTED
     req.responded_at = timezone.now()
@@ -235,7 +277,7 @@ def accept_request(request, request_id):
     user_two = max(req.from_user, req.to_user, key=lambda u: u.id)
 
     try:
-        conn, _ = SupportConnection.objects.get_or_create(
+        conn, created = SupportConnection.objects.get_or_create(
             user_one=user_one,
             user_two=user_two,
             defaults={
@@ -243,6 +285,14 @@ def accept_request(request, request_id):
                 "alias_user_two": f"user_{user_two.id}",
             },
         )
+        if not created and conn.status == SupportConnection.STATUS_DISCONNECTED:
+            # Both participants re-confirmed by accepting the new request;
+            # restore the previously disconnected session. STATUS_BLOCKED can
+            # never reach here: it is pre-empted above and send_request refuses
+            # blocked pairs, so no save() happens on a blocked connection.
+            conn.status = SupportConnection.STATUS_ACTIVE
+            conn.disconnected_at = None
+            conn.save(update_fields=["status", "disconnected_at"])
         return Response(SupportConnectionSerializer(conn, context={'request': request}).data)
     except IntegrityError:
         return Response({"detail": "Connection creation failed."}, status=status.HTTP_400_BAD_REQUEST)
@@ -254,7 +304,8 @@ def accept_request(request, request_id):
 def reject_request(request, request_id):
     try:
         req = SupportRequest.objects.select_for_update().get(
-            id=request_id, to_user=request.user, status=SupportRequest.PENDING
+            id=request_id, to_user=request.user, status=SupportRequest.PENDING,
+            expires_at__gt=timezone.now(),
         )
     except SupportRequest.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -343,7 +394,8 @@ def disconnect_connection(request, connection_id):
 @permission_classes([IsAuthenticated])
 def sent_requests(request):
     reqs = SupportRequest.objects.filter(
-        from_user=request.user, status=SupportRequest.PENDING
+        from_user=request.user, status=SupportRequest.PENDING,
+        expires_at__gt=timezone.now(),
     ).select_related('from_user', 'to_user')
     return Response(SupportRequestSerializer(reqs, many=True).data)
 
@@ -384,10 +436,14 @@ def activity_consent(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        consent = request.data.get("consent", True)
-        profile.has_activity_consent = bool(consent)
-        profile.activity_consent_at = timezone.now() if consent else None
-        profile.save()
+        serializer = ActivityConsentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if "consent" in request.data:
+            consent = serializer.validated_data["consent"]
+            profile.has_activity_consent = bool(consent)
+            profile.activity_consent_at = timezone.now() if consent else None
+            profile.save()
 
     return Response({
         "has_consent": profile.has_activity_consent,
@@ -561,4 +617,3 @@ def submit_connection_activity(request, connection_id):
         "my_answers": sanitized_answers,
         "peer_answers": (quiz.user_two_answers if user_is_one else quiz.user_one_answers) if quiz.is_fully_completed() else {},
     })
-

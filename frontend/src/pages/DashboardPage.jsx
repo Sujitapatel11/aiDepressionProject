@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { api } from '../services/api';
+import { api, resolveMediaUrl } from '../services/api';
+import CreatorHomeFeed from '../components/creator/CreatorHomeFeed';
 
 const PROMPTS = [
   "What's one small thing that went well today?",
@@ -71,6 +72,7 @@ export const DashboardPage = () => {
   const navigate = useNavigate();
   const [dashData, setDashData] = useState(null);
   const [sleepStats, setSleepStats] = useState(null);
+  const [communityPreview, setCommunityPreview] = useState([]);
   const [customAvatar, setCustomAvatar] = useState('');
 
   useEffect(() => {
@@ -91,6 +93,17 @@ export const DashboardPage = () => {
         }
       } catch (e) {
         // Sleep stats are optional; the rest of the dashboard remains available.
+      }
+
+      // Community highlights preview is optional too; panel stays hidden when it fails.
+      try {
+        const cRes = await api('GET', '/community/posts/?page_size=3');
+        if (cRes && cRes.ok) {
+          const cData = await cRes.json();
+          setCommunityPreview(Array.isArray(cData) ? cData : cData.results || []);
+        }
+      } catch (e) {
+        // Ignore — the panel is a nice-to-have.
       }
     }
 
@@ -181,6 +194,8 @@ export const DashboardPage = () => {
           </div>
         </section>
 
+        <CreatorHomeFeed className="mt-0" />
+
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div><h2 className="text-lg font-extrabold text-[#2b2040]">Orbital shortcuts</h2><p className="text-xs text-[#887d98]">Jump back into your space</p></div>
@@ -197,6 +212,32 @@ export const DashboardPage = () => {
             ))}
           </div>
         </section>
+
+        {communityPreview.length > 0 && (
+          <section className="rounded-[26px] border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div><p className="text-xs font-bold uppercase tracking-[.16em] text-violet-500">From the community</p><h2 className="mt-1 text-lg font-extrabold text-[#2b2040]">Community highlights</h2></div>
+              <button type="button" onClick={() => navigate('/community')} className="text-xs font-extrabold text-violet-700 hover:underline">Open the grove ↗</button>
+            </div>
+            <div className="space-y-2">
+              {communityPreview.slice(0, 3).map((post) => (
+                <button key={post.id} type="button" onClick={() => navigate('/community')}
+                  className="flex w-full items-start gap-3 rounded-2xl bg-[#faf7fd] p-3 text-left transition hover:bg-[#f4ecfc]">
+                  {post.media?.[0]?.kind === 'image' || post.media?.[0]?.kind === 'video' ? (
+                    <img src={resolveMediaUrl(post.media[0].preview_url || post.media[0].url)}
+                      alt="" className="h-10 w-10 flex-shrink-0 rounded-xl object-cover" />
+                  ) : (
+                    <span className="mt-0.5 text-base">🕊️</span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-bold text-violet-600">{post.author_alias}</span>
+                    <span className="mt-0.5 block line-clamp-2 text-sm leading-relaxed text-[#5d5271]">{post.content}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <button type="button" onClick={() => navigate('/insights')} className="rounded-2xl border border-violet-100 bg-white p-4 text-left shadow-sm transition hover:border-violet-300">
