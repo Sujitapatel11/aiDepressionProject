@@ -1,4 +1,5 @@
 from pathlib import Path
+import ssl
 import os
 import sys
 from dotenv import load_dotenv
@@ -18,7 +19,7 @@ for env_path in [
 # =========================
 # SECURITY
 # =========================
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False").strip().lower() in {"1", "true", "yes"}
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
@@ -345,7 +346,9 @@ ASGI_APPLICATION = "config.asgi.application"
 
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 
-if REDIS_URL and not REDIS_URL.startswith("redis://127.0.0.1") and not REDIS_URL.startswith("redis://localhost"):
+is_local_redis = REDIS_URL.startswith("redis://127.0.0.1") or REDIS_URL.startswith("redis://localhost")
+
+if REDIS_URL and not (DEBUG and is_local_redis):
     is_tls = REDIS_URL.startswith("rediss://")
     host_config = {
         "address": REDIS_URL,
@@ -355,12 +358,11 @@ if REDIS_URL and not REDIS_URL.startswith("redis://127.0.0.1") and not REDIS_URL
         "health_check_interval": 30,
     }
     if is_tls:
-        import ssl
-        host_config["ssl_cert_reqs"] = ssl.CERT_NONE
+        host_config["ssl_cert_reqs"] = ssl.CERT_REQUIRED
 
     CHANNEL_LAYERS = {
         "default": {
-            "BACKEND": "apps.chat.channel_layer.ResilientChannelLayer",
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
                 "hosts": [host_config],
                 "capacity": 1500,
@@ -368,12 +370,18 @@ if REDIS_URL and not REDIS_URL.startswith("redis://127.0.0.1") and not REDIS_URL
             },
         },
     }
-else:
+elif DEBUG:
+    # In-memory Channels are suitable only for local development and tests.
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
         },
     }
+else:
+    raise RuntimeError(
+        "CRITICAL CONFIGURATION ERROR: REDIS_URL is required when DEBUG=False. "
+        "A process-local channel layer cannot support production WebSocket traffic."
+    )
 
 # =========================
 # MISC

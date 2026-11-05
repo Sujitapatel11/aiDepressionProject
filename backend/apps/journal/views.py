@@ -4,8 +4,10 @@ import requests
 import logging
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
+
+from config.throttles import AIGenerationRateThrottle
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -14,6 +16,7 @@ from .serializers import JournalEntrySerializer
 
 logger = logging.getLogger(__name__)
 
+MAX_AUDIO_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MiB
 
 
 class JournalPagination(PageNumberPagination):
@@ -93,6 +96,7 @@ def journal_detail(request, journal_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AIGenerationRateThrottle])
 def transcribe_audio_view(request):
     """
     POST /api/journal/transcribe/
@@ -103,6 +107,12 @@ def transcribe_audio_view(request):
         return Response({"detail": "No audio file provided."}, status=status.HTTP_400_BAD_REQUEST)
 
     audio_file = request.FILES['audio']
+    if audio_file.size > MAX_AUDIO_UPLOAD_BYTES:
+        return Response(
+            {"detail": "Audio file is too large. Maximum supported size is 20 MiB."},
+            status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+        )
+
     language = request.data.get('language', 'auto')
 
     hf_key = os.environ.get("HF_API_KEY", "")

@@ -81,3 +81,14 @@ class TranscribeAudioTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
         self.assertIn("HuggingFace API key", response.data["detail"])
+
+    @patch("apps.journal.views.MAX_AUDIO_UPLOAD_BYTES", 4)
+    def test_oversized_audio_upload_returns_413(self):
+        audio_file = SimpleUploadedFile("large.webm", b"12345", content_type="audio/webm")
+        response = self.client.post(
+            "/api/journal/transcribe/",
+            {"audio": audio_file},
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        self.assertIn("too large", response.data["detail"])
