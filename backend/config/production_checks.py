@@ -24,6 +24,12 @@ R2_ENV_VARS = (
     'CLOUDFLARE_R2_BUCKET_NAME',
 )
 
+CLOUDINARY_ENV_VARS = (
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+)
+
 DEFAULT_DEV_SECRET_KEY = 'dev-secret-key-unsafe-change-in-prod'
 DEFAULT_DB_PASSWORD = 'postgres'
 
@@ -39,24 +45,32 @@ def validate_media_storage(
     *,
     debug,
     running_tests,
-    r2_configured,
-    r2_partial,
-    allow_local_storage,
-    media_root,
+    r2_configured=False,
+    r2_partial=False,
+    cloudinary_configured=False,
+    cloudinary_partial=False,
+    allow_local_storage=False,
+    media_root='',
 ):
     """Reject a production deploy that would store uploads on ephemeral disk.
 
-    - Fully configured R2 is the supported production path.
-    - A partially configured R2 is always an error in production (half-set
-      credentials indicate a broken deploy, not an intentional local setup).
+    - Cloudinary or fully configured R2 is a supported durable media store.
+    - A partially configured provider is always an error in production.
     - Local storage is accepted only with the explicit
       SOULCARE_ALLOW_LOCAL_MEDIA_STORAGE opt-in (for a mounted persistent
       volume).
     """
     if debug or running_tests:
         return
-    if r2_configured:
+    if cloudinary_configured or r2_configured:
         return
+    if cloudinary_partial:
+        missing = ' / '.join(CLOUDINARY_ENV_VARS)
+        raise ImproperlyConfigured(
+            'Cloudinary is partially configured: only some of '
+            f'{missing} are set. Set all three Cloudinary values or '
+            'configure Cloudflare R2 / persistent volume storage.'
+        )
     if r2_partial:
         missing = ' / '.join(R2_ENV_VARS)
         raise ImproperlyConfigured(
@@ -69,12 +83,11 @@ def validate_media_storage(
     if allow_local_storage:
         return
     raise ImproperlyConfigured(
-        'Media storage is not configured for production: no Cloudflare R2 '
-        f'credentials are set, so uploads would be written to {media_root} on '
+        'Media storage is not configured for production: neither Cloudinary '
+        f'nor Cloudflare R2 credentials are set, so uploads would be written to {media_root} on '
         'the application filesystem and lost on the next redeploy. Configure '
-        'CLOUDFLARE_R2_ACCOUNT_ID, CLOUDFLARE_R2_ACCESS_KEY_ID, '
-        'CLOUDFLARE_R2_SECRET_ACCESS_KEY and CLOUDFLARE_R2_BUCKET_NAME. If this '
-        'deployment intentionally uses a persistent mounted volume, set '
+        'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or R2 credentials). '
+        'If this deployment intentionally uses a persistent mounted volume, set '
         'SOULCARE_ALLOW_LOCAL_MEDIA_STORAGE=true.'
     )
 

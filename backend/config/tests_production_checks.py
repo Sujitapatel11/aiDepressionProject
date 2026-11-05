@@ -51,8 +51,8 @@ class MediaStorageValidationTests(SimpleTestCase):
                 allow_local_storage=False, media_root='/srv/app/media',
             )
         message = str(ctx.exception)
-        self.assertIn('CLOUDFLARE_R2_ACCOUNT_ID', message)
-        self.assertIn('CLOUDFLARE_R2_BUCKET_NAME', message)
+        self.assertIn('Cloudinary nor Cloudflare R2', message)
+        self.assertIn('CLOUDINARY_CLOUD_NAME', message)
         self.assertIn('/srv/app/media', message)
         self.assertIn('SOULCARE_ALLOW_LOCAL_MEDIA_STORAGE', message)
 
@@ -191,7 +191,15 @@ class MediahubStorageConfigTests(SimpleTestCase):
             self.assertEqual(r2_config()['endpoint'], 'https://custom.example.com')
 
     def test_local_storage_backend_under_test(self):
-        # Tests always run on the filesystem backend; a live bucket must never
-        # be touched by the suite.
+        # settings.py sets STORAGES at startup using _IS_RUNNING_TESTS, which
+        # is True whenever sys.argv contains 'test'. This guarantees
+        # FileSystemStorage is used regardless of R2 environment variables,
+        # so the test suite never touches a live bucket.
+        # The assertion uses the live settings value, which is the one that
+        # was actually active when Django started this test run.
         from django.conf import settings
-        self.assertIn('FileSystemStorage', settings.STORAGES['default']['BACKEND'])
+        self.assertIn(
+            'FileSystemStorage',
+            settings.STORAGES['default']['BACKEND'],
+            'Tests must always use FileSystemStorage — check _IS_RUNNING_TESTS in settings.py',
+        )

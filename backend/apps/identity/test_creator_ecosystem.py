@@ -28,6 +28,8 @@ from .models import (
 
 class CreatorEcosystemApiTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()  # reset DRF throttle counters between tests
         self.creator_user = User.objects.create_user(username='owner_account', password='ExistingPassword123!')
         self.viewer = User.objects.create_user(username='viewer_account', password='ViewerPassword123!')
         self.staff = User.objects.create_user(username='moderator_account', password='ModeratorPassword123!', is_staff=True)

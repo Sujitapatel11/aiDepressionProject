@@ -16,6 +16,10 @@ vaderSentiment>=3.3
 textblob>=0.18
 numpy>=1.26
 scipy>=1.11
+# LiveKit server-side token generation (livekit-api is the only package needed;
+# the base livekit SDK is for real-time media/agent use and is not imported here).
+# Pinned to the verified version; bump deliberately after testing.
+livekit-api==1.2.2
 # Production
 whitenoise>=6.6
 dj-database-url>=2.1

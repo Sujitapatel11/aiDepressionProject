@@ -22,6 +22,13 @@ from .serializers import MediaAssetSerializer
 from .signing import verify_media_token
 from .storage import presigned_get_url, r2_enabled
 from . import usage
+from .cloudinary_service import (
+    generate_cloudinary_upload_signature,
+    verify_and_register_cloudinary_asset,
+    upload_to_cloudinary_direct,
+    delete_from_cloudinary,
+    is_cloudinary_configured,
+)
 
 MAX_FILES_PER_UPLOAD = settings.MEDIA_MAX_FILES_PER_UPLOAD
 RANGE_RE = re.compile(r'^bytes=(\d*)-(\d*)$')
@@ -111,6 +118,12 @@ def serve_media(request, asset_id):
     if not asset or not _asset_access_allowed(asset, user, signed_user_id):
         return JsonResponse({'detail': 'Not found.'}, status=404)
 
+    # Cloudinary storage: redirect to secure_url or responsive thumbnail
+    if asset.storage_provider == MediaAsset.StorageProvider.CLOUDINARY:
+        target = asset.thumbnail_url if request.GET.get('thumbnail') and asset.thumbnail_url else asset.secure_url
+        if target:
+            return HttpResponseRedirect(target)
+
     if r2_enabled():
         try:
             redirect_url = presigned_get_url(asset)
@@ -146,6 +159,13 @@ def _request_user(request):
 
 
 def _asset_access_allowed(asset, user, signed_user_id=None):
+    # Private journal media is strictly owner-only (or staff).
+    if asset.journal_entry_id or asset.visibility == MediaAsset.Visibility.PRIVATE:
+        if signed_user_id is not None and asset.user_id == signed_user_id:
+            return True
+        return user is not None and getattr(user, 'is_authenticated', False) and \
+            (user.is_staff or asset.user_id == user.id)
+
     # A valid signed preview token binds this exact asset to its uploader.
     if signed_user_id is not None and asset.user_id == signed_user_id:
         return True

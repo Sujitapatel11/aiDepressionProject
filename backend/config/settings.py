@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     'apps.sleep',
     'apps.community',
     'apps.mediahub',
+    'apps.creator_live',
 
     # Web frontend
     'web',
@@ -153,6 +154,23 @@ R2_MAX_PUT_OPS_MONTH = int(os.environ.get('SOULCARE_R2_MAX_PUT_OPS', '800000'))
 R2_WARN_PUT_OPS_MONTH = int(os.environ.get('SOULCARE_R2_WARN_PUT_OPS', '600000'))
 R2_MAX_GET_OPS_MONTH = int(os.environ.get('SOULCARE_R2_MAX_GET_OPS', '8000000'))
 R2_WARN_GET_OPS_MONTH = int(os.environ.get('SOULCARE_R2_WARN_GET_OPS', '6000000'))
+
+# =========================
+# CLOUDINARY CONFIGURATION
+# =========================
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip()
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '').strip()
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '').strip()
+_CLOUDINARY_CONFIGURED = all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
+_CLOUDINARY_PARTIAL = any([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]) and not _CLOUDINARY_CONFIGURED
+
+# =========================
+# LIVEKIT CONFIGURATION
+# =========================
+LIVEKIT_URL = os.environ.get('LIVEKIT_URL', '').strip()
+LIVEKIT_API_KEY = os.environ.get('LIVEKIT_API_KEY', '').strip()
+LIVEKIT_API_SECRET = os.environ.get('LIVEKIT_API_SECRET', '').strip()
+_LIVEKIT_CONFIGURED = all([LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET])
 
 # Unit tests never touch the real bucket: force the local backend regardless
 # of credentials present in the environment.
@@ -294,6 +312,8 @@ REST_FRAMEWORK = {
         'creator_write': '30/hour',
         'creator_engagement': '120/hour',
         'creator_withdrawal': '5/day',
+        'livekit_token': '20/hour',
+        'media_upload': '30/hour',
     },
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -484,6 +504,8 @@ _validate_media_storage(
     running_tests=_IS_RUNNING_TESTS,
     r2_configured=_R2_CONFIGURED,
     r2_partial=any([R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME]),
+    cloudinary_configured=_CLOUDINARY_CONFIGURED,
+    cloudinary_partial=_CLOUDINARY_PARTIAL,
     allow_local_storage=_SOULCARE_ALLOW_LOCAL_MEDIA,
     media_root=MEDIA_ROOT,
 )

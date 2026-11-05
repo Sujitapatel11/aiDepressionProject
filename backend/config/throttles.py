@@ -35,3 +35,10 @@ class MediaUploadRateThrottle(UserRateThrottle):
     scope = 'media_upload'
     rate = '30/hour'
 
+
+
+class LiveKitTokenRateThrottle(UserRateThrottle):
+    """Token endpoint is called once per session join; limit tightly to prevent
+    credential harvesting while allowing normal participant churn."""
+    scope = 'livekit_token'
+    rate = '20/hour'

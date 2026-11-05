@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/sleep/', include('apps.sleep.urls')),
     path('api/community/', include('apps.community.urls')),
     path('api/media/', include('apps.mediahub.urls')),
+    path('api/live/', include('apps.creator_live.urls')),
     path('api/dashboard/', include('apps.support.dashboard_urls')),
     path('api/dashboard/beta/', beta_dashboard_stats, name='beta_dashboard_stats'),
     path('api/telemetry/', include('apps.telemetry.urls')),

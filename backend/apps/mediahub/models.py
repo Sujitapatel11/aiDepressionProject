@@ -16,13 +16,23 @@ class MediaAsset(models.Model):
     """A validated uploaded media file detached from any single post system.
 
     Uploads start as orphan assets owned by the uploader and are attached to
-    an existing CreatorPost or CommunityPost when the post is saved. Serving
-    is permission-checked in views; the file itself is never publicly mapped.
+    an existing CreatorPost, CommunityPost, or JournalEntry when saved. Serving
+    is permission-checked in views; private journal media is strictly owner-only.
     """
 
     class Kind(models.TextChoices):
         IMAGE = 'image', 'Image'
         VIDEO = 'video', 'Video'
+
+    class StorageProvider(models.TextChoices):
+        LOCAL = 'local', 'Local/Volume'
+        R2 = 'r2', 'Cloudflare R2'
+        CLOUDINARY = 'cloudinary', 'Cloudinary'
+
+    class Visibility(models.TextChoices):
+        PUBLIC = 'public', 'Public'
+        PRIVATE = 'private', 'Private'
+        UNLISTED = 'unlisted', 'Unlisted'
 
     id = models.UUIDField(primary_key=True, editable=False)
     # file_ext is stored so the storage path can be built before the file is
@@ -33,12 +43,26 @@ class MediaAsset(models.Model):
         related_name='media_uploads',
     )
     kind = models.CharField(max_length=8, choices=Kind.choices, db_index=True)
-    file = models.FileField(upload_to=media_upload_path, max_length=512)
+    file = models.FileField(upload_to=media_upload_path, max_length=512, blank=True, null=True)
     original_name = models.CharField(max_length=256, blank=True, default='')
     content_type = models.CharField(max_length=128, blank=True, default='')
     size_bytes = models.PositiveBigIntegerField(default=0)
     width = models.PositiveIntegerField(null=True, blank=True)
     height = models.PositiveIntegerField(null=True, blank=True)
+
+    # Cloudinary & durable storage metadata
+    storage_provider = models.CharField(
+        max_length=16, choices=StorageProvider.choices,
+        default=StorageProvider.LOCAL, db_index=True,
+    )
+    cloudinary_public_id = models.CharField(max_length=256, blank=True, default='', db_index=True)
+    secure_url = models.URLField(max_length=1024, blank=True, default='')
+    thumbnail_url = models.URLField(max_length=1024, blank=True, default='')
+    duration = models.FloatField(null=True, blank=True)
+    visibility = models.CharField(
+        max_length=12, choices=Visibility.choices,
+        default=Visibility.PUBLIC, db_index=True,
+    )
 
     creator_post = models.ForeignKey(
         CreatorPost, on_delete=models.CASCADE, null=True, blank=True,
@@ -46,6 +70,10 @@ class MediaAsset(models.Model):
     )
     community_post = models.ForeignKey(
         CommunityPost, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='media_assets',
+    )
+    journal_entry = models.ForeignKey(
+        'journal.JournalEntry', on_delete=models.CASCADE, null=True, blank=True,
         related_name='media_assets',
     )
 
@@ -57,6 +85,8 @@ class MediaAsset(models.Model):
             models.Index(fields=['user', 'created_at']),
             models.Index(fields=['creator_post']),
             models.Index(fields=['community_post']),
+            models.Index(fields=['journal_entry'], name='mediahub_me_journal_entry_idx'),
+            models.Index(fields=['storage_provider', 'created_at'], name='mediahub_storage_created_idx'),
         ]
 
     def __str__(self):
