@@ -1,0 +1,38 @@
+from django.urls import path
+
+from . import creator_api, views
+
+urlpatterns = [
+    path('activate/', views.activate_creator_view, name='creator_activate'),
+    path('me/', views.my_creator_profile_view, name='creator_me'),
+    path('feed/', creator_api.public_creator_feed, name='creator_feed'),
+    path('posts/', creator_api.public_creator_feed, name='creator_posts_public'),
+    path('posts/mine/', creator_api.my_creator_posts, name='creator_posts_mine'),
+    path('posts/following/', creator_api.creator_feed_following, name='creator_posts_following'),
+    path('feed/<slug:tab>/', creator_api.creator_home_feed, name='creator_home_feed'),
+    path('bookmarks/', creator_api.my_bookmarked_posts, name='creator_bookmarks'),
+    path('comments/<int:comment_id>/delete/', creator_api.delete_creator_comment, name='creator_comment_delete'),
+    path('posts/create/', creator_api.create_creator_post, name='creator_post_create'),
+    path('posts/<uuid:post_id>/analytics/', creator_api.creator_post_analytics, name='creator_post_analytics'),
+    path('posts/<uuid:post_id>/edit/', creator_api.edit_creator_post, name='creator_post_edit'),
+    path('posts/<uuid:post_id>/delete/', creator_api.delete_creator_post, name='creator_post_delete'),
+    path('posts/<uuid:post_id>/like/', creator_api.creator_post_like, name='creator_post_like'),
+    path('posts/<uuid:post_id>/bookmark/', creator_api.creator_post_bookmark, name='creator_post_bookmark'),
+    path('posts/<uuid:post_id>/comments/', creator_api.creator_post_comments, name='creator_post_comments'),
+    path('posts/<uuid:post_id>/share/', creator_api.creator_post_share, name='creator_post_share'),
+    path('posts/<uuid:post_id>/view/', creator_api.record_creator_post_view, name='creator_post_view'),
+    path('posts/<uuid:post_id>/', creator_api.public_creator_post_detail, name='creator_post_detail'),
+    path('profiles/<str:username>/posts/', creator_api.public_creator_posts, name='creator_profile_posts'),
+    path('profiles/<str:username>/follow/', creator_api.creator_follow, name='creator_follow'),
+    path('dashboard/', creator_api.creator_dashboard, name='creator_dashboard'),
+    path('earnings/', creator_api.creator_earnings, name='creator_earnings'),
+    path('withdrawals/', creator_api.creator_withdrawals, name='creator_withdrawals'),
+    path('admin/profiles/', creator_api.admin_creator_profiles, name='creator_admin_profiles'),
+    path('admin/profiles/<int:profile_id>/', creator_api.admin_update_creator_profile, name='creator_admin_profile_update'),
+    path('admin/withdrawals/', creator_api.admin_creator_withdrawals, name='creator_admin_withdrawals'),
+    path('admin/withdrawals/<uuid:withdrawal_id>/review/', creator_api.admin_review_withdrawal, name='creator_admin_withdrawal_review'),
+    path('admin/signals/', creator_api.admin_creator_signals, name='creator_admin_signals'),
+    path('admin/signals/<int:signal_id>/review/', creator_api.admin_review_creator_signal, name='creator_admin_signal_review'),
+    path('admin/comments/<int:comment_id>/moderate/', creator_api.admin_moderate_creator_comment, name='creator_admin_comment_moderate'),
+    path('<str:username>/', views.public_creator_profile_view, name='creator_public'),
+]

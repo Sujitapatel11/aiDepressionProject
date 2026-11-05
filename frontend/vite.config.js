@@ -10,6 +10,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Vitest (frontend unit tests): jsdom + Testing Library.
+  // Include path is scoped to the creator-feed tests; the pre-existing
+  // Jest-style tests under src/features/soul-identity/tests were written for
+  // Jest (jest.fn, HTML collection queries) and predate any JSDOM/Vitest
+  // tooling — they never had a runnable runner and are left untouched.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.js',
+    css: false,
+    include: ['src/components/**/*.test.jsx'],
+  },
   server: {
     port: 5173,
     host: true,

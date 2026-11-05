@@ -3,14 +3,27 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
 import { ChatWebSocketClient } from '../services/chatWebSocket';
+import { ArrowLeft, MessageCircle, Search, Send } from 'lucide-react';
+import './ChatPage.css';
 
 export const ChatPage = () => {
-  const { userId, token } = useAuth();
-  const [searchParams] = useSearchParams();
+  const { userId } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const connId = searchParams.get('conn') || '';
-  const peerName = searchParams.get('name') || 'Peer Companion';
+  const [connections, setConnections] = useState([]);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
+  const [connectionsError, setConnectionsError] = useState('');
+  const [connectionsRefresh, setConnectionsRefresh] = useState(0);
+  const [conversationQuery, setConversationQuery] = useState('');
+  const [historyError, setHistoryError] = useState('');
+  const [sendError, setSendError] = useState('');
+  const selectedConnection = connections.find((connection) => connection.connection_id === connId);
+  const peerName = selectedConnection?.peer?.username
+    || selectedConnection?.alias
+    || searchParams.get('name')
+    || 'Peer companion';
 
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -38,6 +51,35 @@ export const ChatPage = () => {
   const messagesEndRef = useRef(null);
   const wsClientRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const historyRequestRef = useRef(0);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchConnections = async () => {
+      setConnectionsLoading(true);
+      setConnectionsError('');
+      const response = await api('GET', '/support/connections/');
+      if (!active) return;
+
+      if (!response || !response.ok) {
+        setConnections([]);
+        setConnectionsError('Your conversations could not be loaded.');
+      } else {
+        try {
+          const data = await response.json();
+          setConnections(Array.isArray(data) ? data : data.results || []);
+        } catch (error) {
+          setConnections([]);
+          setConnectionsError('Your conversations could not be loaded.');
+        }
+      }
+      if (active) setConnectionsLoading(false);
+    };
+
+    fetchConnections();
+    return () => { active = false; };
+  }, [connectionsRefresh]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -46,17 +88,30 @@ export const ChatPage = () => {
   };
 
   const fetchHistory = async () => {
-    if (!connId) return;
+    const requestId = ++historyRequestRef.current;
+    if (!connId) {
+      setMessages([]);
+      setLoading(false);
+      setHistoryError('');
+      return;
+    }
     setLoading(true);
+    setHistoryError('');
     const res = await api('GET', `/chat/${connId}/messages/`);
+    if (requestId !== historyRequestRef.current) return;
     if (res && res.ok) {
       try {
         const data = await res.json();
+        if (requestId !== historyRequestRef.current) return;
         const list = Array.isArray(data) ? data : data.results || [];
         setMessages(list);
-      } catch (e) {
+      } catch (error) {
         setMessages([]);
+        setHistoryError('Messages could not be read. Try again.');
       }
+    } else {
+      setMessages([]);
+      setHistoryError('This conversation could not be loaded.');
     }
     setLoading(false);
     scrollToBottom();
@@ -84,23 +139,35 @@ export const ChatPage = () => {
     fetchHistory();
     fetchActivityStatus();
 
-    const client = new ChatWebSocketClient(connId, token, {
+    const client = new ChatWebSocketClient(connId, {
       onStatusChange: (statusText, online) => {
         setStatus(statusText);
         setIsOnline(online);
       },
       onMessage: (msgData) => {
-        console.log('[ChatPage] WS message received, updating state:', msgData);
         setMessages((prev) => {
           if (msgData.message_id && prev.some((m) => m.message_id === msgData.message_id)) {
             return prev;
           }
           return [...prev, msgData];
         });
+        setConnections((prev) => prev.map((connection) => (
+          connection.connection_id === connId
+            ? {
+              ...connection,
+              last_message: {
+                content: msgData.message || msgData.content,
+                sender_id: msgData.sender_id,
+                created_at: msgData.timestamp || msgData.created_at,
+              },
+            }
+            : connection
+        )));
         // Re-evaluate level score after new messages arrive
         fetchActivityStatus();
         scrollToBottom();
       },
+      onError: (message) => setSendError(message),
       onTyping: (senderId, isTyping) => {
         if (senderId !== userId) {
           setIsPeerTyping(isTyping);
@@ -115,7 +182,7 @@ export const ChatPage = () => {
     return () => {
       client.disconnect();
     };
-  }, [connId, token, userId]);
+  }, [connId, userId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -124,9 +191,13 @@ export const ChatPage = () => {
   const handleSend = (e) => {
     e.preventDefault();
     const msg = inputText.trim();
-    if (!msg || !wsClientRef.current) return;
+    if (!msg) return;
 
-    wsClientRef.current.sendMessage(msg);
+    if (!wsClientRef.current?.sendMessage(msg)) {
+      setSendError('Reconnecting. Your message is still here; try again when chat is online.');
+      return;
+    }
+    setSendError('');
     setInputText('');
   };
 
@@ -217,137 +288,165 @@ export const ChatPage = () => {
     }
   };
 
+  const fmtConversationTime = (iso) => {
+    if (!iso) return '';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '';
+    const now = new Date();
+    if (date.toDateString() === now.toDateString()) {
+      return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+    if ((now - date) < 6 * 24 * 60 * 60 * 1000) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    }
+    return date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
+  };
+
   const initials = (peerName || '?').slice(0, 2).toUpperCase();
   const lvlInfo = activityState?.level_info || { level: 1, level_name: 'Seed Connection', progress_pct: 0, score: 0 };
   const currentQuiz = activityState?.quiz;
+  const filteredConnections = connections.filter((connection) => {
+    const name = connection.peer?.username || connection.alias || '';
+    return name.toLowerCase().includes(conversationQuery.trim().toLowerCase());
+  });
 
-  if (!connId) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[70vh]">
-        <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-3 shadow-inner">
-          💬
-        </div>
-        <h3 className="t-h3 font-bold text-gray-900 mb-1">Your 1-on-1 Messages</h3>
-        <p className="t-body-md text-gray-500 max-w-sm mb-4">
-          Select a peer conversation from your Support Circle to start messaging.
-        </p>
-        <button
-          onClick={() => navigate('/peers')}
-          className="px-6 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 transition border-none cursor-pointer shadow-md"
-        >
-          Go to Peers Sanctuary →
-        </button>
-      </div>
-    );
-  }
+  const selectConnection = (connection) => {
+    setSendError('');
+    setSearchParams({ conn: connection.connection_id, name: connection.peer?.username || connection.alias || '' });
+  };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-68px)] lg:h-screen bg-white max-w-5xl mx-auto shadow-sm animate-fadeIn relative">
-      {/* CHAT HEADER WITH LEVEL INDICATOR BADGE */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-white flex-shrink-0 relative">
-        <button
-          onClick={() => navigate('/peers')}
-          className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition border-none bg-transparent cursor-pointer mr-1"
-          title="Back to peers"
-        >
-          ←
-        </button>
-        <div className="relative flex-shrink-0">
-          <div
-            className="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-black"
-            style={{ background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)' }}
-          >
-            {initials}
+    <div className="chat-page">
+      <div className={`chat-workspace ${connId ? 'is-selected' : ''}`}>
+        <aside className="chat-sidebar" aria-label="Conversations">
+          <div className="chat-sidebar-heading">
+            <h1 className="chat-sidebar-title">Messages</h1>
+            <p className="chat-sidebar-subtitle">Your private support circle</p>
           </div>
-          {isOnline && <div className="online-dot"></div>}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="t-h5 font-bold text-gray-900 truncate">{peerName}</h3>
-            {lvlInfo.level >= 4 && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold border border-amber-200">
-                🛡️ Trusted Circle
-              </span>
-            )}
+          <label className="chat-search-wrap">
+            <Search className="chat-search-icon" aria-hidden="true" />
+            <input
+              className="chat-search"
+              type="search"
+              value={conversationQuery}
+              onChange={(event) => setConversationQuery(event.target.value)}
+              placeholder="Search conversations"
+              aria-label="Search conversations"
+            />
+          </label>
+          <p className="chat-list-label">Active connections</p>
+          <div className="chat-conversation-list">
+            {connectionsLoading ? (
+              <div className="chat-list-state" role="status">Loading conversations…</div>
+            ) : connectionsError ? (
+              <div className="chat-list-state" role="alert">
+                <strong>Couldn’t load conversations</strong>
+                <p>{connectionsError}</p>
+                <button className="chat-retry-button" onClick={() => setConnectionsRefresh((value) => value + 1)}>
+                  Try again
+                </button>
+              </div>
+            ) : connections.length === 0 ? (
+              <div className="chat-list-state">
+                <MessageCircle size={23} strokeWidth={1.7} aria-hidden="true" />
+                <strong>No conversations yet</strong>
+                <p>Connect with a peer to start a private conversation.</p>
+                <button className="chat-retry-button" onClick={() => navigate('/peers')}>Find peer companions</button>
+              </div>
+            ) : filteredConnections.length === 0 ? (
+              <div className="chat-list-state"><p>No conversations match that search.</p></div>
+            ) : filteredConnections.map((connection) => {
+              const name = connection.peer?.username || connection.alias || 'Peer companion';
+              const lastMessage = connection.last_message;
+              const preview = lastMessage?.content
+                ? `${String(lastMessage.sender_id) === String(userId) ? 'You: ' : ''}${lastMessage.content}`
+                : 'Start a conversation';
+              const avatarUrl = connection.peer?.avatar_url;
+              return (
+                <button
+                  key={connection.connection_id}
+                  type="button"
+                  className={`chat-conversation ${connection.connection_id === connId ? 'is-active' : ''}`}
+                  onClick={() => selectConnection(connection)}
+                  aria-pressed={connection.connection_id === connId}
+                >
+                  {avatarUrl ? (
+                    <img className="chat-avatar" src={avatarUrl} alt="" />
+                  ) : (
+                    <span className="chat-avatar" aria-hidden="true">{name.slice(0, 2).toUpperCase()}</span>
+                  )}
+                  <span className="chat-conversation-copy">
+                    <span className="chat-conversation-name">{name}</span>
+                    <span className="chat-conversation-preview">{preview}</span>
+                  </span>
+                  <span className="chat-conversation-meta">
+                    {fmtConversationTime(lastMessage?.created_at || connection.created_at)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <span className={`text-xs font-semibold block ${isOnline ? 'text-emerald-600' : 'text-gray-400'}`}>
-            {status}
-          </span>
-        </div>
+        </aside>
 
-        {/* LEVEL BADGE & PROGRESS INDICATOR */}
-        <div className="relative flex-shrink-0">
-          <button
-            onClick={() => setShowLevelPopover(!showLevelPopover)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 transition cursor-pointer"
-          >
-            <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black">
-              {lvlInfo.level}
-            </div>
-            <div className="text-left hidden sm:block">
-              <div className="text-[11px] font-bold leading-tight">{lvlInfo.level_name}</div>
-              <div className="w-16 h-1 rounded-full bg-purple-200 overflow-hidden mt-0.5">
-                <div
-                  className="h-full bg-purple-600 transition-all duration-300"
-                  style={{ width: `${lvlInfo.progress_pct}%` }}
-                ></div>
-              </div>
-            </div>
-          </button>
-
-          {/* LEVEL POPOVER TOOLTIP */}
-          {showLevelPopover && (
-            <div className="absolute right-0 top-12 w-72 bg-white rounded-2xl p-4 shadow-xl border border-purple-100 z-30 animate-fadeIn">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-100 mb-3">
-                <span className="text-xs font-bold text-gray-900">Connection Depth: Level {lvlInfo.level}</span>
-                <span className="text-xs font-semibold text-purple-600">{lvlInfo.score} pts</span>
-              </div>
-              <p className="text-xs text-gray-500 mb-3">{lvlInfo.level_name}</p>
-
-              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-3">
-                <div
-                  className="bg-purple-600 h-full transition-all duration-300"
-                  style={{ width: `${lvlInfo.progress_pct}%` }}
-                ></div>
-              </div>
-
-              <div className="space-y-1.5 text-[11px] font-medium text-gray-600 mb-3">
-                <div className={`flex items-center gap-1.5 ${lvlInfo.level >= 1 ? 'text-purple-700 font-bold' : 'text-gray-400'}`}>
-                  <span>🏷️</span> <span>Level 1: Journal Interest Tags</span>
+        <section className="chat-main" aria-label={connId ? `Chat with ${peerName}` : 'Conversation'}>
+          {connId ? (
+            <>
+              <header className="chat-header">
+                <button
+                  type="button"
+                  className="chat-back-button"
+                  onClick={() => setSearchParams({})}
+                  aria-label="Back to conversations"
+                >
+                  <ArrowLeft size={18} aria-hidden="true" />
+                </button>
+                <div className="relative flex-shrink-0">
+                  {selectedConnection?.peer?.avatar_url ? (
+                    <img className="chat-avatar" src={selectedConnection.peer.avatar_url} alt="" />
+                  ) : (
+                    <span className="chat-avatar" aria-hidden="true">{initials}</span>
+                  )}
+                  <span className={`chat-status-dot absolute -bottom-0.5 -right-0.5 ${isOnline ? 'is-online' : ''}`} />
                 </div>
-                <div className={`flex items-center gap-1.5 ${lvlInfo.level >= 2 ? 'text-purple-700 font-bold' : 'text-gray-400'}`}>
-                  <span>🎲</span> <span>Level 2: "Get to Know Each Other" Activity</span>
+                <div className="chat-header-copy">
+                  <h2 className="chat-header-name">{peerName}</h2>
+                  <div className="chat-header-status">
+                    <span className={`chat-status-dot ${isOnline ? 'is-online' : ''}`} />
+                    <span>{status}</span>
+                  </div>
                 </div>
-                <div className={`flex items-center gap-1.5 ${lvlInfo.level >= 3 ? 'text-purple-700 font-bold' : 'text-gray-400'}`}>
-                  <span>💖</span> <span>Level 3: Compatibility Summary</span>
+                <div className="relative flex-shrink-0">
+                  <button
+                    type="button"
+                    className="chat-level-button"
+                    onClick={() => setShowLevelPopover(!showLevelPopover)}
+                    aria-expanded={showLevelPopover}
+                    aria-label={`Connection level ${lvlInfo.level}: ${lvlInfo.level_name}`}
+                  >
+                    <span>Level {lvlInfo.level}</span>
+                    <span className="hidden sm:inline">{lvlInfo.level_name}</span>
+                  </button>
+                  {showLevelPopover && (
+                    <div className="chat-level-popover">
+                      <strong>Connection depth · {lvlInfo.score} points</strong>
+                      <p>{lvlInfo.level_name} · {lvlInfo.progress_pct}% to the next level</p>
+                      {activityState?.compatibility_summary && (
+                        <p>{activityState.compatibility_summary}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className={`flex items-center gap-1.5 ${lvlInfo.level >= 4 ? 'text-purple-700 font-bold' : 'text-gray-400'}`}>
-                  <span>🛡️</span> <span>Level 4: Trusted Circle Badge</span>
-                </div>
-              </div>
-
-              {activityState?.compatibility_summary && (
-                <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-100 text-xs font-medium text-purple-800">
-                  <span className="font-bold">✨ Compatibility: </span>
-                  {activityState.compatibility_summary}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+              </header>
 
       {/* DISMISSIBLE "GET TO KNOW EACH OTHER" CHAT PROMPT CARD */}
       {activityState?.unlocked && !promptDismissed && (!currentQuiz || !currentQuiz.is_fully_completed) && (
-        <div className="px-6 pt-3 bg-[#FAF8FE] flex-shrink-0">
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md flex items-center justify-between gap-4">
+        <div className="chat-activity-banner">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center text-xl flex-shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-white/70 text-purple-700 flex items-center justify-center text-lg flex-shrink-0">
                 ✨
               </div>
               <div>
-                <h4 className="text-sm font-bold">Get to know each other</h4>
+                <h4 className="text-xs font-bold">Get to know each other</h4>
                 <p className="text-xs text-purple-100">
                   Play a fun, positive-only guessing activity tailored to your connection!
                 </p>
@@ -358,42 +457,36 @@ export const ChatPage = () => {
               <button
                 onClick={handleStartActivity}
                 disabled={generatingQuiz}
-                className="px-4 py-2 rounded-xl bg-white text-purple-700 font-bold text-xs hover:bg-purple-50 transition border-none cursor-pointer shadow-sm"
+                className="px-3 py-2 rounded-lg bg-white text-purple-700 font-bold text-xs hover:bg-purple-50 transition border-none cursor-pointer shadow-sm"
               >
                 {generatingQuiz ? 'Loading...' : currentQuiz ? 'Continue Quiz' : 'Start Activity'}
               </button>
               <button
                 onClick={() => setPromptDismissed(true)}
-                className="p-1.5 text-purple-200 hover:text-white transition border-none bg-transparent cursor-pointer"
+                className="p-1.5 text-purple-700 hover:text-purple-900 transition border-none bg-transparent cursor-pointer"
                 title="Dismiss"
               >
                 ✕
               </button>
             </div>
-          </div>
         </div>
       )}
 
       {/* MESSAGES CONTAINER */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-[#FAF8FE]">
-        {loading ? (
-          <div className="space-y-3 py-4 animate-pulse">
-            <div className="flex flex-col items-start">
-              <div className="w-48 h-10 rounded-2xl bg-purple-100"></div>
-            </div>
-            <div className="flex flex-col items-end">
-              <div className="w-56 h-12 rounded-2xl bg-purple-200"></div>
-            </div>
+          <div className="chat-message-list" aria-live="polite" aria-label="Messages">
+        {historyError && (
+            <div className="chat-inline-error" role="alert">
+            <p>{historyError}</p>
+            <button type="button" className="chat-retry-button" onClick={fetchHistory}>Retry</button>
           </div>
-        ) : messages.length === 0 ? (
-          <div className="p-8 rounded-[28px] bg-white border border-purple-100 text-center flex flex-col items-center justify-center space-y-3 shadow-sm mx-auto my-auto max-w-sm">
-            <div className="w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-3xl mb-1 shadow-inner">
-              💜
-            </div>
-            <h3 className="t-h3 font-bold text-gray-900">Start your conversation.</h3>
-            <p className="t-body-md text-gray-500">
-              A kind message can make someone's day better. Send a supportive reflection to begin.
-            </p>
+        )}
+        {loading ? (
+          <div className="chat-empty-state" role="status"><p>Loading messages…</p></div>
+          ) : historyError ? null : messages.length === 0 ? (
+          <div className="chat-empty-state">
+            <span className="chat-empty-mark"><MessageCircle size={23} aria-hidden="true" /></span>
+            <h2>Start your conversation</h2>
+            <p>A kind message can make someone's day better. Send a supportive reflection to begin.</p>
           </div>
         ) : (
           messages.map((m, idx) => {
@@ -401,23 +494,11 @@ export const ChatPage = () => {
             const time = fmtTime(m.created_at || m.timestamp);
 
             return (
-              <div key={idx} className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'} fade-in`}>
-                <div
-                  className="p-4 max-w-md shadow-sm text-sm font-normal leading-relaxed"
-                  style={{
-                    background: isSelf
-                      ? 'linear-gradient(135deg,#8B5CF6,#7C3AED)'
-                      : '#FFFFFF',
-                    color: isSelf ? '#FFFFFF' : '#1F2937',
-                    border: isSelf ? 'none' : '1px solid #E5E7EB',
-                    borderRadius: isSelf
-                      ? '24px 24px 4px 24px'
-                      : '24px 24px 24px 4px',
-                  }}
-                >
+              <div key={m.message_id || `${m.sender_id}-${m.created_at || m.timestamp}-${idx}`} className={`chat-message-row ${isSelf ? 'is-mine' : ''}`}>
+                <div className="chat-message-bubble">
                   {m.content || m.message}
                 </div>
-                <span className="text-[10px] font-semibold text-gray-400 mt-1 px-1">{time}</span>
+                <span className="chat-message-time">{time}</span>
               </div>
             );
           })
@@ -425,34 +506,40 @@ export const ChatPage = () => {
 
         {/* Typing indicator */}
         {isPeerTyping && (
-          <div className="flex flex-col items-start fade-in">
-            <div className="p-3 px-4 rounded-2xl bg-white border border-gray-200 text-xs font-semibold text-purple-600 flex items-center gap-1.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping"></span>
-              <span>{peerName} is typing...</span>
-            </div>
-          </div>
+          <div className="chat-typing" role="status">{peerName} is typing…</div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
       {/* INPUT FORM */}
-      <form
-        onSubmit={handleSend}
-        className="flex items-center gap-3 px-6 py-4 flex-shrink-0 bg-white border-t border-gray-200"
-      >
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => handleTypingInput(e.target.value)}
-          placeholder="Write a supportive message..."
-          className="inp flex-1 t-body-md"
-          style={{ borderRadius: '24px', padding: '12px 20px' }}
-        />
-        <button type="submit" className="btn-blue py-3 px-6" style={{ width: 'auto' }}>
-          Send
-        </button>
-      </form>
+      <div className="chat-composer-shell">
+        {sendError && <p className="chat-inline-error" role="alert">{sendError}</p>}
+        <form onSubmit={handleSend} className="chat-composer">
+          <textarea
+            rows="1"
+            value={inputText}
+            onChange={(e) => handleTypingInput(e.target.value)}
+            placeholder="Write a supportive message..."
+            className="chat-composer-input"
+            aria-label="Message"
+          />
+          <button type="submit" className="chat-send-button" disabled={!inputText.trim() || !isOnline}>
+            <Send size={16} aria-hidden="true" />
+            Send
+          </button>
+        </form>
+      </div>
+            </>
+          ) : (
+            <div className="chat-empty-state">
+              <span className="chat-empty-mark"><MessageCircle size={23} aria-hidden="true" /></span>
+              <h2>Choose a conversation</h2>
+              <p>Your private support conversations will appear here.</p>
+            </div>
+          )}
+        </section>
+      </div>
 
       {/* EXPLICIT ONE-TIME CONSENT MODAL */}
       {showConsentModal && (

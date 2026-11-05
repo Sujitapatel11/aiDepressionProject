@@ -1,3 +1,6 @@
+import uuid
+
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
@@ -5,6 +8,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
+from apps.mediahub.services import attach_media_assets
 from config.throttles import CommunityPostRateThrottle
 from apps.insights.engine import detect_crisis_keywords
 from .models import CommunityPost, PostReport, PostReaction, generate_anonymous_alias
@@ -28,7 +32,7 @@ def list_posts(request):
     """
     posts = (
         CommunityPost.objects.filter(is_hidden=False)
-        .prefetch_related("reactions", "reports")
+        .prefetch_related("reactions", "reports", "media_assets")
         .order_by("-created_at")
     )
     paginator = CommunityPostPagination()
@@ -57,6 +61,24 @@ def create_post(request):
     if len(content) > 2000:
         return Response({"detail": "Post content is too long (max 2000 characters)."}, status=status.HTTP_400_BAD_REQUEST)
 
+    raw_assets = request.data.get("media_asset_ids")
+    if raw_assets in (None, ""):
+        asset_ids = None
+    elif isinstance(raw_assets, (list, tuple)):
+        asset_ids = []
+        for value in raw_assets:
+            try:
+                asset_ids.append(str(uuid.UUID(str(value))))
+            except (ValueError, AttributeError, TypeError):
+                return Response({"media_asset_ids": [f'"{value}" is not a valid asset ID.']},
+                                status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"media_asset_ids": ["Must be a list of upload asset IDs."]},
+                        status=status.HTTP_400_BAD_REQUEST)
+    if asset_ids and len(asset_ids) > settings.MEDIA_MAX_FILES_PER_UPLOAD:
+        return Response({"media_asset_ids": [f"At most {settings.MEDIA_MAX_FILES_PER_UPLOAD} media per post."]},
+                        status=status.HTTP_400_BAD_REQUEST)
+
     has_crisis, crisis_note = detect_crisis_keywords(content)
 
     post = CommunityPost.objects.create(
@@ -66,6 +88,9 @@ def create_post(request):
         has_crisis_resources=has_crisis,
         crisis_resource_note=crisis_note if has_crisis else "",
     )
+
+    if asset_ids:
+        attach_media_assets(asset_ids, request.user, community_post=post)
 
     serializer = CommunityPostSerializer(post, context={"request": request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)

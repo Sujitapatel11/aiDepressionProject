@@ -1,11 +1,18 @@
+import hashlib
+from datetime import timedelta
+from urllib.parse import quote
+
+from asgiref.sync import async_to_sync
+from channels.testing import WebsocketCommunicator
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase, override_settings
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
 # pyrefly: ignore [missing-import]
 from apps.support.models import SupportConnection
-from .models import Message
+from .models import Message, WebSocketAuthTicket
 
 
 class MessageHistoryTests(TestCase):
@@ -81,4 +88,108 @@ class MessageHistoryTests(TestCase):
         messages_data = response.data
         self.assertEqual(len(messages_data), 1)
         self.assertEqual(messages_data[0]["content"], "Visible message")
+
+
+class WebSocketAuthTicketTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="ticket_user", password="password123")
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_authenticated_endpoint_issues_hashed_short_lived_ticket(self):
+        response = self.client.post("/api/chat/ws-ticket/")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        raw_ticket = response.data["ticket"]
+        ticket = WebSocketAuthTicket.objects.get(user=self.user)
+        self.assertEqual(ticket.token_hash, hashlib.sha256(raw_ticket.encode()).hexdigest())
+        self.assertNotEqual(ticket.token_hash, raw_ticket)
+        self.assertEqual(response.data["expires_in"], WebSocketAuthTicket.LIFETIME_SECONDS)
+        self.assertLessEqual(
+            (ticket.expires_at - ticket.created_at).total_seconds(),
+            WebSocketAuthTicket.LIFETIME_SECONDS,
+        )
+
+    def test_ticket_endpoint_requires_authentication(self):
+        self.client.force_authenticate(user=None)
+
+        response = self.client.post("/api/chat/ws-ticket/")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_expired_ticket_is_rejected(self):
+        raw_ticket, ticket = WebSocketAuthTicket.issue_for_user(self.user)
+        WebSocketAuthTicket.objects.filter(pk=ticket.pk).update(
+            expires_at=timezone.now() - timedelta(seconds=1)
+        )
+
+        self.assertIsNone(WebSocketAuthTicket.consume(raw_ticket))
+
+    def test_ticket_cannot_be_replayed(self):
+        raw_ticket, _ = WebSocketAuthTicket.issue_for_user(self.user)
+
+        self.assertEqual(WebSocketAuthTicket.consume(raw_ticket), self.user)
+        self.assertIsNone(WebSocketAuthTicket.consume(raw_ticket))
+
+    def test_malformed_and_unknown_tickets_are_rejected(self):
+        self.assertIsNone(WebSocketAuthTicket.consume(None))
+        self.assertIsNone(WebSocketAuthTicket.consume("not a ticket"))
+        self.assertIsNone(WebSocketAuthTicket.consume("a" * 129))
+        self.assertIsNone(WebSocketAuthTicket.consume("A" * 43))
+
+    def test_inactive_user_ticket_is_rejected(self):
+        raw_ticket, _ = WebSocketAuthTicket.issue_for_user(self.user)
+        self.user.is_active = False
+        self.user.save(update_fields=["is_active"])
+
+        self.assertIsNone(WebSocketAuthTicket.consume(raw_ticket))
+
+
+@override_settings(
+    CHANNEL_LAYERS={"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+)
+class WebSocketTicketConnectionTests(TransactionTestCase):
+    def setUp(self):
+        from config.asgi import application
+
+        self.application = application
+        self.user = User.objects.create_user(username="socket_user", password="password123")
+        self.peer = User.objects.create_user(username="socket_peer", password="password123")
+        self.connection = SupportConnection.objects.create(
+            user_one=self.user,
+            user_two=self.peer,
+            alias_user_one="socket_user",
+            alias_user_two="socket_peer",
+            status=SupportConnection.STATUS_ACTIVE,
+        )
+
+    def test_single_use_ticket_authenticates_actual_asgi_connection(self):
+        raw_ticket, _ = WebSocketAuthTicket.issue_for_user(self.user)
+        communicator = WebsocketCommunicator(
+            self.application,
+            f"/ws/chat/{self.connection.connection_id}/?ticket={quote(raw_ticket)}",
+            headers=[(b"origin", b"http://testserver")],
+        )
+
+        async def connect_and_disconnect():
+            result = await communicator.connect()
+            if result[0]:
+                await communicator.disconnect()
+            return result
+
+        connected, connect_result = async_to_sync(connect_and_disconnect)()
+        self.assertTrue(connected, f"ASGI connection was rejected: {connect_result!r}")
+
+    def test_jwt_query_parameter_does_not_authenticate_connection(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        token = str(AccessToken.for_user(self.user))
+        communicator = WebsocketCommunicator(
+            self.application,
+            f"/ws/chat/{self.connection.connection_id}/?token={quote(token)}",
+            headers=[(b"origin", b"http://testserver")],
+        )
+
+        connected, _ = async_to_sync(communicator.connect)()
+        self.assertFalse(connected)
 

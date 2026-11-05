@@ -80,6 +80,9 @@ class TelemetrySubsystemTests(TestCase):
         AnalyticsEvent.objects.create(user=self.user, event_name="journal_created", session_id="sess_1")
         CrashReport.objects.create(user=self.user, stack_trace="Fatal NullPointer", severity="fatal")
 
+        self.user.is_staff = True
+        self.user.save(update_fields=["is_staff"])
+        self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/dashboard/beta/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
@@ -89,3 +92,41 @@ class TelemetrySubsystemTests(TestCase):
         self.assertIn("crash_free_session_percent", data["beta_overview"])
         self.assertEqual(data["crash_metrics"]["fatal_crashes"], 1)
         self.assertIn("journal_created", data["feature_usage"])
+
+    def test_beta_dashboard_rejects_anonymous_user(self):
+        response = self.client.get("/api/dashboard/beta/")
+        # The API uses JWT as its sole authentication class, so an anonymous
+        # request to a protected view gets 401 (NotAuthenticated with a
+        # WWW-Authenticate challenge), not 403. Either way access is denied.
+        self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
+
+    def test_feedback_list_rejects_non_staff_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/api/feedback/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_feedback_list_allows_staff_user(self):
+        self.user.is_staff = True
+        self.user.save(update_fields=["is_staff"])
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get("/api/feedback/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_analytics_batch_rejects_empty_list(self):
+        response = self.client.post("/api/telemetry/event/", [], format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_analytics_batch_rejects_more_than_limit(self):
+        payload = [{"event_name": "journal_created"} for _ in range(51)]
+        response = self.client.post("/api/telemetry/event/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_analytics_batch_validates_all_before_saving(self):
+        payload = [
+            {"event_name": "journal_created", "session_id": "batch-1"},
+            {"session_id": "batch-2"},
+        ]
+        response = self.client.post("/api/telemetry/event/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(AnalyticsEvent.objects.count(), 0)
+

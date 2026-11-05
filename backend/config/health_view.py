@@ -1,21 +1,71 @@
-import time
-import os
+import logging
 import re
-from django.http import JsonResponse
-from django.db import connection
-from django.conf import settings
-from django.contrib.auth.models import User
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework import status
+import time
+from functools import wraps
 
-_START_TIME = time.time()
+from django.core.cache import cache
+from django.db import connection
+from django.http import JsonResponse
+
+logger = logging.getLogger(__name__)
+
+# Public machine-probe budget per counting point.
+#
+# Rate-limit implementation notes (read before changing this):
+# - Uses the default Django cache backend. config/settings.py defines no
+#   CACHES setting, so the backend is Django's default LocMemCache: the
+#   limit is PER-PROCESS, NOT global. Today the Procfile/nixpacks start
+#   command runs a single Daphne process, so per-process == global. If the
+#   backend deployment ever gains multiple workers, the effective ceiling
+#   becomes (worker count x HEALTH_RATE_LIMIT_PER_MINUTE) per REMOTE_ADDR —
+#   this is intentional and documented, do not describe it as a global limit.
+# - Counting is atomic per cache backend: cache.add() (no-op if the key
+#   exists) followed by cache.incr() (LocMemCache increments under an
+#   internal lock; redis INCR is atomic). A get()+set() pair would NOT be
+#   atomic and is deliberately not used. If the 61s key expires between
+#   add() and incr() (unlikely), incr() raises ValueError, which is handled
+#   by re-adding a fresh bucket.
+# - Keyed on REMOTE_ADDR only. Behind a single reverse proxy (Render) the
+#   bucket is shared by all clients of that proxy, which is acceptable for a
+#   diagnostics-only endpoint; X-Forwarded-For is deliberately ignored
+#   because it is client-spoofable.
+# - These endpoints stay public (no authentication) because uptime monitors
+#   depend on unauthenticated HTTP status probes (see docs/API.md,
+#   STAGING_DEPLOYMENT_REPORT.md).
+HEALTH_RATE_LIMIT_PER_MINUTE = 60
+
+
+def _register_probe_hit(view_key: str, request) -> bool:
+    """Atomically bump the window-scoped probe counter. Returns False if over limit."""
+    ident = request.META.get("REMOTE_ADDR", "") or "unknown"
+    window_start = int(time.time() // 60)
+    bucket = f"health_rl:{view_key}:{ident}:{window_start}"
+    cache.add(bucket, 0, 61)  # no-op when the key already exists; atomic
+    try:
+        count = cache.incr(bucket)  # atomic increment
+    except ValueError:
+        # Key raced to expiry between add() and incr(): start a fresh window.
+        cache.add(bucket, 1, 61)
+        count = 1
+    return count <= HEALTH_RATE_LIMIT_PER_MINUTE
+
+
+def _rate_limited_json_response(view_key: str):
+    """Fixed-window, per-REMOTE_ADDR rate limiter for the public health probes."""
+    def decorator(view):
+        @wraps(view)
+        def wrapped(request, *args, **kwargs):
+            if not _register_probe_hit(view_key, request):
+                return JsonResponse({"detail": "Too many requests."}, status=429)
+            return view(request, *args, **kwargs)
+        return wrapped
+    return decorator
 
 
 def _sanitize_error_message(message: str) -> str:
     """
     Remove passwords, tokens, URLs, and sensitive credentials from error messages.
+    Used for server-side log messages only; these never reach API responses.
     """
     # Strip credentials in database/HTTP URLs (e.g. postgresql://user:password@host...)
     msg = re.sub(r'([a-zA-Z0-9+.-]+://[^:]+:)([^@]+)(@)', r'\1*****\3', message)
@@ -24,88 +74,51 @@ def _sanitize_error_message(message: str) -> str:
     return msg
 
 
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-@throttle_classes([])
+@_rate_limited_json_response("db_health")
 def db_health_check(request):
     """
-    Temporary database diagnostic endpoint for verifying connection & migrations.
-    Runs SELECT 1 and User.objects.count().
-    Never leaks passwords, tokens, or credentials.
+    Public database liveness probe.
+
+    Minimal status-only body - never counts, identifiers, engine names, or
+    error text. Full diagnostic details go to server-side logs only. Kept
+    public for uptime monitoring; HTTP status is the contract
+    (200 healthy / 503 unhealthy / 429 throttled).
     """
     try:
-        # Step 1: Run trivial query to verify TCP connectivity and database responsiveness
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1;")
             cursor.fetchone()
-
-        # Step 2: Query User table to verify migrations and schema presence
-        user_count = User.objects.count()
-
-        db_engine = settings.DATABASES["default"].get("ENGINE", "").split(".")[-1]
-        raw_host = settings.DATABASES["default"].get("HOST", "")
-
-        return Response({
-            "status": "healthy",
-            "select_1": "ok",
-            "user_count": user_count,
-        }, status=status.HTTP_200_OK)
-
     except Exception as exc:
-        sanitized_msg = _sanitize_error_message(str(exc))
-        return Response({
-            "error_class": exc.__class__.__name__,
-            "error_message": sanitized_msg,
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.warning("DB health probe failed: %s", _sanitize_error_message(str(exc)))
+        return JsonResponse({"status": "unhealthy"}, status=503)
+
+    return JsonResponse({
+        "status": "healthy",
+        "select_1": "ok",
+    })
 
 
+@_rate_limited_json_response("health")
 def health_check(request):
     """
-    Staging & Production Health Check Endpoint
-    Returns system status, database connectivity, memory usage, uptime.
+    Public uptime probe, served at /api/health/ and /health/.
+
+    HTTP status is the monitoring contract (200 healthy / 503 degraded).
+    Body is minimal by design: status and timestamp only - no debug flag,
+    DB engine or latency, error text, uptime, or process memory/CPU metrics.
     """
-    db_status = "healthy"
-    db_latency_ms = 0.0
+    db_healthy = True
     try:
         start_db = time.time()
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1;")
             cursor.fetchone()
-        db_latency_ms = round((time.time() - start_db) * 1000, 2)
-    except Exception as e:
-        db_status = f"unhealthy: {str(e)}"
-
-    rss_mb = 0.0
-    vsz_mb = 0.0
-    cpu_pct = 0.0
-    try:
-        import psutil
-        process = psutil.Process(os.getpid())
-        memory_info = process.memory_info()
-        rss_mb = round(memory_info.rss / (1024 * 1024), 2)
-        vsz_mb = round(memory_info.vsz / (1024 * 1024), 2)
-        cpu_pct = process.cpu_percent(interval=None)
-    except Exception:
-        pass
+    except Exception as exc:
+        db_healthy = False
+        logger.warning("Health probe database check failed: %s", _sanitize_error_message(str(exc)))
 
     data = {
-        "status": "healthy" if db_status == "healthy" else "degraded",
-        "environment": "staging" if not settings.DEBUG else "development",
-        "debug": settings.DEBUG,
-        "database": {
-            "status": db_status,
-            "latency_ms": db_latency_ms,
-            "engine": settings.DATABASES["default"]["ENGINE"].split(".")[-1],
-        },
-        "system": {
-            "uptime_seconds": round(time.time() - _START_TIME, 2),
-            "memory_rss_mb": rss_mb,
-            "memory_vsz_mb": vsz_mb,
-            "cpu_percent": cpu_pct,
-        },
+        "status": "healthy" if db_healthy else "degraded",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
-    status_code = 200 if data["status"] == "healthy" else 503
-    return JsonResponse(data, status=status_code)
-
+    return JsonResponse(data, status=200 if db_healthy else 503)

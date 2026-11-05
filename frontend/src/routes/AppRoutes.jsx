@@ -10,6 +10,10 @@ import { useAuth }   from '../hooks/useAuth';
 const JournalPage   = lazy(() => import('../pages/JournalPage'));
 const SoulWorldPage = lazy(() => import('../pages/SoulWorldPage'));
 const CreatorStudioPage = lazy(() => import('../pages/CreatorStudioPage'));
+const CreatorPublicPage = lazy(() => import('../pages/CreatorPublicPage'));
+const CreatorDashboardPage = lazy(() => import('../pages/CreatorDashboardPage'));
+const CreatorEarningsPage = lazy(() => import('../pages/CreatorEarningsPage'));
+const CreatorAdminPage = lazy(() => import('../pages/CreatorAdminPage'));
 const InsightsPage  = lazy(() => import('../pages/InsightsPage'));
 const PeersPage     = lazy(() => import('../pages/PeersPage'));
 const ChatPage      = lazy(() => import('../pages/ChatPage'));
@@ -40,6 +44,8 @@ export const AppRoutes = () => {
       <Routes>
         {/* ── Auth route ── */}
         <Route path="/login" element={<AuthPage />} />
+        <Route path="/creators/:username" element={<CreatorPublicPage />} />
+        <Route path="/creators/:username/posts/:postId" element={<CreatorPublicPage />} />
 
         {/* ── Protected application shell ── */}
         <Route
@@ -52,6 +58,9 @@ export const AppRoutes = () => {
           <Route path="/"           element={<DashboardPage />} />
           <Route path="/world"      element={<SoulWorldPage />} />
           <Route path="/creator-studio" element={<CreatorStudioPage />} />
+          <Route path="/creator-dashboard" element={<CreatorDashboardPage />} />
+          <Route path="/creator-earnings" element={<CreatorEarningsPage />} />
+          <Route path="/creator-admin" element={<CreatorAdminPage />} />
           <Route path="/journal"    element={<JournalPage />} />
           <Route path="/insights"   element={<InsightsPage />} />
           <Route path="/peers"      element={<PeersPage />} />
@@ -59,7 +68,6 @@ export const AppRoutes = () => {
           <Route path="/chat"       element={<ChatPage />} />
           <Route path="/community"  element={<CommunityFeedPage />} />
           <Route path="/sleep"      element={<SleepPage />} />
-          <Route path="/profile font-bold" element={<ProfilePage />} />
           <Route path="/profile"    element={<ProfilePage />} />
           <Route path="/settings"   element={<SettingsPage />} />
           <Route path="/beta-admin" element={<BetaAdminPage />} />
