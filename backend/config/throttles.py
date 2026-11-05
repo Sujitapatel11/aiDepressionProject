@@ -15,3 +15,23 @@ class CommunityPostRateThrottle(UserRateThrottle):
     scope = 'community_post'
     rate = '10/day'
 
+
+class CreatorWriteRateThrottle(UserRateThrottle):
+    scope = 'creator_write'
+    rate = '30/hour'
+
+
+class CreatorEngagementRateThrottle(UserRateThrottle):
+    scope = 'creator_engagement'
+    rate = '120/hour'
+
+
+class CreatorWithdrawalRateThrottle(UserRateThrottle):
+    scope = 'creator_withdrawal'
+    rate = '5/day'
+
+
+class MediaUploadRateThrottle(UserRateThrottle):
+    scope = 'media_upload'
+    rate = '30/hour'
+

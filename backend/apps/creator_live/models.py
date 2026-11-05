@@ -40,8 +40,9 @@ class CreatorPlan(models.Model):
     class Meta:
         ordering = ['price_minor', 'name']
         constraints = [
+            # Django 4.2 uses `check=`; `condition=` is Django 5.x syntax.
             models.CheckConstraint(
-                condition=Q(price_minor__gte=0),
+                check=Q(price_minor__gte=0),
                 name='creator_plan_price_nonnegative',
             ),
         ]
@@ -93,7 +94,7 @@ class CreatorSubscription(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['provider', 'provider_subscription_id'],
-                condition=~Q(provider_subscription_id=''),
+                check=~Q(provider_subscription_id=''),
                 name='creator_subscription_provider_id_uniq',
             ),
         ]
@@ -165,7 +166,7 @@ class LiveSession(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=Q(ended_at__isnull=True) | Q(started_at__isnull=False),
+                check=Q(ended_at__isnull=True) | Q(started_at__isnull=False),
                 name='live_session_end_requires_start',
             ),
         ]
@@ -240,7 +241,7 @@ class LiveParticipant(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['session', 'user'],
-                condition=Q(left_at__isnull=True),
+                check=Q(left_at__isnull=True),
                 name='live_one_active_participation_per_user',
             ),
         ]

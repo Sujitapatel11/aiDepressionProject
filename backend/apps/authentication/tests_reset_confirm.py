@@ -33,7 +33,13 @@ class PasswordResetConfirmTestCase(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("NewStrongPassword123!"))
 
-    def test_successful_password_reset_confirm_with_raw_uid(self):
+    def test_raw_uid_is_rejected(self):
+        """Security hardening: only Django's encoded UID format is accepted.
+
+        The previous implementation fell back to a raw numeric primary key,
+        which widened the reset endpoint's attack surface. This test replaces
+        the old `..._with_raw_uid` success expectation.
+        """
         payload = {
             "uid": str(self.user.pk),  # raw integer string e.g. "1"
             "token": self.token,
@@ -41,11 +47,12 @@ class PasswordResetConfirmTestCase(TestCase):
             "confirm_password": "NewStrongPassword123!"
         }
         response = self.client.post("/api/auth/password/reset/confirm/", payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get("detail"), "Invalid reset link or user ID.")
 
-        # Verify password changed
+        # Password must remain unchanged.
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("NewStrongPassword123!"))
+        self.assertFalse(self.user.check_password("NewStrongPassword123!"))
 
     def test_successful_reset_with_trailing_slashes(self):
         payload = {

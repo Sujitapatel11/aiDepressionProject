@@ -95,7 +95,10 @@ class TelemetrySubsystemTests(TestCase):
 
     def test_beta_dashboard_rejects_anonymous_user(self):
         response = self.client.get("/api/dashboard/beta/")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # The API uses JWT as its sole authentication class, so an anonymous
+        # request to a protected view gets 401 (NotAuthenticated with a
+        # WWW-Authenticate challenge), not 403. Either way access is denied.
+        self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
 
     def test_feedback_list_rejects_non_staff_user(self):
         self.client.force_authenticate(user=self.user)

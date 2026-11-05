@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -104,12 +105,70 @@ INSTALLED_APPS = [
     'apps.telemetry',
     'apps.sleep',
     'apps.community',
+    'apps.mediahub',
 
     # Web frontend
     'web',
 ]
 
 SITE_ID = 1
+
+# =========================
+# MEDIA UPLOADS (direct device upload)
+# Local disk is the default storage backend; MEDIA_ROOT can be overridden via
+# environment (e.g. a mounted volume). Object-storage backends (S3-compatible)
+# are intentionally NOT enabled until credentials exist — see deployment docs.
+# =========================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', str(BASE_DIR / 'media'))
+MEDIA_MAX_IMAGE_MB = int(os.environ.get('SOULCARE_MAX_IMAGE_MB', '10'))
+MEDIA_MAX_VIDEO_MB = int(os.environ.get('SOULCARE_MAX_VIDEO_MB', '100'))
+MEDIA_MAX_FILES_PER_UPLOAD = int(os.environ.get('SOULCARE_MAX_MEDIA_FILES', '6'))
+MEDIA_ORPHAN_CLEANUP_HOURS = int(os.environ.get('SOULCARE_ORPHAN_MEDIA_HOURS', '24'))
+
+# =========================
+# CLOUDFLARE R2 (persistent media storage, S3-compatible API)
+# Credentials live ONLY in environment (.env.local / provider dashboard) —
+# never in code or frontend. When all four variables are set, uploaded media
+# is stored in the private R2 bucket and delivered via short-lived presigned
+# URLs handed out by the permission-checked serve view. Missing variables →
+# transparent fallback to local disk (dev/test behavior unchanged).
+# Free-tier safety: usage tracked in apps.mediahub.usage; ceilings BELOW the
+# free tier block uploads before any paid usage can occur.
+# =========================
+R2_ACCOUNT_ID = os.environ.get('CLOUDFLARE_R2_ACCOUNT_ID', '').strip()
+R2_ACCESS_KEY_ID = os.environ.get('CLOUDFLARE_R2_ACCESS_KEY_ID', '').strip()
+R2_SECRET_ACCESS_KEY = os.environ.get(
+    'CLOUDFLARE_R2_SECRET_ACCESS_KEY', '').strip()
+R2_BUCKET_NAME = os.environ.get('CLOUDFLARE_R2_BUCKET_NAME', '').strip()
+# Optional override (default derives from the account id).
+R2_ENDPOINT_URL = os.environ.get('CLOUDFLARE_R2_ENDPOINT_URL', '').strip()
+R2_PRESIGN_TTL_SECONDS = int(os.environ.get('SOULCARE_R2_PRESIGN_TTL', '600'))
+
+# Safety ceilings (below R2 free tier: 10 GB storage-month, 1M Class A, 10M Class B).
+R2_MAX_STORAGE_GB = float(os.environ.get('SOULCARE_R2_MAX_STORAGE_GB', '9'))
+R2_WARN_STORAGE_GB = float(os.environ.get('SOULCARE_R2_WARN_STORAGE_GB', '8'))
+R2_MAX_PUT_OPS_MONTH = int(os.environ.get('SOULCARE_R2_MAX_PUT_OPS', '800000'))
+R2_WARN_PUT_OPS_MONTH = int(os.environ.get('SOULCARE_R2_WARN_PUT_OPS', '600000'))
+R2_MAX_GET_OPS_MONTH = int(os.environ.get('SOULCARE_R2_MAX_GET_OPS', '8000000'))
+R2_WARN_GET_OPS_MONTH = int(os.environ.get('SOULCARE_R2_WARN_GET_OPS', '6000000'))
+
+# Unit tests never touch the real bucket: force the local backend regardless
+# of credentials present in the environment.
+_IS_RUNNING_TESTS = any(
+    arg == 'test' or arg.endswith('\\test') or arg.endswith('/test')
+    for arg in sys.argv
+)
+_R2_CONFIGURED = all([R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME])
+
+STORAGES = {
+    'default': (
+        {'BACKEND': 'apps.mediahub.storage.R2MediaStorage'}
+        if _R2_CONFIGURED and not _IS_RUNNING_TESTS
+        else {'BACKEND': 'django.core.files.storage.FileSystemStorage'}
+    ),
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 
 # =========================
 # MIDDLEWARE
@@ -151,7 +210,8 @@ TEMPLATES = [
 STATIC_URL = '/static/'
 STATICFILES_DIRS = []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# staticfiles storage is configured via STORAGES (see MEDIA/R2 section) —
+# Django 4.2 forbids STATICFILES_STORAGE alongside STORAGES.
 
 # =========================
 # DATABASE
@@ -230,6 +290,9 @@ REST_FRAMEWORK = {
         'ai_generation': '20/minute',
         'password_reset': '5/hour',
         'community_post': '10/day',
+        'creator_write': '30/hour',
+        'creator_engagement': '120/hour',
+        'creator_withdrawal': '5/day',
     },
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -245,6 +308,10 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+CREATOR_MINIMUM_WITHDRAWAL = os.environ.get('CREATOR_MINIMUM_WITHDRAWAL', '500.00')
+CREATOR_EARNING_HOLD_DAYS = 30
+CREATOR_AD_REVENUE_PROVIDER_CONFIGURED = False
 
 # =========================
 # CORS
