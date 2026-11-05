@@ -254,7 +254,7 @@ export const JournalPage = () => {
               🌿 Sanctuary · Ancient Grove
             </span>
           </div>
-          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">Journal Forest</h1>
+          <h1 className="t-display text-gray-900 text-2xl lg:text-3xl font-extrabold mb-1">Journal</h1>
           <p className="t-body-md text-gray-500 italic">Unburden your thoughts beneath the glowing canopy. This space is yours — write freely, without judgment.</p>
         </div>
         <div className="hidden sm:flex items-center gap-3">

@@ -192,3 +192,42 @@ export async function api(method, path, body = null, isRetry = false) {
     return null;
   }
 }
+
+// ── Multipart upload with progress (XMLHttpRequest; fetch cannot report
+//    upload progress). Returns {ok, status, json} or null on network failure.
+export async function apiUpload(path, formData, { onProgress } = {}, isRetry = false) {
+  return new Promise((resolve) => {
+    const token = getStoredToken();
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', getApiUrl(path), true);
+    if (token) {
+      try { xhr.setRequestHeader('Authorization', `Bearer ${token}`); } catch (e) {}
+    }
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+      };
+    }
+    xhr.onload = async () => {
+      if (xhr.status === 401 && !isRetry) {
+        const newAccess = await refreshAccessToken();
+        if (newAccess) {
+          resolve(apiUpload(path, formData, { onProgress }, true));
+          return;
+        }
+        clearAuthData();
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        resolve(null);
+        return;
+      }
+      let json = null;
+      try { json = JSON.parse(xhr.responseText); } catch (err) { /* non-JSON body */ }
+      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, json });
+    };
+    xhr.onerror = () => resolve(null);
+    xhr.onabort = () => resolve(null);
+    xhr.send(formData);
+  });
+}

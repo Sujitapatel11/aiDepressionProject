@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const REALMS = [
   { id: 'soul-room', name: 'Soul Room', subtitle: 'Your private sanctuary', icon: '⌂', tone: 'violet', path: '/', status: 'Home base', description: 'Return to your personal corner of the universe.' },
-  { id: 'journal-forest', name: 'Journal Forest', subtitle: 'A quiet place to reflect', icon: '🌳', tone: 'pink', path: '/journal', status: 'Ready to explore', description: 'Follow a thought, capture a moment, and let your reflections grow.' },
+  { id: 'journal-forest', name: 'Journal', subtitle: 'A quiet place to reflect', icon: '🌳', tone: 'pink', path: '/journal', status: 'Ready to explore', description: 'Follow a thought, capture a moment, and let your reflections grow.' },
   { id: 'connect-island', name: 'Connect Island', subtitle: 'Find your people', icon: '♡', tone: 'rose', path: '/peers', status: 'Meet people', description: 'Build meaningful connections at your own pace.' },
   { id: 'play-zone', name: 'Community', subtitle: 'Shared stories & moments', icon: '✧', tone: 'amber', path: '/community', status: 'Community space', description: 'Visit the community to read and share anonymous reflections.' },
   { id: 'creator-studio', name: 'Creator Studio', subtitle: 'Your creative corner', icon: '✿', tone: 'lavender', path: '/creator-studio', status: 'Creative space', description: 'Shape ideas into private drafts in your creative workshop.' },
