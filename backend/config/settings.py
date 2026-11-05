@@ -49,6 +49,7 @@ if backend_url:
 
 # Trust proxy for HTTPS detection
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "false").lower() in ("1", "true")
 
 # Production security headers (only when DEBUG=False)
 if not DEBUG:
