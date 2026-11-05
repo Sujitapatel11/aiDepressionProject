@@ -344,3 +344,66 @@ class BookmarkTests(HomeFeedTestBase):
         post = self.make_post()
         response = self.anon_client.post(f'/api/creators/posts/{post.pk}/bookmark/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class JournalPrivacyInFeedAndCreatorApiTests(HomeFeedTestBase):
+    """Verifies that private journal content is strictly isolated and NEVER
+    leaks into public creator endpoints, home feed tabs, or public profiles."""
+
+    def setUp(self):
+        super().setUp()
+        from django.core.cache import cache
+        cache.clear()
+        from apps.journal.models import JournalEntry
+        self.secret_snippet = "TOP_SECRET_PRIVATE_JOURNAL_VULNERABILITY_CHECK_98765"
+        self.journal_entry = JournalEntry.objects.create(
+            user=self.creator_user,
+            content=f"Dear diary, {self.secret_snippet}. Today was a reflective day."
+        )
+        self.make_post(
+            caption="Hello world, this is a public creator post!",
+            creator=self.creator,
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_journal_content_never_appears_in_any_feed_tab(self):
+        for tab in ('for-you', 'latest', 'trending'):
+            res = self.anon_client.get(f'/api/creators/feed/{tab}/')
+            self.assertEqual(res.status_code, status.HTTP_200_OK)
+            body_str = str(res.content)
+            self.assertNotIn(self.secret_snippet, body_str)
+            self.assertNotIn('dear diary', body_str.lower())
+
+    def test_journal_content_never_appears_in_following_tab(self):
+        CreatorFollow.objects.create(follower=self.reader, creator=self.creator)
+        res = self.client_reader.get('/api/creators/feed/following/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        body_str = str(res.content)
+        self.assertNotIn(self.secret_snippet, body_str)
+        self.assertNotIn('dear diary', body_str.lower())
+
+    def test_journal_content_never_appears_in_public_creator_profile(self):
+        res = self.anon_client.get(f'/api/creators/{self.creator.username}/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        body_str = str(res.content)
+        self.assertNotIn(self.secret_snippet, body_str)
+        self.assertNotIn('dear diary', body_str.lower())
+
+    def test_journal_content_never_appears_in_public_profile(self):
+        res = self.anon_client.get(f'/api/identity/public/{self.creator_user.id}/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        body_str = str(res.content)
+        self.assertNotIn(self.secret_snippet, body_str)
+        self.assertNotIn('dear diary', body_str.lower())
+
+    def test_journal_api_strictly_denies_unauthenticated_and_cross_user_access(self):
+        anon_res = self.anon_client.get('/api/journal/')
+        self.assertEqual(anon_res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        cross_res = self.client_reader.get(f'/api/journal/{self.journal_entry.id}/')
+        self.assertEqual(cross_res.status_code, status.HTTP_404_NOT_FOUND)
+

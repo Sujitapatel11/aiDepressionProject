@@ -11,6 +11,8 @@ from .services.identity_service import IdentityService
 
 class SoulIdentitySubsystemTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(
             username="identity_tester",

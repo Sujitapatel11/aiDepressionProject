@@ -459,3 +459,43 @@ LOGGING = {
     },
 }
 
+# =========================
+# PRODUCTION CONFIGURATION VALIDATION (fail fast, DEBUG=False only)
+# =========================
+# Local development and the test suite skip these checks. In production a
+# missing variable becomes a startup error instead of silent data loss —
+# see config/production_checks.py for the exact rules and opt-out flags.
+from config.production_checks import (  # noqa: E402  (must run last)
+    env_flag as _env_flag,
+    validate_media_storage as _validate_media_storage,
+    validate_production_security as _validate_production_security,
+)
+
+_SOULCARE_ALLOW_LOCAL_MEDIA = _env_flag(
+    os.environ.get('SOULCARE_ALLOW_LOCAL_MEDIA_STORAGE', ''))
+_SOULCARE_ALLOW_IN_MEMORY_CHANNELS = _env_flag(
+    os.environ.get('SOULCARE_ALLOW_IN_MEMORY_CHANNELS', ''))
+
+_db = DATABASES['default']
+
+_validate_media_storage(
+    debug=DEBUG,
+    running_tests=_IS_RUNNING_TESTS,
+    r2_configured=_R2_CONFIGURED,
+    r2_partial=any([R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME]),
+    allow_local_storage=_SOULCARE_ALLOW_LOCAL_MEDIA,
+    media_root=MEDIA_ROOT,
+)
+
+_validate_production_security(
+    debug=DEBUG,
+    running_tests=_IS_RUNNING_TESTS,
+    secret_key=SECRET_KEY,
+    allowed_hosts=ALLOWED_HOSTS,
+    cors_allow_all_origins=CORS_ALLOW_ALL_ORIGINS,
+    redis_url=REDIS_URL,
+    allow_in_memory_channels=_SOULCARE_ALLOW_IN_MEMORY_CHANNELS,
+    db_engine=_db.get('ENGINE', ''),
+    db_password=_db.get('PASSWORD', ''),
+)
+

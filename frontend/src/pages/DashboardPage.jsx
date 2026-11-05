@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { api } from '../services/api';
+import { api, resolveMediaUrl } from '../services/api';
 import CreatorHomeFeed from '../components/creator/CreatorHomeFeed';
 
 const PROMPTS = [
@@ -224,7 +224,7 @@ export const DashboardPage = () => {
                 <button key={post.id} type="button" onClick={() => navigate('/community')}
                   className="flex w-full items-start gap-3 rounded-2xl bg-[#faf7fd] p-3 text-left transition hover:bg-[#f4ecfc]">
                   {post.media?.[0]?.kind === 'image' || post.media?.[0]?.kind === 'video' ? (
-                    <img src={post.media[0].preview_url || post.media[0].url}
+                    <img src={resolveMediaUrl(post.media[0].preview_url || post.media[0].url)}
                       alt="" className="h-10 w-10 flex-shrink-0 rounded-xl object-cover" />
                   ) : (
                     <span className="mt-0.5 text-base">🕊️</span>

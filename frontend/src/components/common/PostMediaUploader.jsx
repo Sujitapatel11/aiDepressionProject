@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { api, apiUpload, getApiUrl } from '../../services/api';
+import { api, apiUpload, resolveMediaUrl } from '../../services/api';
 
 const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
 const VIDEO_EXT = /\.(mp4|mov|m4v)$/i;
 const IMAGE_ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp';
 const VIDEO_ACCEPT = 'video/mp4,video/quicktime,video/x-m4v';
 
-const resolveSrc = (path) => (path && path.startsWith('/') ? getApiUrl(path) : path);
+const resolveSrc = (path) => resolveMediaUrl(path);
 
 /**
  * Shared direct-from-device media picker for the existing composers.

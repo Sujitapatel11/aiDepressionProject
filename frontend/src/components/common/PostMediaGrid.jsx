@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { getApiUrl } from '../../services/api';
+import { resolveMediaUrl } from '../../services/api';
 
-// Resolves backend-relative paths (/api/media/serve/…) through the shared
-// API base (Vite proxy in dev, absolute origin in production). Legacy
-// absolute URLs stored in media_url pass through unchanged.
-const resolveSrc = (path) => (path && path.startsWith('/') ? getApiUrl(path) : path);
+// Media paths (/api/media/serve/…) are resolved through the shared API base
+// (Vite proxy in dev, absolute origin in production). Legacy absolute URLs
+// stored in media_url pass through unchanged.
+const resolveSrc = (path) => resolveMediaUrl(path);
 
 /**
  * Image with lazy loading and a soft fallback when the file fails to load,

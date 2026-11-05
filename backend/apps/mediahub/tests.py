@@ -321,3 +321,61 @@ class R2UsageAndRedirectTests(TestCase):
                 R2_BUCKET_NAME='bucket'):
             serve_res = self.client.get(f'/api/media/serve/{asset_id}/')
         self.assertEqual(serve_res.status_code, 404)
+
+
+class MediaRangeRequestTests(TestCase):
+    """Browsers need Range support to seek in uploaded videos. The local
+    streaming path implements it by hand (Django's FileResponse does not), so
+    it gets explicit coverage for 200/206/416 responses."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user('media_range_a', 'ra@example.com', 'MediaPass!2026')
+        self.client.force_authenticate(self.user)
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.data = mp4_bytes()
+        upload = SimpleUploadedFile('seek.mp4', self.data, content_type='video/mp4')
+        res = self.client.post('/api/media/uploads/', {'files': upload}, format='multipart')
+        self.assertEqual(res.status_code, 201, res.content)
+        self.preview_url = res.json()['uploaded'][0]['preview_url']
+
+    def _serve(self, range_header=None):
+        extra = {'HTTP_RANGE': range_header} if range_header else {}
+        return self.client.get(self.preview_url, **extra)
+
+    def _body(self, response):
+        return b''.join(response.streaming_content)
+
+    def test_full_response_without_range_header(self):
+        res = self._serve()
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res['Accept-Ranges'], 'bytes')
+        self.assertEqual(int(res['Content-Length']), len(self.data))
+        self.assertEqual(self._body(res), self.data)
+
+    def test_partial_content_for_explicit_range(self):
+        res = self._serve('bytes=0-9')
+        self.assertEqual(res.status_code, 206)
+        self.assertEqual(res['Content-Range'], f'bytes 0-9/{len(self.data)}')
+        self.assertEqual(int(res['Content-Length']), 10)
+        self.assertEqual(self._body(res), self.data[:10])
+
+    def test_suffix_range_returns_tail(self):
+        res = self._serve('bytes=-5')
+        self.assertEqual(res.status_code, 206)
+        self.assertEqual(self._body(res), self.data[-5:])
+
+    def test_open_ended_range_reads_to_end(self):
+        res = self._serve(f'bytes={len(self.data) - 8}-')
+        self.assertEqual(res.status_code, 206)
+        self.assertEqual(self._body(res), self.data[-8:])
+
+    def test_unsatisfiable_range_is_rejected_with_real_extent(self):
+        res = self._serve(f'bytes={len(self.data) + 10}-{len(self.data) + 20}')
+        self.assertEqual(res.status_code, 416)
+        self.assertEqual(res['Content-Range'], f'bytes */{len(self.data)}')
+
+    def test_malformed_range_is_rejected(self):
+        res = self._serve('bytes=not-a-range')
+        self.assertEqual(res.status_code, 416)
+        self.assertEqual(res['Content-Range'], f'bytes */{len(self.data)}')

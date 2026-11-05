@@ -25,6 +25,30 @@ export const getApiUrl = (path) => {
   return `${base}${cleanPath}`;
 };
 
+// Absolute URL shapes that must pass through untouched (external media_url
+// values, blob/data previews produced by the browser).
+const ABSOLUTE_URL_RE = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
+/**
+ * Resolve a media path returned by the backend into a browser-usable URL.
+ *
+ * The media serializers emit backend-relative paths that already include the
+ * `/api` mount point (`/api/media/serve/<id>/?at=…`). Feeding those straight
+ * into getApiUrl() duplicates the prefix (`/api/api/media/...`, 404). This
+ * helper strips the backend prefix exactly once and then resolves against the
+ * configured API base, so the same value is correct behind the Vite proxy
+ * (base `/api`) and against an absolute production origin
+ * (`https://host` → `https://host/api/...`). Absolute URLs are unchanged.
+ */
+export const resolveMediaUrl = (path) => {
+  if (path === null || path === undefined) return path;
+  const raw = String(path).trim();
+  if (!raw) return raw;
+  if (ABSOLUTE_URL_RE.test(raw)) return raw;
+  const withoutApiPrefix = raw.replace(/^\/api(?=\/)/, '');
+  return getApiUrl(withoutApiPrefix);
+};
+
 // ── Token readers (sc_* keys only — canonical keys from original app.js) ──────
 export const getStoredToken        = () => localStorage.getItem('sc_token')   || localStorage.getItem('soulcare_token')   || '';
 export const getStoredRefreshToken = () => localStorage.getItem('sc_refresh') || localStorage.getItem('soulcare_refresh') || '';
