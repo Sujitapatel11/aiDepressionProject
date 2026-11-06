@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { api, apiUpload, resolveMediaUrl } from '../../services/api';
+import { pickMediaUrl } from '../../services/media';
 
 const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
 const VIDEO_EXT = /\.(mp4|mov|m4v)$/i;
@@ -32,7 +33,7 @@ export default function PostMediaUploader({
   const imageCount = value.filter((item) => item.kind === 'image').length;
   const videoCount = value.filter((item) => item.kind === 'video').length;
 
-  const pickSrc = (asset) => asset.preview_url || asset.url;
+  const pickSrc = (asset) => pickMediaUrl(asset);
 
   const handleFiles = async (fileList, kind) => {
     if (disabled) return;
@@ -84,6 +85,9 @@ export default function PostMediaUploader({
     }
 
     let uploaded = json.uploaded || [];
+    // Never attach the same asset twice if a response is replayed/retried.
+    const existingIds = new Set(value.map((item) => String(item.id)));
+    uploaded = uploaded.filter((item) => !existingIds.has(String(item.id)));
     let nextValue = [...value, ...uploaded];
     if (accepted.length === 1 && accepted[0][1] === 'video') {
       // Replace any previously selected video (only one video per post).

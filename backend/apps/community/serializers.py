@@ -26,9 +26,9 @@ class CommunityPostSerializer(serializers.ModelSerializer):
 
     def get_media(self, obj):
         from apps.mediahub.serializers import MediaAssetSerializer
+        context = {**self.context, 'media_public_override': not obj.is_hidden}
         return MediaAssetSerializer(
-            obj.media_assets.order_by("created_at"), many=True,
-            context=self.context,
+            obj.media_assets.all(), many=True, context=context,
         ).data
 
     def get_reaction_counts(self, obj):

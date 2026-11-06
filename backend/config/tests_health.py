@@ -46,12 +46,18 @@ class HealthEndpointTests(TestCase):
     def test_rate_limit_returns_429_after_burst(self):
         from config.health_view import HEALTH_RATE_LIMIT_PER_MINUTE
 
-        for _ in range(HEALTH_RATE_LIMIT_PER_MINUTE):
-            resp = self.client.get("/api/health/")
-            if resp.status_code != 200:
-                self.fail("Rate limiter engaged before the advertised budget was consumed")
-        # The (LIMIT + 1)-th call must be throttled.
-        self.assertEqual(self.client.get("/api/health/").status_code, 429)
+        fixed_time = 1700000000.0
+        with mock.patch("config.health_view.time.time", return_value=fixed_time):
+            for _ in range(HEALTH_RATE_LIMIT_PER_MINUTE):
+                resp = self.client.get("/api/health/")
+                if resp.status_code != 200:
+                    self.fail("Rate limiter engaged before the advertised budget was consumed")
+            # The (LIMIT + 1)-th call in the same minute window must be throttled.
+            self.assertEqual(self.client.get("/api/health/").status_code, 429)
+
+        # In the next minute window, budget resets and requests succeed again.
+        with mock.patch("config.health_view.time.time", return_value=fixed_time + 60.0):
+            self.assertEqual(self.client.get("/api/health/").status_code, 200)
 
     def test_db_health_failure_returns_no_error_text(self):
         with mock.patch(

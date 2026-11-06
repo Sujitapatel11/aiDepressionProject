@@ -92,6 +92,45 @@ describe('PostMediaGrid media URLs', () => {
     expect(video.getAttribute('src')).not.toContain('/api/api/');
   });
 
+  it('prefers the stable url for public media instead of an expiring preview', () => {
+    const { container } = render(
+      <PostMediaGrid
+        post={{
+          content_type: 'image',
+          media: [{
+            id: 'm1',
+            kind: 'image',
+            is_public: true,
+            url: '/api/media/serve/m1/',
+            preview_url: '/api/media/serve/m1/?at=stale-token',
+          }],
+        }}
+      />
+    );
+    const img = container.querySelector('img');
+    expect(img.getAttribute('src')).toBe('/api/media/serve/m1/');
+    expect(img.getAttribute('src')).not.toContain('at=');
+  });
+
+  it('uses the signed preview for owner-only draft media', () => {
+    const { container } = render(
+      <PostMediaGrid
+        post={{
+          content_type: 'image',
+          media: [{
+            id: 'm1',
+            kind: 'image',
+            is_public: false,
+            url: '/api/media/serve/m1/',
+            preview_url: '/api/media/serve/m1/?at=owner-token',
+          }],
+        }}
+      />
+    );
+    const img = container.querySelector('img');
+    expect(img.getAttribute('src')).toBe('/api/media/serve/m1/?at=owner-token');
+  });
+
   it('passes legacy absolute media_url values through unchanged', () => {
     const { container } = render(
       <PostMediaGrid

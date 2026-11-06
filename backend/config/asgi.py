@@ -8,13 +8,14 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django_asgi_app = get_asgi_application()
 
 from apps.chat.routing import websocket_urlpatterns
+from apps.soultube.routing import websocket_urlpatterns as soultube_websocket_urlpatterns
 from apps.chat.middleware import TicketAuthMiddlewareStack
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
     "websocket": AllowedHostsOriginValidator(
         TicketAuthMiddlewareStack(
-            URLRouter(websocket_urlpatterns)
+            URLRouter(websocket_urlpatterns + soultube_websocket_urlpatterns)
         )
     ),
 })

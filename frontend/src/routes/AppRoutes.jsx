@@ -17,6 +17,8 @@ const CreatorAdminPage = lazy(() => import('../pages/CreatorAdminPage'));
 const InsightsPage  = lazy(() => import('../pages/InsightsPage'));
 const PeersPage     = lazy(() => import('../pages/PeersPage'));
 const ChatPage      = lazy(() => import('../pages/ChatPage'));
+const SoulTubePage  = lazy(() => import('../pages/SoulTubePage'));
+const SoulTubeRoomPage = lazy(() => import('../pages/SoulTubeRoomPage'));
 const SleepPage     = lazy(() => import('../pages/SleepPage'));
 const CommunityFeedPage = lazy(() => import('../pages/CommunityFeedPage'));
 const ProfilePage   = lazy(() => import('../pages/ProfilePage'));
@@ -66,6 +68,8 @@ export const AppRoutes = () => {
           <Route path="/peers"      element={<PeersPage />} />
           <Route path="/support"    element={<PeersPage />} />
           <Route path="/chat"       element={<ChatPage />} />
+          <Route path="/soultube"   element={<SoulTubePage />} />
+          <Route path="/soultube/rooms/:code" element={<SoulTubeRoomPage />} />
           <Route path="/community"  element={<CommunityFeedPage />} />
           <Route path="/sleep"      element={<SleepPage />} />
           <Route path="/profile"    element={<ProfilePage />} />

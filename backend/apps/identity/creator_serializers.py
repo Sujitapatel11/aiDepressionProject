@@ -104,12 +104,21 @@ class CreatorPostSerializer(serializers.ModelSerializer):
 
     def get_media(self, obj):
         from apps.mediahub.serializers import MediaAssetSerializer
+        public = bool(
+            obj.status == CreatorPost.Status.PUBLISHED
+            and not obj.deleted_at
+            and obj.published_at
+            and obj.published_at <= timezone.now()
+        )
+        context = {**self.context, 'media_public_override': public}
         return MediaAssetSerializer(
-            obj.media_assets.order_by('created_at'), many=True,
-            context=self.context,
+            obj.media_assets.all(), many=True, context=context,
         ).data
 
     def get_liked_by_me(self, obj):
+        cached = getattr(obj, 'liked_by_viewer', None)
+        if cached is not None:
+            return bool(cached)
         request = self.context.get('request')
         return bool(
             request and request.user.is_authenticated

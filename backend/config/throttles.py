@@ -42,3 +42,23 @@ class LiveKitTokenRateThrottle(UserRateThrottle):
     credential harvesting while allowing normal participant churn."""
     scope = 'livekit_token'
     rate = '20/hour'
+
+
+class SoulTubeCreateRateThrottle(UserRateThrottle):
+    scope = 'soultube_create'
+    rate = '10/hour'
+
+
+class SoulTubeJoinRateThrottle(UserRateThrottle):
+    scope = 'soultube_join'
+    rate = '60/hour'
+
+
+class SoulTubeChatRateThrottle(UserRateThrottle):
+    scope = 'soultube_chat'
+    rate = '60/minute'
+
+
+class SoulTubePlaybackRateThrottle(UserRateThrottle):
+    scope = 'soultube_playback'
+    rate = '600/hour'

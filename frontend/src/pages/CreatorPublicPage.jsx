@@ -37,13 +37,16 @@ export default function CreatorPublicPage() {
         setProfile(profileData);
 
         if (postId) {
-          const postResponse = await api('GET', `/creators/posts/${postId}/`);
+          // Post body and comments are independent; fetch them together.
+          const [postResponse, commentsResponse] = await Promise.all([
+            api('GET', `/creators/posts/${postId}/`),
+            api('GET', `/creators/posts/${postId}/comments/`),
+          ]);
           if (!postResponse?.ok) throw new Error('This post is not available.');
           const postData = await postResponse.json();
           if (!active) return;
           setPost(postData);
           if (token) api('POST', `/creators/posts/${postId}/view/`);
-          const commentsResponse = await api('GET', `/creators/posts/${postId}/comments/`);
           if (commentsResponse?.ok) {
             const commentsData = await commentsResponse.json();
             if (active) setComments(Array.isArray(commentsData) ? commentsData : commentsData.results || []);

@@ -180,15 +180,18 @@ class MediaAccessTests(TestCase):
         res = self.client.get(self.serve_url)
         self.assertEqual(res.status_code, 404)
 
-    def test_foreign_asset_attachment_ignored(self):
+    def test_foreign_asset_attachment_rejected(self):
         # B (another user) tries to attach A's orphan asset to B's own post.
+        # Silent dropping used to leave a "published" post with no media; the
+        # API now fails loudly so the client can surface a real error.
         client_b = APIClient()
         client_b.force_authenticate(self.b)
         res = client_b.post('/api/community/posts/create/', {
             'content': 'b trying', 'media_asset_ids': [str(self.asset_id)],
         }, format='json')
-        self.assertEqual(res.status_code, 201)
-        self.assertEqual(len(res.json()['media']), 0)
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('media_asset_ids', res.json())
+        self.assertFalse(CommunityPost.objects.filter(user=self.b).exists())
         self.asset.refresh_from_db()
         self.assertIsNone(self.asset.community_post)
 
@@ -267,7 +270,11 @@ class R2UsageAndRedirectTests(TestCase):
         from apps.mediahub.models import R2UsageMonth
         from apps.mediahub.usage import month_key, storage_bytes_used
         before = storage_bytes_used()
-        res = self.upload_png()
+        # PUT accounting only applies while R2 is the active backend.
+        with override_settings(
+                R2_ACCOUNT_ID='acct', R2_ACCESS_KEY_ID='key', R2_SECRET_ACCESS_KEY='sec',
+                R2_BUCKET_NAME='bucket'):
+            res = self.upload_png()
         self.assertEqual(res.status_code, 201)
         record = R2UsageMonth.objects.get(month=month_key())
         self.assertEqual(record.put_ops, 1)
@@ -379,3 +386,46 @@ class MediaRangeRequestTests(TestCase):
         res = self._serve('bytes=not-a-range')
         self.assertEqual(res.status_code, 416)
         self.assertEqual(res['Content-Range'], f'bytes */{len(self.data)}')
+
+class MediaLibraryTests(TestCase):
+    """The SoulTube host picker lists only the caller's own uploads."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.client = APIClient()
+        self.user = User.objects.create_user('library_a', 'la@example.com', 'MediaPass!2026')
+        self.other = User.objects.create_user('library_b', 'lb@example.com', 'MediaPass!2026')
+        self.client.force_authenticate(self.user)
+
+    def _upload(self, name, data, content_type, client=None):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        client = client or self.client
+        upload = SimpleUploadedFile(name, data, content_type=content_type)
+        return client.post('/api/media/uploads/', {'files': upload}, format='multipart')
+
+    def test_library_lists_only_own_videos(self):
+        video = self._upload('mine.mp4', mp4_bytes(), 'video/mp4')
+        self.assertEqual(video.status_code, 201, video.content)
+        self._upload('mine.png', image_bytes('PNG'), 'image/png')
+
+        self.client.force_authenticate(self.other)
+        foreign = self._upload('theirs.mp4', mp4_bytes(), 'video/mp4')
+        self.assertEqual(foreign.status_code, 201, foreign.content)
+        self.client.force_authenticate(self.user)
+
+        res = self.client.get('/api/media/library/?kind=video')
+        self.assertEqual(res.status_code, 200, res.content)
+        body = res.json()
+        self.assertEqual(len(body['results']), 1)
+        self.assertEqual(body['results'][0]['kind'], 'video')
+        self.assertEqual(body['results'][0]['original_name'], 'mine.mp4')
+        self.assertTrue(body['results'][0]['preview_url'])
+
+    def test_library_rejects_unknown_kind(self):
+        res = self.client.get('/api/media/library/?kind=audio')
+        self.assertEqual(res.status_code, 400)
+
+    def test_library_requires_authentication(self):
+        res = APIClient().get('/api/media/library/')
+        self.assertEqual(res.status_code, 401)

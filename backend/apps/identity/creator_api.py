@@ -16,7 +16,13 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from config.throttles import CreatorEngagementRateThrottle, CreatorWithdrawalRateThrottle, CreatorWriteRateThrottle
-from apps.mediahub.services import attach_media_assets, delete_assets_of, replace_creator_post_assets
+from apps.mediahub.services import (
+    MediaAttachmentError,
+    attach_media_assets_strict,
+    delete_assets_of,
+    replace_creator_post_assets,
+    validate_attachment,
+)
 from .creator_services import creator_balances
 from .creator_serializers import (
     CreatorAdminProfileSerializer,
@@ -73,7 +79,7 @@ def _published_posts(user=None):
         deleted_at__isnull=True,
         published_at__lte=timezone.now(),
         creator__is_active=True,
-    ).select_related('creator').order_by('-published_at', '-created_at').annotate(
+    ).select_related('creator').prefetch_related('media_assets').order_by('-published_at', '-created_at').annotate(
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comments', filter=Q(comments__is_hidden=False), distinct=True),
         shares_count=Count('shares', distinct=True),
@@ -86,6 +92,9 @@ def _published_posts(user=None):
             ),
             bookmarked_by_viewer=Exists(
                 CreatorPostBookmark.objects.filter(post=OuterRef('pk'), user=user)
+            ),
+            liked_by_viewer=Exists(
+                CreatorPostLike.objects.filter(post=OuterRef('pk'), user=user)
             ),
         )
     return queryset
@@ -178,7 +187,7 @@ def public_creator_post_detail(request, post_id):
 @permission_classes([IsAuthenticated])
 def my_creator_posts(request):
     creator = _creator_for_user(request.user, require_active=False)
-    posts = CreatorPost.objects.filter(creator=creator, deleted_at__isnull=True).select_related('creator').order_by(
+    posts = CreatorPost.objects.filter(creator=creator, deleted_at__isnull=True).select_related('creator').prefetch_related('media_assets').order_by(
         '-published_at', '-created_at'
     ).annotate(
         likes_count=Count('likes', distinct=True),
@@ -304,8 +313,21 @@ def create_creator_post(request):
     serializer = CreatorPostWriteSerializer(data=request.data, context={'request': request})
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    asset_ids, error = _asset_ids_from_request(request)
+    if error:
+        return error
+
     post = serializer.save(creator=creator)
-    _attach_requested_assets(request, post)
+    if asset_ids:
+        try:
+            attach_media_assets_strict(asset_ids, request.user, creator_post=post)
+        except MediaAttachmentError as exc:
+            # Publishing must never silently drop media: undo the new post and
+            # return the exact attachment problem.
+            post.delete()
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
     post = _published_posts().filter(id=post.id).first() or CreatorPost.objects.get(id=post.id)
     return Response(CreatorPostSerializer(post, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
@@ -326,17 +348,7 @@ def _asset_ids_from_request(request):
             ids.append(str(uuid.UUID(str(value))))
         except (ValueError, AttributeError, TypeError):
             return None, Response({'media_asset_ids': [f'"{value}" is not a valid asset ID.']}, status=status.HTTP_400_BAD_REQUEST)
-    return ids, None
-
-
-def _attach_requested_assets(request, post):
-    ids, error = _asset_ids_from_request(request)
-    if error:
-        return error
-    if ids is None:
-        return None
-    attach_media_assets(ids, request.user, creator_post=post)
-    return None
+    return list(dict.fromkeys(ids)), None
 
 
 @api_view(['PATCH'])
@@ -345,15 +357,25 @@ def _attach_requested_assets(request, post):
 def edit_creator_post(request, post_id):
     creator = _creator_for_user(request.user)
     post = get_object_or_404(CreatorPost, id=post_id, creator=creator, deleted_at__isnull=True)
+
+    asset_ids, error = _asset_ids_from_request(request)
+    if error:
+        return error
+    if asset_ids is not None:
+        try:
+            validate_attachment(asset_ids, request.user, creator_post=post)
+        except MediaAttachmentError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
     serializer = CreatorPostWriteSerializer(post, data=request.data, partial=True, context={'request': request})
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     post = serializer.save()
-    ids, error = _asset_ids_from_request(request)
-    if error:
-        return error
-    if ids is not None:
-        replace_creator_post_assets(post, ids, request.user)
+    if asset_ids is not None:
+        try:
+            replace_creator_post_assets(post, asset_ids, request.user)
+        except MediaAttachmentError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
     return Response(CreatorPostSerializer(post, context={'request': request}).data)
 
 
@@ -473,7 +495,7 @@ def creator_dashboard(request):
     comments = _within_range(CreatorPostComment.objects.filter(post__in=post_ids, is_hidden=False), 'created_at', start, end).count()
     shares = _within_range(CreatorPostShare.objects.filter(post__in=post_ids), 'created_at', start, end).count()
     paginator = CreatorPagination()
-    page = paginator.paginate_queryset(ranged_posts.select_related('creator').annotate(
+    page = paginator.paginate_queryset(ranged_posts.select_related('creator').prefetch_related('media_assets').annotate(
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comments', filter=Q(comments__is_hidden=False), distinct=True),
         shares_count=Count('shares', distinct=True),

@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     'apps.community',
     'apps.mediahub',
     'apps.creator_live',
+    'apps.soultube',
 
     # Web frontend
     'web',

@@ -253,9 +253,12 @@ def upload_to_cloudinary_direct(file_obj, user_id, purpose='post', resource_type
         data['eager'] = bundle['eager']
 
     files = {'file': file_obj}
-    response = requests.post(bundle['upload_url'], data=data, files=files, timeout=60)
+    timeout = int(getattr(settings, 'CLOUDINARY_UPLOAD_TIMEOUT_SECONDS', 300))
+    response = requests.post(bundle['upload_url'], data=data, files=files, timeout=timeout)
     if response.status_code != 200:
-        raise RuntimeError(f"Cloudinary upload failed ({response.status_code}): {response.text}")
+        # Never echo the provider response body (it can contain internal IDs).
+        logger.warning('Cloudinary upload failed with status %s', response.status_code)
+        raise RuntimeError(f"Cloudinary upload failed ({response.status_code}).")
 
     return response.json()
 

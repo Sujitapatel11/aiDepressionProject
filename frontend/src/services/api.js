@@ -158,7 +158,9 @@ export async function refreshAccessToken() {
 }
 
 // ── Core fetch wrapper (with single-retry on 401) ────────────────────────────
-export async function api(method, path, body = null, isRetry = false) {
+export async function api(method, path, body = null, isRetry = false, timeoutMs = 45000) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  let timer = null;
   try {
     const token = getStoredToken();
     const headers = {};
@@ -167,6 +169,12 @@ export async function api(method, path, body = null, isRetry = false) {
     }
 
     const opts = { method, headers };
+    if (controller) {
+      opts.signal = controller.signal;
+      // Bound every request so a stalled backend cannot leave a spinner
+      // forever; callers can pass a larger timeout as the fifth argument.
+      timer = setTimeout(() => controller.abort(), timeoutMs);
+    }
     if (body) {
       if (typeof FormData !== 'undefined' && body instanceof FormData) {
         opts.body = body;
@@ -207,13 +215,19 @@ export async function api(method, path, body = null, isRetry = false) {
       }
 
       // Retry original request once with isRetry = true
-      return api(method, path, body, true);
+      return api(method, path, body, true, timeoutMs);
     }
 
     return res;
   } catch (err) {
-    console.error('API Error:', path, err);
+    if (err && err.name === 'AbortError') {
+      console.warn('API request timed out:', path);
+    } else {
+      console.error('API Error:', path, err);
+    }
     return null;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -224,6 +238,9 @@ export async function apiUpload(path, formData, { onProgress } = {}, isRetry = f
     const token = getStoredToken();
     const xhr = new XMLHttpRequest();
     xhr.open('POST', getApiUrl(path), true);
+    // Videos can legitimately take minutes on slow connections, but never
+    // leave the composer stuck in "uploading" forever.
+    xhr.timeout = 300000;
     if (token) {
       try { xhr.setRequestHeader('Authorization', `Bearer ${token}`); } catch (e) {}
     }
@@ -252,6 +269,7 @@ export async function apiUpload(path, formData, { onProgress } = {}, isRetry = f
     };
     xhr.onerror = () => resolve(null);
     xhr.onabort = () => resolve(null);
+    xhr.ontimeout = () => resolve(null);
     xhr.send(formData);
   });
 }

@@ -20,7 +20,11 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/test/setup.js',
     css: false,
-    include: ['src/components/**/*.test.jsx'],
+    include: [
+      'src/components/**/*.test.jsx',
+      'src/services/**/*.test.js',
+      'src/pages/**/*.test.jsx',
+    ],
   },
   server: {
     port: 5173,

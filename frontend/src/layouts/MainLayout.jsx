@@ -192,6 +192,17 @@ export const MainLayout = () => {
               <span>Community</span>
             </Link>
 
+            <Link
+              to="/soultube"
+              className={`snav-item ${location.pathname.startsWith('/soultube') ? 'active' : ''}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="3" strokeWidth="1.8" />
+                <path d="M10 9.5l5 2.5-5 2.5v-5z" strokeLinejoin="round" strokeWidth="1.8" />
+              </svg>
+              <span>SoulTube</span>
+            </Link>
+
             {isCreator && (
               <>
                 <p className="px-3 pt-3 pb-0.5 text-[10px] font-extrabold uppercase tracking-wider text-violet-400">
@@ -361,6 +372,17 @@ export const MainLayout = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <span className="nav-label">Community</span>
+            </Link>
+
+            <Link
+              to="/soultube"
+              className={`nav-item ${location.pathname.startsWith('/soultube') ? 'active' : ''}`}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="3" strokeWidth="1.8" />
+                <path d="M10 9.5l5 2.5-5 2.5v-5z" strokeLinejoin="round" strokeWidth="1.8" />
+              </svg>
+              <span className="nav-label">SoulTube</span>
             </Link>
 
             <Link

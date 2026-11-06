@@ -49,8 +49,14 @@ export default function CreatorStudioPage() {
     let active = true;
     const loadPublishingData = async () => {
       setPostsLoading(true);
-      const profileResponse = await api('GET', '/creators/me/');
+      // Profile and posts are independent endpoints; fetch them together.
+      const [profileResult, postsResult] = await Promise.allSettled([
+        api('GET', '/creators/me/'),
+        api('GET', '/creators/posts/mine/'),
+      ]);
       if (!active) return;
+
+      const profileResponse = profileResult.status === 'fulfilled' ? profileResult.value : null;
       if (!profileResponse?.ok) {
         setCreatorProfile(null);
         setPosts([]);
@@ -61,8 +67,8 @@ export default function CreatorStudioPage() {
         const profile = await profileResponse.json();
         if (!active) return;
         setCreatorProfile(profile);
-        const postsResponse = await api('GET', '/creators/posts/mine/');
-        if (!active) return;
+
+        const postsResponse = postsResult.status === 'fulfilled' ? postsResult.value : null;
         if (postsResponse?.ok) {
           const postsData = await postsResponse.json();
           if (active) setPosts(Array.isArray(postsData) ? postsData : postsData.results || []);

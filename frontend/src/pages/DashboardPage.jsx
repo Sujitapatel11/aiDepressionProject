@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api, resolveMediaUrl } from '../services/api';
+import { pickMediaUrl } from '../services/media';
 import CreatorHomeFeed from '../components/creator/CreatorHomeFeed';
 
 const PROMPTS = [
@@ -76,38 +77,51 @@ export const DashboardPage = () => {
   const [customAvatar, setCustomAvatar] = useState('');
 
   useEffect(() => {
+    let active = true;
     setCustomAvatar(localStorage.getItem('sc_av_' + username) || '');
 
     async function loadData() {
-      const res = await api('GET', '/dashboard/');
-      if (res && res.ok) {
-        const data = await res.json();
-        setDashData(data);
+      // These three panels are independent; fetch them together instead of
+      // paying for three sequential round-trips on every dashboard visit.
+      const [dashRes, sleepRes, communityRes] = await Promise.allSettled([
+        api('GET', '/dashboard/'),
+        api('GET', '/sleep/stats/'),
+        api('GET', '/community/posts/?page_size=3'),
+      ]);
+      if (!active) return;
+
+      if (dashRes.status === 'fulfilled' && dashRes.value?.ok) {
+        try {
+          const data = await dashRes.value.json();
+          if (active) setDashData(data);
+        } catch (e) {
+          // Dashboard core data failed to parse; the rest stays usable.
+        }
       }
 
-      try {
-        const sRes = await api('GET', '/sleep/stats/');
-        if (sRes && sRes.ok) {
-          const sData = await sRes.json();
-          setSleepStats(sData);
+      // Sleep stats are optional; the rest of the dashboard remains available.
+      if (sleepRes.status === 'fulfilled' && sleepRes.value?.ok) {
+        try {
+          const sData = await sleepRes.value.json();
+          if (active) setSleepStats(sData);
+        } catch (e) {
+          // Ignore — the sleep panel simply stays hidden.
         }
-      } catch (e) {
-        // Sleep stats are optional; the rest of the dashboard remains available.
       }
 
       // Community highlights preview is optional too; panel stays hidden when it fails.
-      try {
-        const cRes = await api('GET', '/community/posts/?page_size=3');
-        if (cRes && cRes.ok) {
-          const cData = await cRes.json();
-          setCommunityPreview(Array.isArray(cData) ? cData : cData.results || []);
+      if (communityRes.status === 'fulfilled' && communityRes.value?.ok) {
+        try {
+          const cData = await communityRes.value.json();
+          if (active) setCommunityPreview(Array.isArray(cData) ? cData : cData.results || []);
+        } catch (e) {
+          // Ignore — the panel is a nice-to-have.
         }
-      } catch (e) {
-        // Ignore — the panel is a nice-to-have.
       }
     }
 
     loadData();
+    return () => { active = false; };
   }, [username]);
 
   const greeting = useMemo(() => {
@@ -224,7 +238,7 @@ export const DashboardPage = () => {
                 <button key={post.id} type="button" onClick={() => navigate('/community')}
                   className="flex w-full items-start gap-3 rounded-2xl bg-[#faf7fd] p-3 text-left transition hover:bg-[#f4ecfc]">
                   {post.media?.[0]?.kind === 'image' || post.media?.[0]?.kind === 'video' ? (
-                    <img src={resolveMediaUrl(post.media[0].preview_url || post.media[0].url)}
+                    <img src={resolveMediaUrl(pickMediaUrl(post.media[0]))}
                       alt="" className="h-10 w-10 flex-shrink-0 rounded-xl object-cover" />
                   ) : (
                     <span className="mt-0.5 text-base">🕊️</span>

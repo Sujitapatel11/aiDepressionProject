@@ -6,6 +6,7 @@ const REALMS = [
   { id: 'journal-forest', name: 'Journal Forest', subtitle: 'A quiet place to reflect', icon: '🌳', tone: 'pink', path: '/journal', status: 'Ready to explore', description: 'Follow a thought, capture a moment, and let your reflections grow.' },
   { id: 'connect-island', name: 'Connect Island', subtitle: 'Find your people', icon: '♡', tone: 'rose', path: '/peers', status: 'Meet people', description: 'Build meaningful connections at your own pace.' },
   { id: 'play-zone', name: 'Community', subtitle: 'Shared stories & moments', icon: '✧', tone: 'amber', path: '/community', status: 'Community space', description: 'Visit the community to read and share anonymous reflections.' },
+  { id: 'soultube', name: 'SoulTube', subtitle: 'Watch together, in sync', icon: '▶', tone: 'violet', path: '/soultube', status: 'Watch party', description: 'Open a watch room, share a video you own, and let the host keep everyone in sync.' },
   { id: 'creator-studio', name: 'Creator Studio', subtitle: 'Your creative corner', icon: '✿', tone: 'lavender', path: '/creator-studio', status: 'Creative space', description: 'Shape ideas into private drafts in your creative workshop.' },
   { id: 'explore-island', name: 'Explore Island', subtitle: 'A new realm awaits', icon: '♙', tone: 'slate', path: null, status: 'Locked', description: 'This realm is not available yet.' },
 ];
@@ -50,7 +51,7 @@ export default function SoulWorldPage() {
         <section className="relative overflow-hidden rounded-[30px] border border-violet-100 bg-gradient-to-br from-[#28204b] via-[#66509a] to-[#d6a8d9] p-4 shadow-[0_18px_50px_-24px_rgba(91,49,145,.65)] sm:p-6">
           <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'radial-gradient(circle at 12% 18%, #fff 0 1px, transparent 2px), radial-gradient(circle at 76% 24%, #fff 0 1px, transparent 2px), radial-gradient(circle at 40% 62%, #fff 0 1px, transparent 2px), radial-gradient(circle at 88% 78%, #fff 0 1px, transparent 2px)', backgroundSize: '74px 68px, 113px 91px, 89px 102px, 131px 117px' }} />
           <div className="relative z-10 flex items-center justify-between gap-2 text-white">
-            <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-violet-100">Celestial map</p><h2 className="text-lg font-extrabold">Six realms, one universe</h2></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-violet-100">Celestial map</p><h2 className="text-lg font-extrabold">{REALMS.length} realms, one universe</h2></div>
             <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/90 backdrop-blur">Select an island</span>
           </div>
           <div className="relative z-10 mx-auto mt-4 grid min-h-[390px] max-w-3xl grid-cols-2 grid-rows-3 gap-3 sm:min-h-[430px] sm:grid-cols-3 sm:grid-rows-2 sm:gap-5">
@@ -67,7 +68,7 @@ export default function SoulWorldPage() {
           </div>
           <div className="relative z-10 mt-4 flex items-center justify-between rounded-2xl border border-white/25 bg-[#21183f]/40 px-4 py-3 text-xs text-white backdrop-blur">
             <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-fuchsia-200" /> Tap an island to preview its realm</span>
-            <span className="font-bold">4 destinations available</span>
+            <span className="font-bold">{REALMS.filter((realm) => realm.path).length} destinations available</span>
           </div>
         </section>
 

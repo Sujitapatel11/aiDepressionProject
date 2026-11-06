@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from apps.mediahub.services import attach_media_assets
+from apps.mediahub.services import MediaAttachmentError, attach_media_assets_strict
 from config.throttles import CommunityPostRateThrottle
 from apps.insights.engine import detect_crisis_keywords
 from .models import CommunityPost, PostReport, PostReaction, generate_anonymous_alias
@@ -90,7 +90,11 @@ def create_post(request):
     )
 
     if asset_ids:
-        attach_media_assets(asset_ids, request.user, community_post=post)
+        try:
+            attach_media_assets_strict(asset_ids, request.user, community_post=post)
+        except MediaAttachmentError as exc:
+            post.delete()
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = CommunityPostSerializer(post, context={"request": request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)
