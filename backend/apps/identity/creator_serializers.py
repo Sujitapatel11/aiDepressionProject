@@ -105,16 +105,17 @@ class CreatorPostSerializer(serializers.ModelSerializer):
     def get_media(self, obj):
         from apps.mediahub.serializers import MediaAssetSerializer
         return MediaAssetSerializer(
-            obj.media_assets.order_by('created_at'), many=True,
+            obj.media_assets.all(), many=True,
             context=self.context,
         ).data
 
     def get_liked_by_me(self, obj):
         request = self.context.get('request')
-        return bool(
-            request and request.user.is_authenticated
-            and obj.likes.filter(user=request.user).exists()
-        )
+        if not request or not request.user.is_authenticated:
+            return False
+        if hasattr(obj, 'liked_by_viewer'):
+            return bool(obj.liked_by_viewer)
+        return obj.likes.filter(user=request.user).exists()
 
     def get_followed_by_me(self, obj):
         from .models import CreatorFollow

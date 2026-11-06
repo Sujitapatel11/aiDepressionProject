@@ -177,7 +177,16 @@ export async function api(method, path, body = null, isRetry = false) {
     }
 
     const url = getApiUrl(path);
-    const res = await fetch(url, opts);
+    // Bound API waits so a sleeping/unhealthy backend cannot leave every tab spinning forever.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    opts.signal = controller.signal;
+    let res;
+    try {
+      res = await fetch(url, opts);
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     // 401 handling: refresh once and retry original request once
     if (res.status === 401) {
@@ -224,6 +233,8 @@ export async function apiUpload(path, formData, { onProgress } = {}, isRetry = f
     const token = getStoredToken();
     const xhr = new XMLHttpRequest();
     xhr.open('POST', getApiUrl(path), true);
+    // Uploads can be large; use a longer explicit limit than normal API calls.
+    xhr.timeout = 120000;
     if (token) {
       try { xhr.setRequestHeader('Authorization', `Bearer ${token}`); } catch (e) {}
     }
@@ -252,6 +263,7 @@ export async function apiUpload(path, formData, { onProgress } = {}, isRetry = f
     };
     xhr.onerror = () => resolve(null);
     xhr.onabort = () => resolve(null);
+    xhr.ontimeout = () => resolve(null);
     xhr.send(formData);
   });
 }
