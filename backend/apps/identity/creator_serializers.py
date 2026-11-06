@@ -105,7 +105,7 @@ class CreatorPostSerializer(serializers.ModelSerializer):
     def get_media(self, obj):
         from apps.mediahub.serializers import MediaAssetSerializer
         return MediaAssetSerializer(
-            obj.media_assets.order_by('created_at'), many=True,
+            obj.media_assets.all(), many=True,
             context=self.context,
         ).data
 
