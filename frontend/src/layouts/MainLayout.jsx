@@ -192,6 +192,50 @@ export const MainLayout = () => {
               <span>Community</span>
             </Link>
 
+            {isCreator && (
+              <>
+                <p className="px-3 pt-3 pb-0.5 text-[10px] font-extrabold uppercase tracking-wider text-violet-400">
+                  Creator
+                </p>
+                <Link
+                  to="/creator-studio"
+                  className={`snav-item ${currentTab === 'creator-studio' ? 'active' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Studio</span>
+                </Link>
+                <Link
+                  to="/creator-dashboard"
+                  className={`snav-item ${currentTab === 'creator-dashboard' ? 'active' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M18 20V10M12 20V4M6 20v-6" />
+                  </svg>
+                  <span>Dashboard</span>
+                </Link>
+                <Link
+                  to="/creator-earnings"
+                  className={`snav-item ${currentTab === 'creator-earnings' ? 'active' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                  </svg>
+                  <span>Earnings</span>
+                </Link>
+                <Link
+                  to="/creator-admin"
+                  className={`snav-item ${currentTab === 'creator-admin' ? 'active' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span>Admin</span>
+                </Link>
+              </>
+            )}
+
             <Link
               to="/soultube"
               className={`snav-item ${location.pathname.startsWith('/soultube') ? 'active' : ''}`}

@@ -118,6 +118,17 @@ export const DashboardPage = () => {
           // Ignore — the panel is a nice-to-have.
         }
       }
+
+      // Community highlights preview is optional too; panel stays hidden when it fails.
+      try {
+        const cRes = await api('GET', '/community/posts/?page_size=3');
+        if (cRes && cRes.ok) {
+          const cData = await cRes.json();
+          setCommunityPreview(Array.isArray(cData) ? cData : cData.results || []);
+        }
+      } catch (e) {
+        // Ignore — the panel is a nice-to-have.
+      }
     }
 
     loadData();
