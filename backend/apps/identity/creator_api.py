@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
-from django.db.models import Case, Count, Exists, ExpressionWrapper, F, IntegerField, OuterRef, Q, Sum, Value, When
+from django.db.models import Case, Count, Exists, ExpressionWrapper, F, IntegerField, OuterRef, Prefetch, Q, Sum, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -73,7 +73,9 @@ def _published_posts(user=None):
         deleted_at__isnull=True,
         published_at__lte=timezone.now(),
         creator__is_active=True,
-    ).select_related('creator').order_by('-published_at', '-created_at').annotate(
+    ).select_related('creator').prefetch_related(
+        Prefetch('media_assets', queryset=__import__('apps.mediahub.models', fromlist=['MediaAsset']).MediaAsset.objects.order_by('created_at'))
+    ).order_by('-published_at', '-created_at').annotate(
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comments', filter=Q(comments__is_hidden=False), distinct=True),
         shares_count=Count('shares', distinct=True),
@@ -81,6 +83,9 @@ def _published_posts(user=None):
     )
     if user is not None and user.is_authenticated:
         queryset = queryset.annotate(
+            liked_by_viewer=Exists(
+                CreatorPostLike.objects.filter(post=OuterRef('pk'), user=user)
+            ),
             followed_by_viewer=Exists(
                 CreatorFollow.objects.filter(creator=OuterRef('creator_id'), follower=user)
             ),
