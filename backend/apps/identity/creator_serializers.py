@@ -111,10 +111,11 @@ class CreatorPostSerializer(serializers.ModelSerializer):
 
     def get_liked_by_me(self, obj):
         request = self.context.get('request')
-        return bool(
-            request and request.user.is_authenticated
-            and obj.likes.filter(user=request.user).exists()
-        )
+        if not request or not request.user.is_authenticated:
+            return False
+        if hasattr(obj, 'liked_by_viewer'):
+            return bool(obj.liked_by_viewer)
+        return obj.likes.filter(user=request.user).exists()
 
     def get_followed_by_me(self, obj):
         from .models import CreatorFollow
