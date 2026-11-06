@@ -1,9 +1,11 @@
 [phases.build]
 cmds = [
   "pip install -r requirements.txt",
-  "python manage.py collectstatic --noinput",
-  "python manage.py migrate --noinput"
+  "python manage.py collectstatic --noinput"
 ]
+# NOTE: Migrations are deliberately NOT run during build.
+# Apply migrations manually via Railway CLI or one-time run command:
+#   railway run python manage.py migrate --noinput
 
 [start]
 cmd = "daphne -b 0.0.0.0 -p $PORT config.asgi:application"
