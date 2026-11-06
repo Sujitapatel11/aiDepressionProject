@@ -6,6 +6,20 @@ import { resolveMediaUrl } from '../../services/api';
 // stored in media_url pass through unchanged.
 const resolveSrc = (path) => resolveMediaUrl(path);
 
+function VideoPlayer({ src, className, id }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div key={id}>
+      <video controls playsInline preload="none" src={src} className={className} onError={() => setFailed(true)} />
+      {failed && (
+        <p className="mt-2 text-xs text-rose-600" role="status">
+          This video could not play. Use an MP4 encoded with H.264 video and AAC audio for best browser support.
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
  * Image with lazy loading and a soft fallback when the file fails to load,
  * so no feed surface ever shows a broken-image icon.
@@ -56,30 +70,10 @@ export default function PostMediaGrid({ post, compact = false, className = '' })
     ? 'max-h-24 w-full rounded-xl bg-black object-cover'
     : 'max-h-[480px] w-full rounded-2xl bg-black';
 
-  const VideoPlayer = ({ src, id }) => {
-    const [failed, setFailed] = useState(false);
-    return (
-      <div key={id}>
-        <video
-          controls
-          playsInline
-          preload="none"
-          src={src}
-          className={videoClass}
-          onError={() => setFailed(true)}
-        />
-        {failed && (
-          <p className="mt-2 text-xs text-rose-600" role="status">
-            This video could not play. Use an MP4 encoded with H.264 video and AAC audio for best browser support.
-          </p>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {legacyIsVideo && <VideoPlayer src={legacyUrl} id="legacy-video" />}
+      {legacyIsVideo && <VideoPlayer src={legacyUrl} id="legacy-video" className={videoClass} />}
       {legacyUrl && !legacyIsVideo && (
         <SafeImg
           src={legacyUrl}
@@ -88,7 +82,7 @@ export default function PostMediaGrid({ post, compact = false, className = '' })
         />
       )}
       {videos.map((video) => (
-        <VideoPlayer key={video.id} id={video.id} src={resolveSrc(pick(video))} />
+        <VideoPlayer key={video.id} id={video.id} src={resolveSrc(pick(video))} className={videoClass} />
       ))}
       {!compact && images.length === 1 && (
         <SafeImg
