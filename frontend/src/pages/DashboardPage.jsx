@@ -76,38 +76,48 @@ export const DashboardPage = () => {
   const [customAvatar, setCustomAvatar] = useState('');
 
   useEffect(() => {
+    let active = true;
     setCustomAvatar(localStorage.getItem('sc_av_' + username) || '');
 
+    // These panels are independent. Fetch them together so their latency does
+    // not stack; optional panels must never hold up the core dashboard data.
     async function loadData() {
-      const res = await api('GET', '/dashboard/');
-      if (res && res.ok) {
-        const data = await res.json();
-        setDashData(data);
+      const results = await Promise.allSettled([
+        api('GET', '/dashboard/'),
+        api('GET', '/sleep/stats/'),
+        api('GET', '/community/posts/?page_size=3'),
+      ]);
+      if (!active) return;
+
+      const [dashboardResult, sleepResult, communityResult] = results;
+      if (dashboardResult.status === 'fulfilled' && dashboardResult.value?.ok) {
+        try {
+          setDashData(await dashboardResult.value.json());
+        } catch (error) {
+          console.error('Dashboard response could not be parsed:', error);
+        }
       }
 
-      try {
-        const sRes = await api('GET', '/sleep/stats/');
-        if (sRes && sRes.ok) {
-          const sData = await sRes.json();
-          setSleepStats(sData);
+      if (sleepResult.status === 'fulfilled' && sleepResult.value?.ok) {
+        try {
+          setSleepStats(await sleepResult.value.json());
+        } catch (error) {
+          // Sleep stats are optional; keep the rest of the dashboard available.
         }
-      } catch (e) {
-        // Sleep stats are optional; the rest of the dashboard remains available.
       }
 
-      // Community highlights preview is optional too; panel stays hidden when it fails.
-      try {
-        const cRes = await api('GET', '/community/posts/?page_size=3');
-        if (cRes && cRes.ok) {
-          const cData = await cRes.json();
-          setCommunityPreview(Array.isArray(cData) ? cData : cData.results || []);
+      if (communityResult.status === 'fulfilled' && communityResult.value?.ok) {
+        try {
+          const data = await communityResult.value.json();
+          setCommunityPreview(Array.isArray(data) ? data : data.results || []);
+        } catch (error) {
+          // Community preview is optional too.
         }
-      } catch (e) {
-        // Ignore — the panel is a nice-to-have.
       }
     }
 
     loadData();
+    return () => { active = false; };
   }, [username]);
 
   const greeting = useMemo(() => {
