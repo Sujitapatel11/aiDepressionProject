@@ -16,6 +16,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from config.throttles import CreatorEngagementRateThrottle, CreatorWithdrawalRateThrottle, CreatorWriteRateThrottle
+from apps.mediahub.models import MediaAsset
 from apps.mediahub.services import attach_media_assets, delete_assets_of, replace_creator_post_assets
 from .creator_services import creator_balances
 from .creator_serializers import (
@@ -74,7 +75,7 @@ def _published_posts(user=None):
         published_at__lte=timezone.now(),
         creator__is_active=True,
     ).select_related('creator').prefetch_related(
-        Prefetch('media_assets', queryset=__import__('apps.mediahub.models', fromlist=['MediaAsset']).MediaAsset.objects.order_by('created_at'))
+        Prefetch('media_assets', queryset=MediaAsset.objects.order_by('created_at'))
     ).order_by('-published_at', '-created_at').annotate(
         likes_count=Count('likes', distinct=True),
         comments_count=Count('comments', filter=Q(comments__is_hidden=False), distinct=True),
