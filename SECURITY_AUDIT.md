@@ -1,3 +1,7 @@
+> [!WARNING]
+> **Historical audit — do not treat this report as a current security assessment.**
+> This document is dated July 26, 2026 and describes an earlier application state, including a Flutter client and features that may no longer match the current React/Django social creator platform. Its scores, findings, and statements such as “not implemented” or “zero upload vectors” are not verified against the current default branch or deployed production system. Reproduce each finding against the current code and deployment before prioritizing or closing it. See the current repository [Security Policy](SECURITY.md).
+
 # SoulCare Comprehensive Security Production Audit Report
 
 Comprehensive Security Production Audit reviewing the **SoulCare Django REST Backend** and **Flutter Mobile Application** for authentication vulnerabilities, authorization flaws, rate limiting, secrets management, OWASP Top 10 risks, and mobile data protection.
