@@ -1,21 +1,56 @@
-# Flutter / Dart
-.dart_tool/
-.pub-cache/
-.pub/
-build/
+# Environment and secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Python / Django
 __pycache__/
 *.py[cod]
 *$py.class
-backend/.env
-
-# IDEs & OS
-.idea/
-.vscode/
-.DS_Store
 *.sqlite3
-scratch/
-.neon
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+ENV/
+backend/media/
+backend/staticfiles/
+
+# Node / frontend
 node_modules/
-.env.local
+frontend/node_modules/
+frontend/dist/
+dist/
+coverage/
+.vite/
+
+# Build and generated output
+build/
+out/
+tmp/
+temp/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local tools and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
