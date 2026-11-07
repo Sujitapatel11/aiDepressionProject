@@ -29,6 +29,7 @@ export function SafeImg({ src, alt, className }) {
   return (
     <img
       loading="lazy"
+      decoding="async"
       src={resolveSrc(src)}
       alt={alt || ''}
       onError={() => setFailed(true)}
@@ -69,7 +70,7 @@ export function SafeVideo({ src, poster, alt, className = '' }) {
     }, { rootMargin: '200px' });
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [src]);
 
   if (!src || failed) {
     return (
@@ -100,6 +101,7 @@ export function SafeVideo({ src, poster, alt, className = '' }) {
           {poster ? (
             <img
               loading="lazy"
+              decoding="async"
               src={resolveSrc(poster)}
               alt={alt || ''}
               className="h-full w-full object-cover"
